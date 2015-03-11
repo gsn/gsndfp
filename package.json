@@ -50,7 +50,7 @@
     "gulp-clean": "*",
     "jshint-stylish": "^1.0.0"
   },
-    "engines": {
+  "engines": {
     "node": ">= 0.9.0"
   },
   "scripts": {

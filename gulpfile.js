@@ -22,6 +22,11 @@ var banner = [
   ' */\n'
 ].join('\n');
 
+gulp.task('clean', function() {
+  return gulp.src('./dist/*')
+    .pipe(clean({force: true}));
+});
+
 gulp.task('coffee', function() {
   return gulp.src('./src/*.coffee')
     .pipe(concat('gsndfp.coffee'))
@@ -30,7 +35,7 @@ gulp.task('coffee', function() {
     .pipe(gulp.dest('dist'));
 });
 
-gulp.task('default', ['coffee'], function() {
+gulp.task('default', ['clean', 'coffee'], function() {
   return gulp.src('./dist/*.js')
     .pipe(uglify())
     .pipe(header(banner, {pkg: pkg}))

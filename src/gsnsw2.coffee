@@ -1,3 +1,7 @@
+###!
+#  Project: gsnsw2
+ * ===============================
+###
 (($, window) ->
   'use strict'
   sessionStorageX = sessionStorage

@@ -1,3 +1,8 @@
+###!
+#  Project: gsndfp
+ * ===============================
+###
+
 (($, window) ->
   'use strict'
   sessionStorageX = sessionStorage

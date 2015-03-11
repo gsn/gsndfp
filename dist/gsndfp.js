@@ -6,6 +6,308 @@
  * License: Grocery Shopping Network
  *          MIT from derived work of Copyright (c) 2013 Matt Cooper: https://github.com/coop182/jquery.dfp.js  v1.0.18
  */
+
+/*!
+ *  Project: gsnevent triggering
+ * ===============================
+ */
+
+/* Usage:
+ *   For Publisher: 
+ *         Gsn.Advertising.clickBrickOffer(clickTrackingUrl, 69);
+#
+ *   For Consumer:
+ *         Gsn.Advertising.on('clickBrickOffer', function(evt)) { alert(evt.OfferCode); });
+#
+ * The following events are currently available: clickProduct, clickPromotion, clickBrand, clickBrickOffer, clickRecipe, and clickLink
+ */
+(function($, oldGsn, win, doc, gsnContext) {
+  var Plugin, buildQueryString, createFrame, myGsn, myParent$, myPlugin, oldGsnAdvertising, parent$, sessionStorageX, tickerFrame;
+  sessionStorageX = win.sessionStorage;
+  createFrame = function() {
+    var tempIFrame, tickerFrame;
+    if (typeof tickerFrame === 'undefined') {
+      tempIFrame = doc.createElement('iframe');
+      tempIFrame.setAttribute('id', 'gsnticker');
+      tempIFrame.style.position = 'absolute';
+      tempIFrame.style.top = '-100px';
+      tempIFrame.style.left = '-100px';
+      tempIFrame.style.zIndex = '99';
+      tempIFrame.style.border = '0px';
+      tempIFrame.style.width = '0px';
+      tempIFrame.style.height = '0px';
+      tickerFrame = doc.body.appendChild(tempIFrame);
+      if (doc.frames) {
+        tickerFrame = doc.frames['gsnticker'];
+      }
+    }
+  };
+  Plugin = function() {
+    this.init();
+  };
+  buildQueryString = function(keyWord, keyValue) {
+    if (keyValue !== null) {
+      keyValue = new String(keyValue);
+      if (keyWord !== 'ProductDescription') {
+        keyValue = keyValue.replace(/&/, '`');
+      }
+      return keyWord + '=' + keyValue.toString();
+    } else {
+      return '';
+    }
+  };
+  if (typeof sessionStorageX === 'undefined') {
+    sessionStorageX = {
+      getItem: function() {},
+      setItem: function() {}
+    };
+  }
+  tickerFrame = void 0;
+  parent$ = void 0;
+  myGsn = oldGsn || {};
+  oldGsnAdvertising = myGsn.Advertising;
+  if (typeof oldGsnAdvertising !== 'undefined') {
+    if (oldGsnAdvertising.pluginLoaded) {
+      return;
+    }
+  }
+  Plugin.prototype = {
+    init: function() {},
+    pluginLoaded: true,
+    data: {},
+    onAllEvents: null,
+    oldGsnAdvertising: oldGsnAdvertising,
+    trigger: function(eventName, eventData) {
+      if (eventName.indexOf('gsnevent') < 0) {
+        eventName = 'gsnevent:' + eventName;
+      }
+      win.setTimeout((function() {
+        if (parent$) {
+          parent$.event.trigger({
+            type: eventName,
+            detail: eventData
+          });
+        } else {
+          $.event.trigger({
+            type: eventName,
+            detail: eventData
+          });
+        }
+        if (typeof this.onAllEvents === 'function') {
+          this.onAllEvents({
+            type: eventName,
+            detail: eventData
+          });
+        }
+      }), 100);
+    },
+    on: function(eventName, callback) {
+      if (eventName.indexOf('gsnevent') < 0) {
+        eventName = 'gsnevent:' + eventName;
+      }
+      $(doc).on(eventName, callback);
+    },
+    off: function(eventName, callback) {
+      if (eventName.indexOf('gsnevent') < 0) {
+        eventName = 'gsnevent:' + eventName;
+      }
+      $(doc).off(eventName, callback);
+    },
+    ajaxFireUrl: function(url, sync) {
+      var adUrlIndex, newUrl;
+      if (typeof url === 'string') {
+        if (url.length < 10) {
+          return;
+        }
+        url = url.replace('%%CACHEBUSTER%%', (new Date).getTime());
+        if (sync) {
+          $.ajax({
+            async: false,
+            url: url
+          });
+          adUrlIndex = url.indexOf('adurl=');
+          if (adUrlIndex > 0) {
+            newUrl = url.substr(adUrlIndex + 6);
+            this.ajaxFireUrl(newUrl, sync);
+          }
+        } else {
+          createFrame();
+          tickerFrame.src = url;
+        }
+      }
+    },
+    clickProduct: function(click, categoryId, brandName, productDescription, productCode, quantity, displaySize, regularPrice, currentPrice, savingsAmount, savingsStatement, adCode, creativeId) {
+      this.ajaxFireUrl(click);
+      this.trigger('clickProduct', {
+        myPlugin: this,
+        CategoryId: categoryId,
+        BrandName: brandName,
+        Description: productDescription,
+        ProductCode: productCode,
+        DisplaySize: displaySize,
+        RegularPrice: regularPrice,
+        CurrentPrice: currentPrice,
+        SavingsAmount: savingsAmount,
+        SavingsStatement: savingsStatement,
+        AdCode: adCode,
+        CreativeId: creativeId,
+        Quantity: quantity || 1
+      });
+    },
+    clickBrickOffer: function(click, offerCode, checkCode) {
+      this.ajaxFireUrl(click);
+      this.trigger('clickBrickOffer', {
+        myPlugin: this,
+        OfferCode: offerCode || 0
+      });
+    },
+    clickBrand: function(click, brandName) {
+      this.ajaxFireUrl(click);
+      this.setBrand(brandName);
+      this.trigger('clickBrand', {
+        myPlugin: this,
+        BrandName: brandName
+      });
+    },
+    clickPromotion: function(click, adCode) {
+      this.ajaxFireUrl(click);
+      this.trigger('clickPromotion', {
+        myPlugin: this,
+        AdCode: adCode
+      });
+    },
+    clickRecipe: function(click, recipeId) {
+      this.ajaxFireUrl(click);
+      this.trigger('clickRecipe', {
+        RecipeId: recipeId
+      });
+    },
+    clickLink: function(click, url, target) {
+      if (target === void 0 || target === '') {
+        target = '_top';
+      }
+      this.ajaxFireUrl(click);
+      this.trigger('clickLink', {
+        myPlugin: this,
+        Url: url,
+        Target: target
+      });
+    },
+    setBrand: function(brandName) {
+      this.data.BrandName = brandName;
+      sessionStorageX.setItem('Gsn.Advertisement.data.BrandName', brandName);
+    },
+    getBrand: function() {
+      return this.data.BrandName || sessionStorageX.getItem('Gsn.Advertisement.data.BrandName');
+    }
+  };
+  myPlugin = new Plugin;
+  myGsn.Advertising = myPlugin;
+  myGsn.Advertising.brickRedirect = myPlugin.clickBrickOffer;
+  myGsn.Advertising.clickBrand = myPlugin.clickBrand;
+  myGsn.Advertising.clickThru = myPlugin.clickProduct;
+  myGsn.Advertising.logAdImpression = function() {};
+  myGsn.Advertising.logAdRequest = function() {};
+  myGsn.Advertising.promotionRedirect = myPlugin.clickPromotion;
+  myGsn.Advertising.verifyClickThru = myPlugin.clickLink;
+  myGsn.Advertising.recipeRedirect = myPlugin.clickRecipe;
+  win.Gsn = myGsn;
+  if (typeof gsnContext !== 'undefined') {
+    myGsn.Advertising.on('clickRecipe', function(data) {
+      if (data.type !== 'gsnevent:clickRecipe') {
+        return;
+      }
+      win.location.replace('/Recipes/RecipeFull.aspx?recipeid=' + data.detail.RecipeId);
+    });
+    myGsn.Advertising.on('clickProduct', function(data) {
+      var product, queryString;
+      if (data.type !== 'gsnevent:clickProduct') {
+        return;
+      }
+      product = data.detail;
+      if (product) {
+        queryString = new String('');
+        queryString += buildQueryString('DepartmentID', product.CategoryId);
+        queryString += '~';
+        queryString += buildQueryString('BrandName', product.BrandName);
+        queryString += '~';
+        queryString += buildQueryString('ProductDescription', product.Description);
+        queryString += '~';
+        queryString += buildQueryString('ProductCode', product.ProductCode);
+        queryString += '~';
+        queryString += buildQueryString('DisplaySize', product.DisplaySize);
+        queryString += '~';
+        queryString += buildQueryString('RegularPrice', product.RegularPrice);
+        queryString += '~';
+        queryString += buildQueryString('CurrentPrice', product.CurrentPrice);
+        queryString += '~';
+        queryString += buildQueryString('SavingsAmount', product.SavingsAmount);
+        queryString += '~';
+        queryString += buildQueryString('SavingsStatement', product.SavingsStatement);
+        queryString += '~';
+        queryString += buildQueryString('Quantity', product.Quantity);
+        queryString += '~';
+        queryString += buildQueryString('AdCode', product.AdCode);
+        queryString += '~';
+        queryString += buildQueryString('CreativeID', product.CreativeId);
+        if (typeof AddAdToShoppingList === 'function') {
+          AddAdToShoppingList(queryString);
+        }
+      }
+    });
+    myGsn.Advertising.on('clickLink', function(data) {
+      var linkData;
+      if (data.type !== 'gsnevent:clickLink') {
+        return;
+      }
+      linkData = data.detail;
+      if (linkData) {
+        if (linkData.Target === void 0 || linkData.Target === '') {
+          linkData.Target = '_top';
+        }
+        if (linkData.Target === '_blank') {
+          win.open(linkData.Url);
+        } else {
+          win.location.replace(linkData.Url);
+        }
+      }
+    });
+    myGsn.Advertising.on('clickPromotion', function(data) {
+      var linkData;
+      if (data.type !== 'gsnevent:clickPromotion') {
+        return;
+      }
+      linkData = data.detail;
+      if (linkData) {
+        win.location.replace('/Ads/Promotion.aspx?adcode=' + linkData.AdCode);
+      }
+    });
+    myGsn.Advertising.on('clickBrickOffer', function(data) {
+      var linkData, url;
+      if (data.type !== 'gsnevent:clickBrickOffer') {
+        return;
+      }
+      linkData = data.detail;
+      if (linkData) {
+        url = 'https://clientapi.gsn2.com/api/v1/profile/BrickOffer/' + gsnContext.ConsumerID + '/' + linkData.OfferCode;
+        win.open(url, '');
+      }
+    });
+  }
+  if (win.top) {
+    myParent$ = win.top.jQuery || win.top.Zepto || win.top.tire;
+    if (myParent$ !== $) {
+      parent$ = myParent$;
+    }
+  }
+})(window.jQuery || window.Zepto || window.tire || window.$, window.Gsn || {}, window, document, window.GSNContext);
+
+
+/*!
+ *  Project: gsndfp
+ * ===============================
+ */
+
 (function($, window) {
   'use strict';
   var $adCollection, count, createAds, dfpBlocked, dfpID, dfpIsLoaded, dfpLoader, dfpOptions, dfpScript, dfpSelector, displayAds, getDimensions, getID, init, isInView, lastRefreshTime, refreshHandler, rendered, sessionStorageX, setOptions, storeAs;
@@ -344,6 +646,12 @@
     return this;
   };
 })(window.jQuery || window.Zepto || window.tire || window.$, window);
+
+
+/*!
+ *  Project: gsnsw2
+ * ===============================
+ */
 
 (function($, window) {
   'use strict';
@@ -799,3 +1107,148 @@
     return this;
   };
 })(window.jQuery || window.Zepto || window.tire || window.$, window);
+
+
+/**
+ * gsn.easyModal.js v1.0.1
+ * A minimal jQuery modal that works with your CSS.
+ * Author: Flavius Matis - http://flaviusmatis.github.com/
+ * URL: https://github.com/flaviusmatis/easyModal.js
+ * Modified: Eric Schmit - GSN
+ *========================================================
+ */
+
+(function($) {
+  'use strict';
+  var methods;
+  methods = {
+    init: function(options) {
+      var defaults;
+      defaults = {
+        top: 'auto',
+        autoOpen: false,
+        overlayOpacity: 0.5,
+        overlayColor: '#000',
+        overlayClose: true,
+        overlayParent: 'body',
+        closeOnEscape: true,
+        closeButtonClass: '.close',
+        transitionIn: '',
+        transitionOut: '',
+        onOpen: false,
+        onClose: false,
+        zIndex: function() {
+          return (function(value) {
+            if (value === -Infinity) {
+              return 0;
+            } else {
+              return value + 1;
+            }
+          })(Math.max.apply(Math, $.makeArray($('*').map(function() {
+            return $(this).css('z-index');
+          }).filter(function() {
+            return $.isNumeric(this);
+          }).map(function() {
+            return parseInt(this, 10);
+          }))));
+        },
+        updateZIndexOnOpen: false,
+        adClass: 'gsnsw'
+      };
+      options = $.extend(defaults, options);
+      return this.each(function() {
+        var $modal, $overlay, o;
+        o = options;
+        $overlay = $('<div class="lean-overlay"></div>');
+        $modal = $(this);
+        $overlay.css({
+          'display': 'none',
+          'position': 'absolute',
+          'z-index': 2147483640,
+          'top': 0,
+          'left': 0,
+          'height': '100%',
+          'width': '100%',
+          'background': o.overlayColor,
+          'opacity': o.overlayOpacity,
+          'overflow': 'auto'
+        }).appendTo(o.overlayParent);
+        $modal.css({
+          'display': 'none',
+          'position': 'absolute',
+          'z-index': 2147483647,
+          'left': window.devicePixelRatio >= 2 ? 33 + '%' : 50 + '%',
+          'top': parseInt(o.top, 10) > -1 ? o.top + 'px' : 50 + '%'
+        });
+        $modal.bind('openModal', function() {
+          var modalZ, overlayZ;
+          overlayZ = o.updateZIndexOnOpen ? o.zIndex() : parseInt($overlay.css('z-index'), 10);
+          modalZ = overlayZ + 1;
+          if (o.transitionIn !== '' && o.transitionOut !== '') {
+            $modal.removeClass(o.transitionOut).addClass(o.transitionIn);
+          }
+          $modal.css({
+            'display': 'block',
+            'margin-left': window.devicePixelRatio >= 2 ? 0 : -($modal.outerWidth() / 2) + 'px',
+            'margin-top': (parseInt(o.top, 10) > -1 ? 0 : -($modal.outerHeight() / 2)) + 'px',
+            'z-index': modalZ
+          });
+          $overlay.css({
+            'z-index': overlayZ,
+            'display': 'block'
+          });
+          if (o.onOpen && typeof o.onOpen === 'function') {
+            o.onOpen($modal[0]);
+          }
+        });
+        $modal.bind('closeModal', function() {
+          if (o.transitionIn !== '' && o.transitionOut !== '') {
+            $modal.removeClass(o.transitionIn).addClass(o.transitionOut);
+            $modal.one('webkitAnimationEnd mozAnimationEnd MSAnimationEnd oanimationend animationend', function() {
+              $modal.css('display', 'none');
+              $overlay.css('display', 'none');
+            });
+          } else {
+            $modal.css('display', 'none');
+            $overlay.css('display', 'none');
+          }
+          if (o.onClose && typeof o.onClose === 'function') {
+            o.onClose($modal[0]);
+          }
+        });
+        $overlay.click(function() {
+          if (o.overlayClose) {
+
+          } else {
+
+          }
+        });
+        $(document).keydown(function(e) {
+          if (o.closeOnEscape && e.keyCode === 27) {
+            $modal.trigger('closeModal');
+          }
+        });
+        $modal.on('click', o.adClass, function(e) {
+          $modal.trigger('closeModal');
+          e.preventDefault();
+        });
+        $modal.on('click', o.closeButtonClass, function(e) {
+          $modal.trigger('closeModal');
+          e.preventDefault();
+        });
+        if (o.autoOpen) {
+          $modal.trigger('openModal');
+        }
+      });
+    }
+  };
+  $.fn.easyModal = function(method) {
+    if (methods[method]) {
+      return methods[method].apply(this, Array.prototype.slice.call(arguments, 1));
+    }
+    if (typeof method === 'object' || !method) {
+      return methods.init.apply(this, arguments);
+    }
+    $.error('Method ' + method + ' does not exist on jQuery.easyModal');
+  };
+})(window.jQuery || window.Zepto || window.tire || window.$);

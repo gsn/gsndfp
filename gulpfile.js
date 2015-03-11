@@ -1,8 +1,12 @@
 var gulp =       require('gulp');
+var gutil =      require('gulp-util');
 var uglify =     require('gulp-uglify');
 var jshint =     require('gulp-jshint');
 var webpack =    require('gulp-webpack');
 var rename =     require('gulp-rename');
+var coffee =     require('gulp-coffee');
+var concat =     require('gulp-concat');
+var clean =      require('gulp-clean');
 var header =     require('gulp-header');
                  require('gulp-grunt')(gulp);
 
@@ -18,26 +22,16 @@ var banner = [
   ' */\n'
 ].join('\n');
 
-gulp.task('default', function() {
-  return gulp.src('src/gsndfp.js')
-    .pipe(jshint())
-    .pipe(jshint.reporter('jshint-stylish'))
-    .pipe(webpack({
-      output: {
-        libraryTarget: 'umd'
-      },
-      externals: {
-        'jquery': {
-          commonjs: 'jquery',
-          commonjs2: 'jquery',
-          amd: 'jquery',
-          root: 'jQuery'
-        }
-      }
-    }))
-    .pipe(rename('gsndfp.js'))
+gulp.task('coffee', function() {
+  return gulp.src('./src/*.coffee')
+    .pipe(concat('gsndfp.coffee'))
+    .pipe(coffee({bare: true}).on('error', gutil.log))
     .pipe(header(banner, {pkg: pkg}))
-    .pipe(gulp.dest('dist'))
+    .pipe(gulp.dest('dist'));
+});
+
+gulp.task('default', ['coffee'], function() {
+  return gulp.src('./dist/*.js')
     .pipe(uglify())
     .pipe(header(banner, {pkg: pkg}))
     .pipe(rename({suffix: '.min'}))

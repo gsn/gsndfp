@@ -19,8 +19,8 @@
   $adCollection = undefined
   storeAs = 'gsnsw'
   apiUrl = 'https://clientapi.gsn2.com/api/v1/ShopperWelcome/GetShopperWelcome/'
-  cssUrl = 'http://cdn.gsngrocers.com/script/sw2/1.1.0/sw2-override.css'
-  advertUrl = 'http://cdn.gsngrocers.com/script/sw2/1.1.0/advertisement.js'
+  cssUrl = '//cdn.gsngrocers.com/script/sw2/1.1.0/sw2-override.css'
+  advertUrl = '//cdn.gsngrocers.com/script/sw2/1.1.0/advertisement.js'
   chainId = 0
   didOpen = false
 

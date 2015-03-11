@@ -25,8 +25,8 @@
       tempIFrame = doc.createElement('iframe')
       tempIFrame.setAttribute 'id', 'gsnticker'
       tempIFrame.style.position = 'absolute'
-      tempIFrame.style.top = '-100px'
-      tempIFrame.style.left = '-100px'
+      tempIFrame.style.top = '-9999em'
+      tempIFrame.style.left = '-9999em'
       tempIFrame.style.zIndex = '99'
       tempIFrame.style.border = '0px'
       tempIFrame.style.width = '0px'

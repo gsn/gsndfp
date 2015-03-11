@@ -1,0 +1,27 @@
+{
+  "name": "gsndfp",
+  "version": "1.1.0",
+  "main": [
+    "dist/gsndfp.js",
+    "dist/gsndfp.min.js"
+  ],
+  "ignore": [
+    ".gitignore",
+    ".jshintrc",
+    "src",
+    "gulpfile.js",
+    "package.json",
+    "component.json",
+    "examples",
+    "tests",
+    "README.md",
+    "bower.json",
+    "Gruntfile.js",
+    "gulpfile.js",
+    "bower_components"
+  ],
+  "dependencies": {
+    "jquery": ">=1.7.1",
+    "jasmine-jquery": "~1.0.0"
+  }
+}

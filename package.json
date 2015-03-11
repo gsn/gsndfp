@@ -1,0 +1,53 @@
+{
+  "name": "gsndfp",
+  "description": "GSN DFP Plugin",
+  "version": "1.1.0",
+  "homepage": "https://github.com/gsn/gsndfp",
+  "author": {
+    "name": "Grocery Shopping Network",
+    "email": "tech@groceryshopping.net",
+    "url": "http://www.groceryshopping.net"
+  },
+  "contributors": [
+    {
+      "name": "Tom Nguyen",
+      "email": "tnguyen@groceryshopping.net",
+    "url": "http://www.groceryshopping.net"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:gsn/gsndfp.git"
+  },
+  "keywords": [
+    "jquery",
+    "dfp",
+    "doubleclick",
+    "jquery-plugin",
+    "jquery",
+    "zepto"
+  ],
+  "main": "dist/gsndfp.js",
+  "directories": {
+    "example": "examples",
+    "test": "tests"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "bower": "*",
+    "grunt": "~0.4.5",
+    "grunt-contrib-jasmine": "~0.8.2",
+    "gulp": "~3.8.10",
+    "gulp-grunt": "~0.5.2",
+    "gulp-header": "~1.2.2",
+    "gulp-jshint": "~1.9.0",
+    "gulp-rename": "~1.2.0",
+    "gulp-uglify": "~1.1.0",
+    "gulp-webpack": "^1.2.0",
+    "jshint-stylish": "^1.0.0"
+  },
+  "scripts": {
+    "test": "gulp test",
+    "postinstall": "node node_modules/bower/bin/bower install"
+  }
+}

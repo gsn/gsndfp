@@ -43,6 +43,23 @@ gulp.task('default', ['clean', 'coffee'], function() {
     .pipe(gulp.dest('dist'));
 });
 
+gulp.task('SpecRunner.update', function(){
+	var target  = './test/SpecRunner.html',
+        names =
+            bowerFiles({includeDev: true})
+            .concat([
+                './src/**/*.js',
+                './dist/**/*.js',
+                './test/**/*Spec.js'
+            ]),
+
+		dependencies   = gulp.src(names, {read: false});
+	
+	return gulp.src(target)
+        .pipe(inject(dependencies, {relative : true}))
+		.pipe(gulp.dest('./test'));
+});
+
 gulp.task('watch', function() {
   gulp.watch('src/gsndfp.js', ['default']);
 });

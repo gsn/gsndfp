@@ -17,50 +17,12 @@
 # scripts and/or other plugins which may not be closed properly.
 (($, oldGsn, win, doc, gsnContext) ->
   sessionStorageX = win.sessionStorage
-
-  createFrame = ->
-    if typeof tickerFrame == 'undefined'
-      # create the IFrame and assign a reference to the
-      # object to our global variable tickerFrame.
-      tempIFrame = doc.createElement('iframe')
-      tempIFrame.setAttribute 'id', 'gsnticker'
-      tempIFrame.style.position = 'absolute'
-      tempIFrame.style.top = '-9999em'
-      tempIFrame.style.left = '-9999em'
-      tempIFrame.style.zIndex = '99'
-      tempIFrame.style.border = '0px'
-      tempIFrame.style.width = '0px'
-      tempIFrame.style.height = '0px'
-      tickerFrame = doc.body.appendChild(tempIFrame)
-      if doc.frames
-        # this is for IE5 Mac, because it will only
-        # allow access to the doc object
-        # of the IFrame if we access it through
-        # the doc.frames array
-        tickerFrame = doc.frames['gsnticker']
-    return
-
-  ##region The actual plugin constructor
-
-  Plugin = ->
-    #/ <summary>Plugin constructor</summary>
-    @init()
-    return
-
-  buildQueryString = (keyWord, keyValue) ->
-    if keyValue != null
-      keyValue = new String(keyValue)
-      if keyWord != 'ProductDescription'
-        # some product descriptions have '&amp;' which should not be replaced with '`'. 
-        keyValue = keyValue.replace(/&/, '`')
-      keyWord + '=' + keyValue.toString()
-    else
-      ''
-
+  
   if typeof sessionStorageX == 'undefined'
     sessionStorageX =
       getItem: ->
       setItem: ->
+                 
   tickerFrame = undefined
   parent$ = undefined
   myGsn = oldGsn or {}
@@ -68,14 +30,60 @@
   if typeof oldGsnAdvertising != 'undefined'
     if oldGsnAdvertising.pluginLoaded
       return
+      
+  ##region The actual plugin constructor
+
+  Plugin = ->
+    #/ <summary>Plugin constructor</summary>
+    @init()
+    return
+    
   Plugin.prototype =
     init: ->
       #/ <summary>Initialization logic goes here</summary>
       return
     pluginLoaded: true
-    data: {}
-    onAllEvents: null
+    defaultActionParam:
+      # default action parameters *optional* means it will not break but we would want it if possible 
+       # required - example: registration, coupon, circular
+      page: ''     
+       # required - specific action/event/behavior name (prev circular, next circular)  
+      evtname: ''    
+       # optional* - string identifying the department                                                     
+      dept: ''            
+      # -- Device Data --  
+       # optional* - kios, terminal, or device Id
+       # if deviceid is not unique, then the combination of storeid and deviceid should be unique 
+      deviceid: ''         
+       # optional* - the storeId        
+      storeid: ''
+       # these are consumer data
+       # optional* - the id you use to uniquely identify your consumer
+      consumerid: ''          
+       # optional* - determine if consumer is anonymous or registered with your site     
+      isanon: false     
+       # optional * - string identify consumer loyalty card id
+      loyaltyid: ''        
+      # -- Consumer Interest --
+      aisle: ''           # optional - ailse
+      category: ''        # optional - category
+      shelf: ''           # optional - shelf                          
+      brand: ''           # optional - default brand
+      pcode: ''           # string contain product code or upc
+      pdesc: ''           # string containing product description
+      latlng: [0,0]       # latitude, longitude if possible
+       # optional - describe how you want to categorize this event/action.
+       # ie. this action is part of (checkout process, circular, coupon, etc...)
+      evtcategory: ''
+       # example: page (order summary), evtcategory (checkout), evtname (transaction total), evtvalue (100) for $100 
+      evtvalue: 0
+      # additional parameters TBD
+    data: {}         
+    gsnNetworkId: '/6394/digitalstore.test'
+    chainId: 0,
+    onAllEvents: null     
     oldGsnAdvertising: oldGsnAdvertising
+    isDebug: false
     trigger: (eventName, eventData) ->
       if eventName.indexOf('gsnevent') < 0
         eventName = 'gsnevent:' + eventName
@@ -106,6 +114,11 @@
         eventName = 'gsnevent:' + eventName
       $(doc).off eventName, callback
       return
+    log: (message) ->
+      if (console)
+        console.log message
+        
+      return this
     ajaxFireUrl: (url, sync) ->
       #/ <summary>Hit a URL.  Good for click and impression tracking</summary> 
       if typeof url == 'string'
@@ -186,6 +199,57 @@
       return
     getBrand: ->
       @data.BrandName or sessionStorageX.getItem('Gsn.Advertisement.data.BrandName')
+      
+    actionHandler: (evt) ->           
+      self = myGsn.Advertising
+      elem = if evt.target then evt.target else evt.srcElement
+      target = $(elem)           
+      payLoad = {}
+      allData = target.data()
+      $.each allData, (index, attr) ->
+        if /^gsn/gi.test(index)
+          payLoad[index.replace('gsn', '').toLowerCase()] = attr;
+        return
+      self.refreshAdPods payLoad
+      return self
+      
+    refreshAdPods: (actionParam) ->
+      self = myGsn.Advertising
+      payLoad = {}
+      $.extend payLoad, self.defaultActionParam
+      $.extend payLoad, actionParam
+      
+      # track payload
+      if self.isDebug then self.log JSON.stringify payLoad
+      
+      $.gsnDfp
+        dfpID: self.gsnNetworkId
+        setTargeting: brand: self.getBrand()
+        enableSingleRequest: false                              
+      return self
+      
+    setDefault: (defaultParam) ->
+      self = this                     
+      $.extend self.defaultActionParam, defaultParam
+      
+    load: (chainId, gsnNetworkId, isDebug, liveDiv) ->               
+      self = this;    
+      self.chainId = chainId
+      self.gsnNetworkId = gsnNetworkId
+      self.isDebug = isDebug
+      refreshAdPods = self.refreshAdPods
+      $(document).ready ->
+        $(liveDiv or 'body').on 'click', '.gsnaction', self.actionHandler
+        $.gsnSw2
+          chainId: chainId
+          dfpID: gsnNetworkId
+          displayWhenExists: '.gsnunit'
+          enableSingleRequest: false
+          onClose: refreshAdPods
+        return                  
+                  
+      return self
+      
   # #endregion
   # create the plugin and map function for backward compatibility 
   myPlugin = new Plugin
@@ -284,4 +348,36 @@
     if myParent$ != $
       parent$ = myParent$
   return
+        
+  createFrame = ->
+    if typeof tickerFrame == 'undefined'
+      # create the IFrame and assign a reference to the
+      # object to our global variable tickerFrame.
+      tempIFrame = doc.createElement('iframe')
+      tempIFrame.setAttribute 'id', 'gsnticker'
+      tempIFrame.style.position = 'absolute'
+      tempIFrame.style.top = '-9999em'
+      tempIFrame.style.left = '-9999em'
+      tempIFrame.style.zIndex = '99'
+      tempIFrame.style.border = '0px'
+      tempIFrame.style.width = '0px'
+      tempIFrame.style.height = '0px'
+      tickerFrame = doc.body.appendChild(tempIFrame)
+      if doc.frames
+        # this is for IE5 Mac, because it will only
+        # allow access to the doc object
+        # of the IFrame if we access it through
+        # the doc.frames array
+        tickerFrame = doc.frames['gsnticker']
+    return
+
+  buildQueryString = (keyWord, keyValue) ->
+    if keyValue != null
+      keyValue = new String(keyValue)
+      if keyWord != 'ProductDescription'
+        # some product descriptions have '&amp;' which should not be replaced with '`'. 
+        keyValue = keyValue.replace(/&/, '`')
+      keyWord + '=' + keyValue.toString()
+    else
+      ''
 ) window.jQuery or window.Zepto or window.tire or window.$, window.Gsn or {}, window, document, window.GSNContext

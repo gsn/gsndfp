@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    <title>gsnDfp examples</title>
+    <meta charset="utf-8">
+    <meta name="description" content="gsnDfp examples">
+    <meta name="viewport" content="width=device-width">
+  </head>
+  <body>
+    <h1 class="gsnaction" data-gsnevtname="title click" data-gsndept="health">gsnDfp examples - click to refresh</h1>
+    <div class="gsnunit" data-dimensions="728x90"></div>
+    <div class="gsnunit" data-dimensions="300x250"></div>
+    <div class="gsnunit" data-dimensions="160x600"></div>
+    
+    <!-- script is compatible with jquery 1.7.1 and up -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="../dist/gsndfp.js"></script>
+    <script>
+      // this is for demo only to help clear cookie, do not use the code below this line
+      $(function() {
+        document.cookie = "shopperwelcome2=;expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/";
+      });
+      
+      (function($){
+        Gsn.Advertising.load(338, '/6394/shoptocook.299.shursavemarkets', true);
+        Gsn.Advertising.setDefault({storeid: '123', deviceid: '1', page: 'circular'});
+      })(window.jQuery);
+    </script>
+  </body>
+</html>

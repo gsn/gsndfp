@@ -24,38 +24,6 @@
 (function($, oldGsn, win, doc, gsnContext) {
   var Plugin, buildQueryString, createFrame, myGsn, myParent$, myPlugin, oldGsnAdvertising, parent$, sessionStorageX, tickerFrame;
   sessionStorageX = win.sessionStorage;
-  createFrame = function() {
-    var tempIFrame, tickerFrame;
-    if (typeof tickerFrame === 'undefined') {
-      tempIFrame = doc.createElement('iframe');
-      tempIFrame.setAttribute('id', 'gsnticker');
-      tempIFrame.style.position = 'absolute';
-      tempIFrame.style.top = '-100px';
-      tempIFrame.style.left = '-100px';
-      tempIFrame.style.zIndex = '99';
-      tempIFrame.style.border = '0px';
-      tempIFrame.style.width = '0px';
-      tempIFrame.style.height = '0px';
-      tickerFrame = doc.body.appendChild(tempIFrame);
-      if (doc.frames) {
-        tickerFrame = doc.frames['gsnticker'];
-      }
-    }
-  };
-  Plugin = function() {
-    this.init();
-  };
-  buildQueryString = function(keyWord, keyValue) {
-    if (keyValue !== null) {
-      keyValue = new String(keyValue);
-      if (keyWord !== 'ProductDescription') {
-        keyValue = keyValue.replace(/&/, '`');
-      }
-      return keyWord + '=' + keyValue.toString();
-    } else {
-      return '';
-    }
-  };
   if (typeof sessionStorageX === 'undefined') {
     sessionStorageX = {
       getItem: function() {},
@@ -71,12 +39,37 @@
       return;
     }
   }
+  Plugin = function() {
+    this.init();
+  };
   Plugin.prototype = {
     init: function() {},
     pluginLoaded: true,
+    defaultActionParam: {
+      page: '',
+      evtname: '',
+      dept: '',
+      deviceid: '',
+      storeid: '',
+      consumerid: '',
+      isanon: false,
+      loyaltyid: '',
+      aisle: '',
+      category: '',
+      shelf: '',
+      brand: '',
+      pcode: '',
+      pdesc: '',
+      latlng: [0, 0],
+      evtcategory: '',
+      evtvalue: 0
+    },
     data: {},
+    gsnNetworkId: '/6394/digitalstore.test',
+    chainId: 0,
     onAllEvents: null,
     oldGsnAdvertising: oldGsnAdvertising,
+    isDebug: false,
     trigger: function(eventName, eventData) {
       if (eventName.indexOf('gsnevent') < 0) {
         eventName = 'gsnevent:' + eventName;
@@ -112,6 +105,12 @@
         eventName = 'gsnevent:' + eventName;
       }
       $(doc).off(eventName, callback);
+    },
+    log: function(message) {
+      if (console) {
+        console.log(message);
+      }
+      return this;
     },
     ajaxFireUrl: function(url, sync) {
       var adUrlIndex, newUrl;
@@ -199,6 +198,63 @@
     },
     getBrand: function() {
       return this.data.BrandName || sessionStorageX.getItem('Gsn.Advertisement.data.BrandName');
+    },
+    actionHandler: function(evt) {
+      var allData, elem, payLoad, self, target;
+      self = myGsn.Advertising;
+      elem = evt.target ? evt.target : evt.srcElement;
+      target = $(elem);
+      payLoad = {};
+      allData = target.data();
+      $.each(allData, function(index, attr) {
+        if (/^gsn/gi.test(index)) {
+          payLoad[index.replace('gsn', '').toLowerCase()] = attr;
+        }
+      });
+      self.refreshAdPods(payLoad);
+      return self;
+    },
+    refreshAdPods: function(actionParam) {
+      var payLoad, self;
+      self = myGsn.Advertising;
+      payLoad = {};
+      $.extend(payLoad, self.defaultActionParam);
+      $.extend(payLoad, actionParam);
+      if (self.isDebug) {
+        self.log(JSON.stringify(payLoad));
+      }
+      $.gsnDfp({
+        dfpID: self.gsnNetworkId,
+        setTargeting: {
+          brand: self.getBrand()
+        },
+        enableSingleRequest: false
+      });
+      return self;
+    },
+    setDefault: function(defaultParam) {
+      var self;
+      self = this;
+      return $.extend(self.defaultActionParam, defaultParam);
+    },
+    load: function(chainId, gsnNetworkId, isDebug, liveDiv) {
+      var refreshAdPods, self;
+      self = this;
+      self.chainId = chainId;
+      self.gsnNetworkId = gsnNetworkId;
+      self.isDebug = isDebug;
+      refreshAdPods = self.refreshAdPods;
+      $(document).ready(function() {
+        $(liveDiv || 'body').on('click', '.gsnaction', self.actionHandler);
+        $.gsnSw2({
+          chainId: chainId,
+          dfpID: gsnNetworkId,
+          displayWhenExists: '.gsnunit',
+          enableSingleRequest: false,
+          onClose: refreshAdPods
+        });
+      });
+      return self;
     }
   };
   myPlugin = new Plugin;
@@ -300,6 +356,36 @@
       parent$ = myParent$;
     }
   }
+  return;
+  createFrame = function() {
+    var tempIFrame;
+    if (typeof tickerFrame === 'undefined') {
+      tempIFrame = doc.createElement('iframe');
+      tempIFrame.setAttribute('id', 'gsnticker');
+      tempIFrame.style.position = 'absolute';
+      tempIFrame.style.top = '-9999em';
+      tempIFrame.style.left = '-9999em';
+      tempIFrame.style.zIndex = '99';
+      tempIFrame.style.border = '0px';
+      tempIFrame.style.width = '0px';
+      tempIFrame.style.height = '0px';
+      tickerFrame = doc.body.appendChild(tempIFrame);
+      if (doc.frames) {
+        tickerFrame = doc.frames['gsnticker'];
+      }
+    }
+  };
+  return buildQueryString = function(keyWord, keyValue) {
+    if (keyValue !== null) {
+      keyValue = new String(keyValue);
+      if (keyWord !== 'ProductDescription') {
+        keyValue = keyValue.replace(/&/, '`');
+      }
+      return keyWord + '=' + keyValue.toString();
+    } else {
+      return '';
+    }
+  };
 })(window.jQuery || window.Zepto || window.tire || window.$, window.Gsn || {}, window, document, window.GSNContext);
 
 
@@ -673,8 +759,8 @@
   $adCollection = void 0;
   storeAs = 'gsnsw';
   apiUrl = 'https://clientapi.gsn2.com/api/v1/ShopperWelcome/GetShopperWelcome/';
-  cssUrl = 'http://cdn.gsngrocers.com/script/sw2/1.1.0/sw2-override.css';
-  advertUrl = 'http://cdn.gsngrocers.com/script/sw2/1.1.0/advertisement.js';
+  cssUrl = '//cdn.gsngrocers.com/script/sw2/1.1.0/sw2-override.css';
+  advertUrl = '//cdn.gsngrocers.com/script/sw2/1.1.0/advertisement.js';
   chainId = 0;
   didOpen = false;
   init = function(id, selector, options) {

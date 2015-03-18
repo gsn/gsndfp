@@ -22,8 +22,10 @@
       });
       
       (function($){
-        Gsn.Advertising.load(338, '/6394/shoptocook.299.shursavemarkets', true);
-        Gsn.Advertising.setDefault({storeid: '123', deviceid: '1', page: 'circular'});
+        $(document).ready(function() {
+          Gsn.Advertising.setDefault({storeid: '123', deviceid: '1', page: 'circular'});
+          Gsn.Advertising.load(338, '/6394/shoptocook.299.shursavemarkets', true);
+        });
       })(window.jQuery);
     </script>
   </body>

@@ -67,11 +67,26 @@
 
   onOpenCallback = (event) ->
     didOpen = true
+                 
+    event = event or { cancel: false} 
+    if dfpOptions.onOpen
+      dfpOptions.onOpen event
+      
+    if event.cancel
+      setTimeout (->
+         $('.sw-pop').trigger('closeModal')
+         return;      
+      ), 150                              
+      return;      
+            
+    createAds()
+    displayAds()
     setTimeout (->
-      if typeof gsnGlobalTester == 'undefined'
-        jQuery('.sw-msg').show()
-        jQuery('.sw-header-copy').hide()
-        jQuery('.sw-row').hide()
+      # adblocking detection
+      if gsnGlobalTester == 'undefined'
+        $('.sw-msg').show()
+        $('.sw-header-copy').hide()
+        $('.sw-row').hide()
       return
     ), 150
     return
@@ -111,8 +126,6 @@
           $('#sw').html clean(data)
           $adCollection = $(selector)
           if $adCollection
-            createAds()
-            displayAds()
             #open the modal to show shopper welcome
             $('.sw-pop').easyModal
               autoOpen: true

@@ -88,12 +88,16 @@
     gsnNetworkStore: undefined
     onAllEvents: undefined     
     oldGsnAdvertising: oldGsnAdvertising
-    minSecondBetweenRefresh: 2
+    minSecondBetweenRefresh: 5
     enableCircPlus: false
+    disablesw: false
     isLoading: false
     targetting: {}
     depts: []
     circPlusBody: undefined
+    refreshExisting: 
+      circPlus: false
+      pods: false
     trigger: (eventName, eventData) ->
       if eventName.indexOf('gsnevent') < 0
         eventName = 'gsnevent:' + eventName
@@ -247,7 +251,7 @@
       self.refreshAdPods payLoad
       return self
 
-    refreshAdPods: (actionParam) ->
+    refreshAdPods: (actionParam, forceRefresh) ->
       self = myGsn.Advertising
       payLoad = {}
       $.extend payLoad, self.defaultActionParam
@@ -257,8 +261,9 @@
       
       # track payLoad
       if self.isDebug then self.log JSON.stringify payLoad
-
-      if (lastRefreshTime <= 0 || ( (new Date).getTime() / 1000 - lastRefreshTime) >= self.minSecondBetweenRefresh)                                            
+      canRefresh = lastRefreshTime <= 0 || ( (new Date).getTime() / 1000 - lastRefreshTime) >= self.minSecondBetweenRefresh
+      
+      if (forceRefresh || canRefresh)                                            
         lastRefreshTime = (new Date()).getTime() / 1000;
         self.addDept payLoad.dept
           
@@ -272,7 +277,9 @@
         $.gsnDfp
           dfpID: self.gsnNetworkId.replace(/\/$/gi, '') + (self.gsnNetworkStore or '')
           setTargeting: targetting
- 
+          refreshExisting: self.refreshExisting.pods
+        self.refreshExisting.pods = true
+        
         if self.enableCircPlus
           targetting.depts = [] unless targetting.depts
           if targetting.depts.length <= 0
@@ -282,6 +289,8 @@
             dfpID: self.gsnNetworkId.replace(/\/$/gi, '') + (self.gsnNetworkStore or '')
             setTargeting: targetting
             circPlusBody: self.circPlusBody
+            refreshExisting: self.refreshExisting.circPlus
+          self.refreshExisting.circPlus = true
      
         
       return self
@@ -303,6 +312,8 @@
         self.isLoading = true
         $.gsnSw2
           displayWhenExists: '.gsnadunit,.gsnunit'
+          onOpen: (evt) ->
+            evt.cancel self.disablesw
           onClose: ->             
             if self.selector  
               $(self.selector).on 'click', '.gsnaction', self.actionHandler
@@ -453,19 +464,25 @@
 #auto init with attributes
 # at this point, we expect Gsn.Advertising to be available from above
 (($) ->
+  aPlugin = Gsn.Advertising
+  if !aPlugin then return
+  
   attrs =
     debug: (value) ->
       return unless typeof value is "string"
-      Gsn.Advertising.isDebug = value isnt "false"
+      aPlugin.isDebug = value isnt "false"
     api: (value) ->           
       return unless typeof value is "string"
-      Gsn.Advertising.apiUrl = value
+      aPlugin.apiUrl = value
     gsnid: (value) ->                       
       return unless value
       Gsn.Advertising.gsnid = value
+    disablesw: (value) ->                               
+      return unless typeof value is "string"
+      aPlugin.disablesw = value isnt "false"
     selector: (value) ->          
       return unless typeof value is "string"
-      Gsn.Advertising.selector = value
+      aPlugin.selector = value
     
   for script in document.getElementsByTagName("script")
     if /gsndfp/.test(script.src)
@@ -474,7 +491,7 @@
           fn script.getAttribute prefix+k
 
   # auto load if id is found      
-  Gsn.Advertising.load()
+  aPlugin.load()
     
   return
 ) window.jQuery or window.Zepto or window.tire or window.$

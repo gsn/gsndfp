@@ -431,12 +431,17 @@ same command to refresh:
     gsnNetworkStore: void 0,
     onAllEvents: void 0,
     oldGsnAdvertising: oldGsnAdvertising,
-    minSecondBetweenRefresh: 2,
+    minSecondBetweenRefresh: 5,
     enableCircPlus: false,
+    disablesw: false,
     isLoading: false,
     targetting: {},
     depts: [],
     circPlusBody: void 0,
+    refreshExisting: {
+      circPlus: false,
+      pods: false
+    },
     trigger: function(eventName, eventData) {
       if (eventName.indexOf('gsnevent') < 0) {
         eventName = 'gsnevent:' + eventName;
@@ -610,8 +615,8 @@ same command to refresh:
       self.refreshAdPods(payLoad);
       return self;
     },
-    refreshAdPods: function(actionParam) {
-      var payLoad, self, targetting;
+    refreshAdPods: function(actionParam, forceRefresh) {
+      var canRefresh, payLoad, self, targetting;
       self = myGsn.Advertising;
       payLoad = {};
       $.extend(payLoad, self.defaultActionParam);
@@ -621,7 +626,8 @@ same command to refresh:
       if (self.isDebug) {
         self.log(JSON.stringify(payLoad));
       }
-      if (lastRefreshTime <= 0 || ((new Date).getTime() / 1000 - lastRefreshTime) >= self.minSecondBetweenRefresh) {
+      canRefresh = lastRefreshTime <= 0 || ((new Date).getTime() / 1000 - lastRefreshTime) >= self.minSecondBetweenRefresh;
+      if (forceRefresh || canRefresh) {
         lastRefreshTime = (new Date()).getTime() / 1000;
         self.addDept(payLoad.dept);
         targetting = {
@@ -633,8 +639,10 @@ same command to refresh:
         }
         $.gsnDfp({
           dfpID: self.gsnNetworkId.replace(/\/$/gi, '') + (self.gsnNetworkStore || ''),
-          setTargeting: targetting
+          setTargeting: targetting,
+          refreshExisting: self.refreshExisting.pods
         });
+        self.refreshExisting.pods = true;
         if (self.enableCircPlus) {
           if (!targetting.depts) {
             targetting.depts = [];
@@ -645,8 +653,10 @@ same command to refresh:
           $.circPlus({
             dfpID: self.gsnNetworkId.replace(/\/$/gi, '') + (self.gsnNetworkStore || ''),
             setTargeting: targetting,
-            circPlusBody: self.circPlusBody
+            circPlusBody: self.circPlusBody,
+            refreshExisting: self.refreshExisting.circPlus
           });
+          self.refreshExisting.circPlus = true;
         }
       }
       return self;
@@ -675,6 +685,9 @@ same command to refresh:
         self.isLoading = true;
         $.gsnSw2({
           displayWhenExists: '.gsnadunit,.gsnunit',
+          onOpen: function(evt) {
+            return evt.cancel(self.disablesw);
+          },
           onClose: function() {
             if (self.selector) {
               $(self.selector).on('click', '.gsnaction', self.actionHandler);
@@ -826,19 +839,23 @@ same command to refresh:
 })(window.jQuery || window.Zepto || window.tire || window.$, window.Gsn || {}, window, document, window.GSNContext);
 
 (function($) {
-  var attrs, fn, i, j, k, len, len1, prefix, ref, ref1, script;
+  var aPlugin, attrs, fn, i, j, k, len, len1, prefix, ref, ref1, script;
+  aPlugin = Gsn.Advertising;
+  if (!aPlugin) {
+    return;
+  }
   attrs = {
     debug: function(value) {
       if (typeof value !== "string") {
         return;
       }
-      return Gsn.Advertising.isDebug = value !== "false";
+      return aPlugin.isDebug = value !== "false";
     },
     api: function(value) {
       if (typeof value !== "string") {
         return;
       }
-      return Gsn.Advertising.apiUrl = value;
+      return aPlugin.apiUrl = value;
     },
     gsnid: function(value) {
       if (!value) {
@@ -846,11 +863,17 @@ same command to refresh:
       }
       return Gsn.Advertising.gsnid = value;
     },
+    disablesw: function(value) {
+      if (typeof value !== "string") {
+        return;
+      }
+      return aPlugin.disablesw = value !== "false";
+    },
     selector: function(value) {
       if (typeof value !== "string") {
         return;
       }
-      return Gsn.Advertising.selector = value;
+      return aPlugin.selector = value;
     }
   };
   ref = document.getElementsByTagName("script");
@@ -867,7 +890,7 @@ same command to refresh:
       }
     }
   }
-  Gsn.Advertising.load();
+  aPlugin.load();
 })(window.jQuery || window.Zepto || window.tire || window.$);
 
 
@@ -1281,11 +1304,25 @@ same command to refresh:
   };
   onOpenCallback = function(event) {
     didOpen = true;
+    event = event || {
+      cancel: false
+    };
+    if (dfpOptions.onOpen) {
+      dfpOptions.onOpen(event);
+    }
+    if (event.cancel) {
+      setTimeout((function() {
+        $('.sw-pop').trigger('closeModal');
+      }), 150);
+      return;
+    }
+    createAds();
+    displayAds();
     setTimeout((function() {
-      if (typeof gsnGlobalTester === 'undefined') {
-        jQuery('.sw-msg').show();
-        jQuery('.sw-header-copy').hide();
-        jQuery('.sw-row').hide();
+      if (gsnGlobalTester === 'undefined') {
+        $('.sw-msg').show();
+        $('.sw-header-copy').hide();
+        $('.sw-row').hide();
       }
     }), 150);
   };
@@ -1325,8 +1362,6 @@ same command to refresh:
           $('#sw').html(clean(data));
           $adCollection = $(selector);
           if ($adCollection) {
-            createAds();
-            displayAds();
             $('.sw-pop').easyModal({
               autoOpen: true,
               closeOnEscape: false,

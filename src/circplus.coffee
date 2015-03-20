@@ -54,12 +54,12 @@ same command to refresh:
       setTargeting: {}
       setCategoryExclusion: ''
       setLocation: ''
-      enableSingleRequest: true
+      enableSingleRequest: false
       collapseEmptyDivs: true
       refreshExisting: true
       disablePublisherConsole: false
       disableInitialLoad: false
-      inViewOnly: false
+      inViewOnly: true
       noFetch: false
       
     # Merge options objects

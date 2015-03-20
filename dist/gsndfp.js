@@ -61,12 +61,12 @@ same command to refresh:
       setTargeting: {},
       setCategoryExclusion: '',
       setLocation: '',
-      enableSingleRequest: true,
+      enableSingleRequest: false,
       collapseEmptyDivs: true,
       refreshExisting: true,
       disablePublisherConsole: false,
       disableInitialLoad: false,
-      inViewOnly: false,
+      inViewOnly: true,
       noFetch: false
     };
     $.extend(true, dfpOptions, options);
@@ -379,7 +379,7 @@ same command to refresh:
  */
 
 (function($, oldGsn, win, doc, gsnContext) {
-  var Plugin, buildQueryString, createFrame, lastRefreshTime, myGsn, myParent$, myPlugin, oldGsnAdvertising, parent$, sessionStorageX, tickerFrame;
+  var Plugin, buildQueryString, createFrame, e, lastRefreshTime, myGsn, myParent$, myPlugin, oldGsnAdvertising, parent$, sessionStorageX, tickerFrame;
   sessionStorageX = win.sessionStorage;
   lastRefreshTime = 0;
   if (typeof sessionStorageX === 'undefined') {
@@ -404,9 +404,9 @@ same command to refresh:
     init: function() {},
     pluginLoaded: true,
     defaultActionParam: {
-      page: '',
+      page: void 0,
       evtname: '',
-      dept: '',
+      dept: void 0,
       deviceid: '',
       storeid: '',
       consumerid: '',
@@ -423,12 +423,20 @@ same command to refresh:
       evtvalue: 0
     },
     data: {},
-    gsnNetworkId: '/6394/digitalstore.test',
-    chainId: 0,
-    onAllEvents: null,
-    oldGsnAdvertising: oldGsnAdvertising,
     isDebug: false,
+    gsnid: 0,
+    selector: void 0,
+    apiUrl: 'https://clientapi.gsn2.com/api/v1',
+    gsnNetworkId: '/6394/digitalstore.test',
+    gsnNetworkStore: void 0,
+    onAllEvents: void 0,
+    oldGsnAdvertising: oldGsnAdvertising,
     minSecondBetweenRefresh: 2,
+    enableCircPlus: false,
+    isLoading: false,
+    targetting: {},
+    depts: [],
+    circPlusBody: void 0,
     trigger: function(eventName, eventData) {
       if (eventName.indexOf('gsnevent') < 0) {
         eventName = 'gsnevent:' + eventName;
@@ -470,6 +478,35 @@ same command to refresh:
         console.log(message);
       }
       return this;
+    },
+    cleanKeyword: function(keyword) {
+      var result;
+      result = keyword.replace(/[^a-zA-Z0-9]+/gi, '_').replace(/^[_]+/gi, '');
+      if (result.toLowerCase != null) {
+        result = result.toLowerCase();
+      }
+      return result;
+    },
+    addDept: function(dept) {
+      var depts, goodDepts, i, len, oldDepts, self;
+      self = myGsn.Advertising.depts;
+      if (dept) {
+        oldDepts = self.depts;
+        depts = [];
+        goodDepts = {};
+        depts.unshift(cleanKeyword(dept));
+        for (i = 0, len = oldDepts.length; i < len; i++) {
+          dept = oldDepts[i];
+          if ((goodDepts[dept] != null)) {
+            depts.push(dept);
+          }
+          goodDepts[dept] = 1;
+        }
+        while (depts.length > 5) {
+          depts.pop();
+        }
+        return self.depts = depts;
+      }
     },
     ajaxFireUrl: function(url, sync) {
       var adUrlIndex, newUrl;
@@ -574,23 +611,43 @@ same command to refresh:
       return self;
     },
     refreshAdPods: function(actionParam) {
-      var payLoad, self;
+      var payLoad, self, targetting;
       self = myGsn.Advertising;
       payLoad = {};
       $.extend(payLoad, self.defaultActionParam);
-      $.extend(payLoad, actionParam);
+      if (actionParam) {
+        $.extend(payLoad, actionParam);
+      }
       if (self.isDebug) {
         self.log(JSON.stringify(payLoad));
       }
       if (lastRefreshTime <= 0 || ((new Date).getTime() / 1000 - lastRefreshTime) >= self.minSecondBetweenRefresh) {
-        $.gsnDfp({
-          dfpID: self.gsnNetworkId,
-          setTargeting: {
-            brand: self.getBrand()
-          },
-          enableSingleRequest: false
-        });
         lastRefreshTime = (new Date()).getTime() / 1000;
+        self.addDept(payLoad.dept);
+        targetting = {
+          dept: self.depts || [],
+          brand: self.getBrand()
+        };
+        if (payLoad.page) {
+          targetting.kw = payLoad.page.replace(/[^a-z]/gi, '');
+        }
+        $.gsnDfp({
+          dfpID: self.gsnNetworkId.replace(/\/$/gi, '') + (self.gsnNetworkStore || ''),
+          setTargeting: targetting
+        });
+        if (self.enableCircPlus) {
+          if (!targetting.depts) {
+            targetting.depts = [];
+          }
+          if (targetting.depts.length <= 0) {
+            targetting.depts = ['produce'];
+          }
+          $.circPlus({
+            dfpID: self.gsnNetworkId.replace(/\/$/gi, '') + (self.gsnNetworkStore || ''),
+            setTargeting: targetting,
+            circPlusBody: self.circPlusBody
+          });
+        }
       }
       return self;
     },
@@ -599,21 +656,35 @@ same command to refresh:
       self = this;
       return $.extend(self.defaultActionParam, defaultParam);
     },
-    load: function(chainId, gsnNetworkId, isDebug, liveDiv) {
-      var refreshAdPods, self;
-      self = this;
-      self.chainId = chainId;
-      self.gsnNetworkId = gsnNetworkId;
-      self.isDebug = isDebug;
-      refreshAdPods = self.refreshAdPods;
-      $(liveDiv || 'body').on('click', '.gsnaction', self.actionHandler);
-      $.gsnSw2({
-        chainId: chainId,
-        dfpID: gsnNetworkId,
-        displayWhenExists: '.gsnunit',
-        enableSingleRequest: false,
-        onClose: refreshAdPods
-      });
+    load: function(gsnid, isDebug) {
+      var self;
+      self = myGsn.Advertising;
+      if (gsnid) {
+        self.gsnid = gsnid;
+        if (!self.isDebug) {
+          self.isDebug = isDebug;
+        }
+      }
+      if (self.isLoading) {
+        return self;
+      }
+      if ($('.gsnadunit,.gsnunit').length <= 0) {
+        return self;
+      }
+      if (self.gsnid) {
+        self.isLoading = true;
+        $.gsnSw2({
+          displayWhenExists: '.gsnadunit,.gsnunit',
+          onClose: function() {
+            if (self.selector) {
+              $(self.selector).on('click', '.gsnaction', self.actionHandler);
+              self.selector = void 0;
+            }
+            self.isLoading = false;
+            return self.refreshAdPods();
+          }
+        });
+      }
       return self;
     }
   };
@@ -705,7 +776,7 @@ same command to refresh:
       }
       linkData = data.detail;
       if (linkData) {
-        url = 'https://clientapi.gsn2.com/api/v1/profile/BrickOffer/' + gsnContext.ConsumerID + '/' + linkData.OfferCode;
+        url = myGsn.Advertising.apiUrl + '/profile/BrickOffer/' + gsnContext.ConsumerID + '/' + linkData.OfferCode;
         win.open(url, '');
       }
     });
@@ -715,6 +786,7 @@ same command to refresh:
     try {
       myParent$ = win.top.$;
     } catch (_error) {
+      e = _error;
       myParent$ = win.parent.$;
     }
     if (myParent$ !== $) {
@@ -752,6 +824,51 @@ same command to refresh:
     }
   };
 })(window.jQuery || window.Zepto || window.tire || window.$, window.Gsn || {}, window, document, window.GSNContext);
+
+(function($) {
+  var attrs, fn, i, j, k, len, len1, prefix, ref, ref1, script;
+  attrs = {
+    debug: function(value) {
+      if (typeof value !== "string") {
+        return;
+      }
+      return Gsn.Advertising.isDebug = value !== "false";
+    },
+    api: function(value) {
+      if (typeof value !== "string") {
+        return;
+      }
+      return Gsn.Advertising.apiUrl = value;
+    },
+    gsnid: function(value) {
+      if (!value) {
+        return;
+      }
+      return Gsn.Advertising.gsnid = value;
+    },
+    selector: function(value) {
+      if (typeof value !== "string") {
+        return;
+      }
+      return Gsn.Advertising.selector = value;
+    }
+  };
+  ref = document.getElementsByTagName("script");
+  for (i = 0, len = ref.length; i < len; i++) {
+    script = ref[i];
+    if (/gsndfp/.test(script.src)) {
+      ref1 = ['', 'data-'];
+      for (j = 0, len1 = ref1.length; j < len1; j++) {
+        prefix = ref1[j];
+        for (k in attrs) {
+          fn = attrs[k];
+          fn(script.getAttribute(prefix + k));
+        }
+      }
+    }
+  }
+  Gsn.Advertising.load();
+})(window.jQuery || window.Zepto || window.tire || window.$);
 
 
 /*!
@@ -793,12 +910,12 @@ same command to refresh:
       setTargeting: {},
       setCategoryExclusion: '',
       setLocation: '',
-      enableSingleRequest: true,
+      enableSingleRequest: false,
       collapseEmptyDivs: true,
       refreshExisting: true,
       disablePublisherConsole: false,
       disableInitialLoad: false,
-      inViewOnly: false,
+      inViewOnly: true,
       noFetch: false
     };
     $.extend(true, dfpOptions, options);
@@ -1096,7 +1213,7 @@ same command to refresh:
 
 (function($, window) {
   'use strict';
-  var $adCollection, advertUrl, apiUrl, chainId, clean, clearCookie, count, createAds, cssUrl, dfpBlocked, dfpID, dfpIsLoaded, dfpLoader, dfpOptions, dfpScript, dfpSelector, didOpen, displayAds, getCookie, getDimensions, getID, getPopup, init, onCloseCallback, onOpenCallback, rendered, sessionStorageX, setAdvertisingTester, setCookie, setOptions, setResponsiveCss, storeAs;
+  var $adCollection, advertUrl, clean, clearCookie, count, createAds, cssUrl, dfpBlocked, dfpID, dfpIsLoaded, dfpLoader, dfpOptions, dfpScript, dfpSelector, didOpen, displayAds, getCookie, getDimensions, getID, getPopup, init, onCloseCallback, onOpenCallback, rendered, sessionStorageX, setAdvertisingTester, setCookie, setOptions, setResponsiveCss, storeAs;
   sessionStorageX = sessionStorage;
   if (typeof sessionStorageX === 'undefined') {
     sessionStorageX = {
@@ -1113,10 +1230,8 @@ same command to refresh:
   dfpIsLoaded = false;
   $adCollection = void 0;
   storeAs = 'gsnsw';
-  apiUrl = 'https://clientapi.gsn2.com/api/v1/ShopperWelcome/GetShopperWelcome/';
   cssUrl = '//cdn.gsngrocers.com/script/sw2/1.1.0/sw2-override.css';
   advertUrl = '//cdn.gsngrocers.com/script/sw2/1.1.0/advertisement.js';
-  chainId = 0;
   didOpen = false;
   init = function(id, selector, options) {
     var advert, css;
@@ -1130,7 +1245,7 @@ same command to refresh:
     }
     setResponsiveCss(css);
     setAdvertisingTester(advert);
-    if (getCookie('shopperwelcome2') === null) {
+    if (getCookie('gsnsw2') === null) {
       dfpID = id;
       dfpLoader();
       getPopup(selector);
@@ -1178,24 +1293,29 @@ same command to refresh:
     $('.sw-pop').remove();
     $('.lean-overlay').remove();
     window.scrollTo(0, 0);
-    if (getCookie('shopperwelcome2') === null) {
-      setCookie('shopperwelcome2', 'shopperwelcome2', 1);
+    if (getCookie('gsnsw2') === null) {
+      setCookie('gsnsw2', Gsn.Advertising.gsnNetworkId + ',' + Gsn.Advertising.enableCircPlus, 1);
     }
     if (typeof dfpOptions.onClose === 'function') {
       dfpOptions.onClose(didOpen);
     }
   };
   getPopup = function(selector) {
-    var chain, url;
-    url = dfpOptions.apiUrl || apiUrl;
-    chain = dfpOptions.chainId || chainId;
+    var url;
+    url = Gsn.Advertising.apiUrl + '/ShopperWelcome/Get/' + Gsn.Advertising.gsnid;
     $.ajax({
-      url: url + chain,
-      dataType: 'json',
-      success: function(data) {
-        var body, div;
+      url: url + '?callback=?',
+      dataType: 'jsonp',
+      success: function(rsp) {
+        var body, data, div;
+        if (rsp) {
+          Gsn.Advertising.gsnNetworkId = rsp.NetworkId;
+          Gsn.Advertising.enableCircPlus = rsp.EnableCircPlus;
+          data = rsp.Template;
+          dfpID = rsp.NetworkId;
+        }
         if (data) {
-          data = data.replace(/%%CACHEBUSTER%%/g, (new Date).getTime()).replace(/%%CHAINID%%/g, chain);
+          data = data.replace(/%%CACHEBUSTER%%/g, (new Date).getTime()).replace(/%%CHAINID%%/g, Gsn.Advertising.gsnid);
           if (0 === $('#sw').length) {
             body = document.getElementsByTagName('body').item(0);
             div = document.createElement('div');
@@ -1230,7 +1350,7 @@ same command to refresh:
     return template.prop('outerHTML');
   };
   getCookie = function(NameOfCookie) {
-    var begin, end;
+    var begin, cookieData, cookieDatas, end;
     if (document.cookie.length > 0) {
       begin = document.cookie.indexOf(NameOfCookie + '=');
       end = 0;
@@ -1240,7 +1360,13 @@ same command to refresh:
         if (end === -1) {
           end = document.cookie.length;
         }
-        return decodeURI(document.cookie.substring(begin, end));
+        cookieData = decodeURI(document.cookie.substring(begin, end));
+        if (cookieData.indexOf(',') > 0) {
+          cookieDatas = cookieData.split(',');
+          Gsn.Advertising.gsnNetworkId = cookieDatas[0];
+          Gsn.Advertising.enableCircPlus = cookieData[1];
+        }
+        return cookieData;
       }
     }
     return null;
@@ -1261,7 +1387,7 @@ same command to refresh:
       setTargeting: {},
       setCategoryExclusion: '',
       setLocation: '',
-      enableSingleRequest: true,
+      enableSingleRequest: false,
       collapseEmptyDivs: true,
       refreshExisting: true,
       disablePublisherConsole: false,

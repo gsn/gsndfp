@@ -18,10 +18,8 @@
   dfpIsLoaded = false
   $adCollection = undefined
   storeAs = 'gsnsw'
-  apiUrl = 'https://clientapi.gsn2.com/api/v1/ShopperWelcome/GetShopperWelcome/'
   cssUrl = '//cdn.gsngrocers.com/script/sw2/1.1.0/sw2-override.css'
   advertUrl = '//cdn.gsngrocers.com/script/sw2/1.1.0/advertisement.js'
-  chainId = 0
   didOpen = false
 
   init = (id, selector, options) ->
@@ -32,7 +30,7 @@
       onCloseCallback cancel: true
     setResponsiveCss css
     setAdvertisingTester advert
-    if getCookie('shopperwelcome2') == null
+    if getCookie('gsnsw2') == null
       #if the cookies are set, don't show the light-box
       dfpID = id
       dfpLoader()
@@ -82,22 +80,27 @@
     $('.sw-pop').remove()
     $('.lean-overlay').remove()
     window.scrollTo 0, 0
-    if getCookie('shopperwelcome2') == null
-      setCookie 'shopperwelcome2', 'shopperwelcome2', 1
+    if getCookie('gsnsw2') == null
+      setCookie 'gsnsw2', Gsn.Advertising.gsnNetworkId + ',' +  Gsn.Advertising.enableCircPlus, 1
     if typeof dfpOptions.onClose == 'function'
       dfpOptions.onClose didOpen
     return
 
   getPopup = (selector) ->
-    url = dfpOptions.apiUrl or apiUrl
-    chain = dfpOptions.chainId or chainId
+    url = Gsn.Advertising.apiUrl + '/ShopperWelcome/Get/' + Gsn.Advertising.gsnid
     $.ajax
-      url: url + chain
-      dataType: 'json'
-      success: (data) ->
-        if data
+      url: url + '?callback=?'
+      dataType: 'jsonp'
+      success: (rsp) ->
+        if rsp
+          Gsn.Advertising.gsnNetworkId = rsp.NetworkId
+          Gsn.Advertising.enableCircPlus = rsp.EnableCircPlus
+          data = rsp.Template
+          dfpID = rsp.NetworkId
+          
+        if data   
           #add the random cachebuster
-          data = data.replace(/%%CACHEBUSTER%%/g, (new Date).getTime()).replace(/%%CHAINID%%/g, chain)
+          data = data.replace(/%%CACHEBUSTER%%/g, (new Date).getTime()).replace(/%%CHAINID%%/g, Gsn.Advertising.gsnid)
           if 0 == $('#sw').length
             #have we built this element before?
             #insert the template for the shopper welcome window
@@ -139,8 +142,12 @@
         end = document.cookie.indexOf(';', begin)
         if end == -1
           end = document.cookie.length
-        #return unescape(document.cookie.substring(begin, end));
-        return decodeURI(document.cookie.substring(begin, end))
+        cookieData = decodeURI(document.cookie.substring(begin, end))
+        if (cookieData.indexOf(',') > 0)
+          cookieDatas = cookieData.split(',')
+          Gsn.Advertising.gsnNetworkId = cookieDatas[0]
+          Gsn.Advertising.enableCircPlus = cookieData[1]
+        return cookieData
     null
 
   setCookie = (NameOfCookie, value, expiredays) ->
@@ -160,7 +167,7 @@
       setTargeting: {}
       setCategoryExclusion: ''
       setLocation: ''
-      enableSingleRequest: true
+      enableSingleRequest: false
       collapseEmptyDivs: true
       refreshExisting: true
       disablePublisherConsole: false

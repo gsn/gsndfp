@@ -44,49 +44,39 @@
 
   setResponsiveCss = (css) ->
     #have we built this element before?
-    if 0 == $('.respo').length
-      #insert css that will provide responsiveness
-      head = document.getElementsByTagName('head').item(0)
-      cssTag = document.createElement('link')
-      cssTag.setAttribute 'href', css
-      cssTag.setAttribute 'rel', 'stylesheet'
-      cssTag.setAttribute 'class', 'respo'
-      head.appendChild cssTag
-    return
+    #insert css that will provide responsiveness      
+    el = document.getElementById('respo');
+    if el?
+      return
+
+    head = document.getElementsByTagName('head').item(0)
+    cssTag = document.createElement('link')
+    cssTag.setAttribute 'href', css
+    cssTag.setAttribute 'rel', 'stylesheet'
+    cssTag.setAttribute 'id', 'respo'
+    head.appendChild cssTag
 
   setAdvertisingTester = (advert) ->
     #have we built this element before?
-    if 0 == $('.advert').length
-      #insert the advertisement js (fails if an ad-blocker is not present)
-      body = document.getElementsByTagName('body').item(0)
-      scriptTag = document.createElement('script')
-      scriptTag.setAttribute 'src', advert
-      scriptTag.setAttribute 'class', 'advert'
-      body.appendChild scriptTag
-    return
+    #insert the advertisement js (fails if an ad-blocker is not present)
+    el = document.getElementById('advertScript');
+    if el?
+      return
+      
+    body = document.getElementsByTagName('head').item(0)
+    scriptTag = document.createElement('script')
+    scriptTag.setAttribute 'src', advert   
+    scriptTag.setAttribute 'id', 'advertScript'
+    body.appendChild scriptTag
 
   onOpenCallback = (event) ->
-    didOpen = true
-                 
-    event = event or { cancel: false} 
-    if dfpOptions.onOpen
-      dfpOptions.onOpen event
-      
-    if event.cancel
-      setTimeout (->
-         $('.sw-pop').trigger('closeModal')
-         return;      
-      ), 150                              
-      return;      
-            
-    createAds()
-    displayAds()
+    didOpen = true   
     setTimeout (->
-      # adblocking detection
-      if gsnGlobalTester == 'undefined'
-        $('.sw-msg').show()
-        $('.sw-header-copy').hide()
-        $('.sw-row').hide()
+      # adblocking detection  
+      if typeof(gsnGlobalTester) == 'undefined'
+        jQuery('.sw-msg').show()
+        jQuery('.sw-header-copy').hide()
+        jQuery('.sw-row').hide()   
       return
     ), 150
     return
@@ -94,7 +84,7 @@
   onCloseCallback = (event) ->
     $('.sw-pop').remove()
     $('.lean-overlay').remove()
-    window.scrollTo 0, 0
+    window.scrollTo 0, 0            
     if getCookie('gsnsw2') == null
       setCookie 'gsnsw2', Gsn.Advertising.gsnNetworkId + ',' +  Gsn.Advertising.enableCircPlus, 1
     if typeof dfpOptions.onClose == 'function'
@@ -112,8 +102,12 @@
           Gsn.Advertising.enableCircPlus = rsp.EnableCircPlus
           data = rsp.Template
           dfpID = rsp.NetworkId
-          
-        if data   
+                              
+        evt = { data: rsp, cancel: false }                      
+        dfpOptions.onData evt
+        if evt.cancel
+          data = null 
+        if data
           #add the random cachebuster
           data = data.replace(/%%CACHEBUSTER%%/g, (new Date).getTime()).replace(/%%CHAINID%%/g, Gsn.Advertising.gsnid)
           if 0 == $('#sw').length
@@ -125,7 +119,11 @@
             body.appendChild div
           $('#sw').html clean(data)
           $adCollection = $(selector)
-          if $adCollection
+          if $adCollection        
+            console.log '1'   
+            createAds()
+            displayAds()                    
+            console.log '2'   
             #open the modal to show shopper welcome
             $('.sw-pop').easyModal
               autoOpen: true
@@ -451,4 +449,4 @@
     this
 
   return
-) window.jQuery or window.Zepto or window.tire or window.$, window
+) window.jQuery or window.Zepto or window.tire, window

@@ -82,7 +82,7 @@
     data: {}         
     isDebug: false
     gsnid: 0      
-    selector: undefined
+    selector: 'body'
     apiUrl: 'https://clientapi.gsn2.com/api/v1'
     gsnNetworkId: '/6394/digitalstore.test'
     gsnNetworkStore: undefined
@@ -141,12 +141,12 @@
       result
       
     addDept: (dept) ->
-      self =  myGsn.Advertising.depts
+      self =  myGsn.Advertising
       if (dept)
         oldDepts = self.depts
         depts = []
         goodDepts = {}                 
-        depts.unshift cleanKeyword dept
+        depts.unshift self.cleanKeyword dept
         for dept in oldDepts
           if (goodDepts[dept]?)
             depts.push dept
@@ -299,7 +299,7 @@
       self = this                     
       $.extend self.defaultActionParam, defaultParam
     
-    load: (gsnid, isDebug) ->               
+    load: (gsnid, isDebug) ->  
       self = myGsn.Advertising    
       if (gsnid)
         self.gsnid = gsnid
@@ -310,17 +310,18 @@
       
       if (self.gsnid)     
         self.isLoading = true
-        $.gsnSw2
-          displayWhenExists: '.gsnadunit,.gsnunit'
-          onOpen: (evt) ->
-            evt.cancel self.disablesw
-          onClose: ->             
-            if self.selector  
-              $(self.selector).on 'click', '.gsnaction', self.actionHandler
-              self.selector  = undefined
+        $(document).ready ->
+          $.gsnSw2
+            displayWhenExists: '.gsnadunit,.gsnunit'
+            onData: (evt) ->
+              evt.cancel = self.disablesw
+            onClose: ->             
+              if self.selector  
+                $(self.selector).on 'click', '.gsnaction', self.actionHandler
+                self.selector  = undefined
                                   
-            self.isLoading = false
-            self.refreshAdPods() 
+              self.isLoading = false
+              self.refreshAdPods() 
         
       return self
 
@@ -459,7 +460,7 @@
       keyWord + '=' + keyValue.toString()
     else
       ''
-) window.jQuery or window.Zepto or window.tire or window.$, window.Gsn or {}, window, document, window.GSNContext
+) window.jQuery or window.Zepto or window.tire, window.Gsn or {}, window, document, window.GSNContext
 
 #auto init with attributes
 # at this point, we expect Gsn.Advertising to be available from above
@@ -490,8 +491,5 @@
         for k,fn of attrs
           fn script.getAttribute prefix+k
 
-  # auto load if id is found      
-  aPlugin.load()
-    
   return
-) window.jQuery or window.Zepto or window.tire or window.$
+) window.jQuery or window.Zepto or window.tire

@@ -1592,6 +1592,10 @@ same command to refresh:
       if (forceRefresh || canRefresh) {
         lastRefreshTime = (new Date()).getTime() / 1000;
         self.addDept(payLoad.dept);
+        if (forceRefresh) {
+          self.refreshExisting.pods = false;
+          self.refreshExisting.circPlus = false;
+        }
         targetting = {
           dept: self.depts || [],
           brand: self.getBrand()
@@ -1624,6 +1628,14 @@ same command to refresh:
       return self;
     },
     refreshAdPods: function(actionParam, forceRefresh) {
+      var self;
+      self = myGsn.Advertising;
+      if (self.isLoading) {
+        return self;
+      }
+      if ($('.gsnadunit,.gsnunit').length <= 0) {
+        return self;
+      }
       if (self.gsnid) {
         self.isLoading = true;
         $.gsnSw2({
@@ -1655,12 +1667,6 @@ same command to refresh:
         if (!self.isDebug) {
           self.isDebug = isDebug;
         }
-      }
-      if (self.isLoading) {
-        return self;
-      }
-      if ($('.gsnadunit,.gsnunit').length <= 0) {
-        return self;
       }
       self.refreshAdPods(null, true);
       return self;
@@ -1826,7 +1832,7 @@ same command to refresh:
       if (!value) {
         return;
       }
-      return Gsn.Advertising.gsnid = value;
+      return aPlugin.gsnid = value;
     },
     disablesw: function(value) {
       if (typeof value !== "string") {

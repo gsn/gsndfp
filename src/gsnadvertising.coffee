@@ -310,18 +310,17 @@
       
       if (self.gsnid)     
         self.isLoading = true
-        $(document).ready ->
-          $.gsnSw2
-            displayWhenExists: '.gsnadunit,.gsnunit'
-            onData: (evt) ->
-              evt.cancel = self.disablesw
-            onClose: ->             
-              if self.selector  
-                $(self.selector).on 'click', '.gsnaction', self.actionHandler
-                self.selector  = undefined
+        $.gsnSw2
+          displayWhenExists: '.gsnadunit,.gsnunit'
+          onData: (evt) ->
+            evt.cancel = self.disablesw
+          onClose: ->             
+            if self.selector  
+              $(self.selector).on 'click', '.gsnaction', self.actionHandler
+              self.selector  = undefined
                                   
-              self.isLoading = false
-              self.refreshAdPods() 
+            self.isLoading = false
+            self.refreshAdPods() 
         
       return self
 

@@ -251,7 +251,7 @@
       self.refreshAdPods payLoad
       return self
 
-    refreshAdPods: (actionParam, forceRefresh) ->
+    refreshAdPodsInternal: (actionParam, forceRefresh) ->
       self = myGsn.Advertising
       payLoad = {}
       $.extend payLoad, self.defaultActionParam
@@ -295,6 +295,23 @@
         
       return self
       
+    refreshAdPods: (actionParam, forceRefresh) ->
+      if (self.gsnid)     
+        self.isLoading = true
+        $.gsnSw2
+          displayWhenExists: '.gsnadunit,.gsnunit'
+          onData: (evt) ->
+            evt.cancel = self.disablesw
+          onClose: ->             
+            if self.selector  
+              $(self.selector).on 'click', '.gsnaction', self.actionHandler
+              self.selector  = undefined
+                                  
+            self.isLoading = false
+            self.refreshAdPodsInternal(actionParam, forceRefresh) 
+            
+      return
+              
     setDefault: (defaultParam) ->
       self = this                     
       $.extend self.defaultActionParam, defaultParam
@@ -308,19 +325,7 @@
       if (self.isLoading) then return self 
       if ($('.gsnadunit,.gsnunit').length <= 0) then return self
       
-      if (self.gsnid)     
-        self.isLoading = true
-        $.gsnSw2
-          displayWhenExists: '.gsnadunit,.gsnunit'
-          onData: (evt) ->
-            evt.cancel = self.disablesw
-          onClose: ->             
-            if self.selector  
-              $(self.selector).on 'click', '.gsnaction', self.actionHandler
-              self.selector  = undefined
-                                  
-            self.isLoading = false
-            self.refreshAdPods() 
+      self.refreshAdPods(null, true)
         
       return self
 

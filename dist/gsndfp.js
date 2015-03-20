@@ -1854,4 +1854,5 @@ same command to refresh:
       }
     }
   }
+  aPlugin.load();
 })(window.jQuery || window.Zepto || window.tire);

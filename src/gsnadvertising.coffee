@@ -490,6 +490,7 @@
       for prefix in ['','data-']
         for k,fn of attrs
           fn script.getAttribute prefix+k
-
+          
+  aPlugin.load()
   return
 ) window.jQuery or window.Zepto or window.tire

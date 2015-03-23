@@ -98,7 +98,7 @@
     refreshExisting: 
       circPlus: false
       pods: false
-    cirPlusDept: 'produce'
+    circPlusDept: undefined
     trigger: (eventName, eventData) ->
       if eventName.indexOf('gsnevent') < 0
         eventName = 'gsnevent:' + eventName
@@ -286,16 +286,14 @@
           refreshExisting: self.refreshExisting.pods
         self.refreshExisting.pods = true
         
-        if self.enableCircPlus
-          if (self.circPlusDept)
-            targetting.dept = [self.circPlusDept]  
-            self.circPlusDept = null  
-            $.circPlus       
-              dfpID: self.gsnNetworkId.replace(/\/$/gi, '') + (self.gsnNetworkStore or '')
-              setTargeting: targetting
-              circPlusBody: self.circPlusBody
-              refreshExisting: self.refreshExisting.circPlus
-            self.refreshExisting.circPlus = true
+        if self.enableCircPlus        
+          targetting.dept = [self.circPlusDept || 'produce']  
+          $.circPlus       
+            dfpID: self.gsnNetworkId.replace(/\/$/gi, '') + (self.gsnNetworkStore or '')
+            setTargeting: targetting
+            circPlusBody: self.circPlusBody
+            refreshExisting: self.refreshExisting.circPlus
+          self.refreshExisting.circPlus = true
      
         
       return self

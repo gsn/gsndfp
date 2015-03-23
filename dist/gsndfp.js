@@ -1396,7 +1396,7 @@ same command to refresh:
     gsnid: 0,
     selector: 'body',
     apiUrl: 'https://clientapi.gsn2.com/api/v1',
-    gsnNetworkId: '/6394/digitalstore.test',
+    gsnNetworkId: void 0,
     gsnNetworkStore: void 0,
     onAllEvents: void 0,
     oldGsnAdvertising: oldGsnAdvertising,
@@ -1411,6 +1411,7 @@ same command to refresh:
       circPlus: false,
       pods: false
     },
+    cirPlusDept: 'produce',
     trigger: function(eventName, eventData) {
       if (eventName.indexOf('gsnevent') < 0) {
         eventName = 'gsnevent:' + eventName;
@@ -1468,10 +1469,12 @@ same command to refresh:
         oldDepts = self.depts;
         depts = [];
         goodDepts = {};
-        depts.unshift(self.cleanKeyword(dept));
+        depts.push(self.cleanKeyword(dept));
+        goodDepts[depts[0]] = 1;
+        self.circPlusDept = depts[0];
         for (i = 0, len = oldDepts.length; i < len; i++) {
           dept = oldDepts[i];
-          if ((goodDepts[dept] != null)) {
+          if (goodDepts[dept] == null) {
             depts.push(dept);
           }
           goodDepts[dept] = 1;
@@ -1617,19 +1620,17 @@ same command to refresh:
         });
         self.refreshExisting.pods = true;
         if (self.enableCircPlus) {
-          if (!targetting.dept) {
-            targetting.dept = [];
+          if (self.circPlusDept) {
+            targetting.dept = [self.circPlusDept];
+            self.circPlusDept = null;
+            $.circPlus({
+              dfpID: self.gsnNetworkId.replace(/\/$/gi, '') + (self.gsnNetworkStore || ''),
+              setTargeting: targetting,
+              circPlusBody: self.circPlusBody,
+              refreshExisting: self.refreshExisting.circPlus
+            });
+            self.refreshExisting.circPlus = true;
           }
-          if (targetting.dept.length <= 0) {
-            targetting.dept = ['produce'];
-          }
-          $.circPlus({
-            dfpID: self.gsnNetworkId.replace(/\/$/gi, '') + (self.gsnNetworkStore || ''),
-            setTargeting: targetting,
-            circPlusBody: self.circPlusBody,
-            refreshExisting: self.refreshExisting.circPlus
-          });
-          self.refreshExisting.circPlus = true;
         }
       }
       return self;

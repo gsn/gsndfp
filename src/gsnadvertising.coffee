@@ -497,7 +497,7 @@
       aPlugin.selector = value
 
   for script in document.getElementsByTagName("script")
-    if /gsndfp/.test(script.src)
+    if /gsndfp/i.test(script.src)
       for prefix in ['','data-']
         for k,fn of attrs
           fn script.getAttribute prefix+k

@@ -1615,7 +1615,7 @@ same command to refresh:
           payLoad[index.replace('gsn', '').toLowerCase()] = attr;
         }
       });
-      self.refres(payLoad);
+      self.refresh(payLoad);
       return self;
     },
     refreshAdPodsInternal: function(actionParam, forceRefresh) {

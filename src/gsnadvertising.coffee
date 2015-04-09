@@ -114,7 +114,7 @@
     translator:
       siteid: 'sid'
       page: 'pg'
-      evtname: 'ename'
+      evtname: 'en'
       dept: 'dpt'
       deviceid: 'dvc'
       storeid: 'str'
@@ -128,8 +128,8 @@
       pcode: 'pcd'
       pdesc: 'pds'
       latlng: 'latlng'
-      evtcategory: 'ecat'
-      evtvalue: 'eval'
+      evtcategory: 'ec'
+      evtvalue: 'ev'
     isDebug: false
     gsnid: 0
     selector: 'body'
@@ -140,8 +140,9 @@
     oldGsnAdvertising: oldGsnAdvertising
     minSecondBetweenRefresh: 5
     enableCircPlus: false
-    disablesw: false
     isLoading: false
+    disableSw: ''
+    source: ''
     targetting: {}
     depts: []
     circPlusBody: undefined
@@ -150,6 +151,9 @@
       pods: false
     circPlusDept: undefined
     timer: undefined
+    getNetworkId: () ->
+      self = @
+      return self.gsnNetworkId + if (self.source or "").length > 0 then ".#{self.source}" else "" 
     trigger: (eventName, eventData) ->
       if eventName.indexOf('gsnevent') < 0
         eventName = 'gsnevent:' + eventName
@@ -353,7 +357,7 @@
           targetting.kw = payLoad.page.replace(/[^a-z]/gi, '');
 
         $.gsnDfp
-          dfpID: self.gsnNetworkId.replace(/\/$/gi, '') + (self.gsnNetworkStore or '')
+          dfpID: self.getNetworkId().replace(/\/$/gi, '') + (self.gsnNetworkStore or '')
           setTargeting: targetting
           refreshExisting: self.refreshExisting.pods
         self.refreshExisting.pods = true
@@ -361,7 +365,7 @@
         if self.enableCircPlus
           targetting.dept = [self.circPlusDept || 'produce']
           $.circPlus
-            dfpID: self.gsnNetworkId.replace(/\/$/gi, '') + (self.gsnNetworkStore or '')
+            dfpID: self.getNetworkId().replace(/\/$/gi, '') + (self.gsnNetworkStore or '')
             setTargeting: targetting
             circPlusBody: self.circPlusBody
             refreshExisting: self.refreshExisting.circPlus
@@ -374,14 +378,15 @@
       self = myGsn.Advertising;
 
       if (self.isLoading) then return self
-      if ($('.gsnadunit,.gsnunit').length <= 0) then return self
+      if (!self.hasGsnUnit()) then return self
 
       if (self.gsnid)
         self.isLoading = true
         $.gsnSw2
           displayWhenExists: '.gsnadunit,.gsnunit'
           onData: (evt) ->
-            evt.cancel = self.disablesw
+            if (self.source or '').length > 0
+              evt.cancel = self.disableSw.indexOf(self.source) > 0
           onClose: ->
             if self.selector
               $(self.selector).on 'click', '.gsnaction', self.actionHandler
@@ -391,6 +396,8 @@
             self.refreshAdPodsInternal(actionParam, forceRefresh)
 
       return
+    hasGsnUnit: () ->
+      return $('.gsnadunit,.gsnunit,.circplus').length > 0
 
     setDefault: (defaultParam) ->
       self = this
@@ -411,7 +418,7 @@
         self.gsnid = gsnid
         self.isDebug = isDebug unless self.isDebug
 
-      return self.refreshWithTimer({ evtname: 'adload' })
+      return self.refreshWithTimer({ evtname: 'loading' })
 
   # #endregion
   # create the plugin and map function for backward compatibility
@@ -526,7 +533,7 @@
 (($) ->
   aPlugin = Gsn.Advertising
   if !aPlugin then return
-
+  
   attrs =
     debug: (value) ->
       return unless typeof value is "string"
@@ -534,12 +541,12 @@
     api: (value) ->
       return unless typeof value is "string"
       aPlugin.apiUrl = value
+    source: (value) ->
+      return unless typeof value is "string"
+      aPlugin.source = value
     gsnid: (value) ->
       return unless value
       aPlugin.gsnid = value
-    disablesw: (value) ->
-      return unless typeof value is "string"
-      aPlugin.disablesw = value isnt "false"
     timer: (value) ->
       return unless value
       aPlugin.timer = value
@@ -552,7 +559,12 @@
       for prefix in ['','data-']
         for k,fn of attrs
           fn script.getAttribute prefix+k
+  if aPlugin.hasGsnUnit() 
+   aPlugin.load() 
+  else 
+    $( -> 
+      aPlugin.load()
+    )
 
-  aPlugin.load()
   return
 ) window.jQuery or window.Zepto or window.tire

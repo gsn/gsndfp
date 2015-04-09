@@ -18,8 +18,8 @@
   dfpIsLoaded = false
   $adCollection = undefined
   storeAs = 'gsnsw'
-  cssUrl = '//cdn.gsngrocers.com/script/sw2/1.1.0/sw2-override.css'
-  advertUrl = '//cdn.gsngrocers.com/script/sw2/1.1.0/advertisement.js'
+  cssUrl = 'https://cdn.gsngrocers.com/script/sw2/1.1.0/sw2-override.css'
+  advertUrl = 'https://cdn.gsngrocers.com/script/sw2/1.1.0/advertisement.js'
   didOpen = false
 
   init = (id, selector, options) ->
@@ -114,9 +114,10 @@
             Gsn.Advertising.gsnNetworkId = rsp.NetworkId
 
           Gsn.Advertising.enableCircPlus = rsp.EnableCircPlus
+          Gsn.Advertising.disableSw = rsp.DisableSw
           data = rsp.Template
                                                
-        dfpID = Gsn.Advertising.gsnNetworkId 
+        dfpID = Gsn.Advertising.getNetworkId() 
         evt = { data: rsp, cancel: false }                      
         dfpOptions.onData evt
         if evt.cancel
@@ -170,6 +171,7 @@
           cookieDatas = cookieData.split(',')
           Gsn.Advertising.gsnNetworkId = cookieDatas[0]
           Gsn.Advertising.enableCircPlus = cookieData[1]
+          Gsn.Advertising.disableSw = cookieData[2]
         return cookieData
     null
 

@@ -1,6 +1,6 @@
 /*!
  * gsndfp
- * version 1.1.17
+ * version 1.1.21
  * Requires jQuery 1.7.1 or higher
  * git@github.com:gsn/gsndfp.git
  * License: Grocery Shopping Network
@@ -721,8 +721,8 @@ same command to refresh:
   dfpIsLoaded = false;
   $adCollection = void 0;
   storeAs = 'gsnsw';
-  cssUrl = '//cdn.gsngrocers.com/script/sw2/1.1.0/sw2-override.css';
-  advertUrl = '//cdn.gsngrocers.com/script/sw2/1.1.0/advertisement.js';
+  cssUrl = 'https://cdn.gsngrocers.com/script/sw2/1.1.0/sw2-override.css';
+  advertUrl = 'https://cdn.gsngrocers.com/script/sw2/1.1.0/advertisement.js';
   didOpen = false;
   init = function(id, selector, options) {
     var advert, css;
@@ -815,9 +815,10 @@ same command to refresh:
             Gsn.Advertising.gsnNetworkId = rsp.NetworkId;
           }
           Gsn.Advertising.enableCircPlus = rsp.EnableCircPlus;
+          Gsn.Advertising.disableSw = rsp.DisableSw;
           data = rsp.Template;
         }
-        dfpID = Gsn.Advertising.gsnNetworkId;
+        dfpID = Gsn.Advertising.getNetworkId();
         evt = {
           data: rsp,
           cancel: false
@@ -877,6 +878,7 @@ same command to refresh:
           cookieDatas = cookieData.split(',');
           Gsn.Advertising.gsnNetworkId = cookieDatas[0];
           Gsn.Advertising.enableCircPlus = cookieData[1];
+          Gsn.Advertising.disableSw = cookieData[2];
         }
         return cookieData;
       }
@@ -1426,7 +1428,7 @@ same command to refresh:
     translator: {
       siteid: 'sid',
       page: 'pg',
-      evtname: 'ename',
+      evtname: 'en',
       dept: 'dpt',
       deviceid: 'dvc',
       storeid: 'str',
@@ -1440,8 +1442,8 @@ same command to refresh:
       pcode: 'pcd',
       pdesc: 'pds',
       latlng: 'latlng',
-      evtcategory: 'ecat',
-      evtvalue: 'eval'
+      evtcategory: 'ec',
+      evtvalue: 'ev'
     },
     isDebug: false,
     gsnid: 0,
@@ -1453,8 +1455,9 @@ same command to refresh:
     oldGsnAdvertising: oldGsnAdvertising,
     minSecondBetweenRefresh: 5,
     enableCircPlus: false,
-    disablesw: false,
     isLoading: false,
+    disableSw: '',
+    source: '',
     targetting: {},
     depts: [],
     circPlusBody: void 0,
@@ -1464,6 +1467,11 @@ same command to refresh:
     },
     circPlusDept: void 0,
     timer: void 0,
+    getNetworkId: function() {
+      var self;
+      self = this;
+      return self.gsnNetworkId + ((self.source || "").length > 0 ? "." + self.source : "");
+    },
     trigger: function(eventName, eventData) {
       if (eventName.indexOf('gsnevent') < 0) {
         eventName = 'gsnevent:' + eventName;
@@ -1687,7 +1695,7 @@ same command to refresh:
           targetting.kw = payLoad.page.replace(/[^a-z]/gi, '');
         }
         $.gsnDfp({
-          dfpID: self.gsnNetworkId.replace(/\/$/gi, '') + (self.gsnNetworkStore || ''),
+          dfpID: self.getNetworkId().replace(/\/$/gi, '') + (self.gsnNetworkStore || ''),
           setTargeting: targetting,
           refreshExisting: self.refreshExisting.pods
         });
@@ -1695,7 +1703,7 @@ same command to refresh:
         if (self.enableCircPlus) {
           targetting.dept = [self.circPlusDept || 'produce'];
           $.circPlus({
-            dfpID: self.gsnNetworkId.replace(/\/$/gi, '') + (self.gsnNetworkStore || ''),
+            dfpID: self.getNetworkId().replace(/\/$/gi, '') + (self.gsnNetworkStore || ''),
             setTargeting: targetting,
             circPlusBody: self.circPlusBody,
             refreshExisting: self.refreshExisting.circPlus
@@ -1711,7 +1719,7 @@ same command to refresh:
       if (self.isLoading) {
         return self;
       }
-      if ($('.gsnadunit,.gsnunit').length <= 0) {
+      if (!self.hasGsnUnit()) {
         return self;
       }
       if (self.gsnid) {
@@ -1719,7 +1727,9 @@ same command to refresh:
         $.gsnSw2({
           displayWhenExists: '.gsnadunit,.gsnunit',
           onData: function(evt) {
-            return evt.cancel = self.disablesw;
+            if ((self.source || '').length > 0) {
+              return evt.cancel = self.disableSw.indexOf(self.source) > 0;
+            }
           },
           onClose: function() {
             if (self.selector) {
@@ -1731,6 +1741,9 @@ same command to refresh:
           }
         });
       }
+    },
+    hasGsnUnit: function() {
+      return $('.gsnadunit,.gsnunit,.circplus').length > 0;
     },
     setDefault: function(defaultParam) {
       var self;
@@ -1757,7 +1770,7 @@ same command to refresh:
         }
       }
       return self.refreshWithTimer({
-        evtname: 'adload'
+        evtname: 'loading'
       });
     }
   };
@@ -1888,17 +1901,17 @@ same command to refresh:
       }
       return aPlugin.apiUrl = value;
     },
+    source: function(value) {
+      if (typeof value !== "string") {
+        return;
+      }
+      return aPlugin.source = value;
+    },
     gsnid: function(value) {
       if (!value) {
         return;
       }
       return aPlugin.gsnid = value;
-    },
-    disablesw: function(value) {
-      if (typeof value !== "string") {
-        return;
-      }
-      return aPlugin.disablesw = value !== "false";
     },
     timer: function(value) {
       if (!value) {
@@ -1927,5 +1940,11 @@ same command to refresh:
       }
     }
   }
-  aPlugin.load();
+  if (aPlugin.hasGsnUnit()) {
+    aPlugin.load();
+  } else {
+    $(function() {
+      return aPlugin.load();
+    });
+  }
 })(window.jQuery || window.Zepto || window.tire);

@@ -1,6 +1,6 @@
 /*!
  * gsndfp
- * version 1.1.22
+ * version 1.1.23
  * Requires jQuery 1.7.1 or higher
  * git@github.com:gsn/gsndfp.git
  * License: Grocery Shopping Network
@@ -1455,7 +1455,6 @@ same command to refresh:
     oldGsnAdvertising: oldGsnAdvertising,
     minSecondBetweenRefresh: 5,
     enableCircPlus: false,
-    isLoading: false,
     disableSw: '',
     source: '',
     targetting: {},
@@ -1694,7 +1693,6 @@ same command to refresh:
         if (payLoad.page) {
           targetting.kw = payLoad.page.replace(/[^a-z]/gi, '');
         }
-        self.isLoading = false;
         $.gsnDfp({
           dfpID: self.getNetworkId().replace(/\/$/gi, '') + (self.gsnNetworkStore || ''),
           setTargeting: targetting,
@@ -1717,18 +1715,13 @@ same command to refresh:
     refresh: function(actionParam, forceRefresh) {
       var self;
       self = myGsn.Advertising;
-      if (self.isLoading) {
-        return self;
-      }
       if (!self.hasGsnUnit()) {
         return self;
       }
       if (self.gsnid) {
-        self.isLoading = true;
         $.gsnSw2({
           displayWhenExists: '.gsnadunit,.gsnunit',
           onData: function(evt) {
-            self.isLoading = false;
             if ((self.source || '').length > 0) {
               return evt.cancel = self.disableSw.indexOf(self.source) > 0;
             }
@@ -1738,7 +1731,6 @@ same command to refresh:
               $(self.selector).on('click', '.gsnaction', self.actionHandler);
               self.selector = void 0;
             }
-            self.isLoading = false;
             return self.refreshAdPodsInternal(actionParam, forceRefresh);
           }
         });

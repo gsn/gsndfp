@@ -140,7 +140,6 @@
     oldGsnAdvertising: oldGsnAdvertising
     minSecondBetweenRefresh: 5
     enableCircPlus: false
-    isLoading: false
     disableSw: ''
     source: ''
     targetting: {}
@@ -356,7 +355,6 @@
         if payLoad.page
           targetting.kw = payLoad.page.replace(/[^a-z]/gi, '');
 
-        self.isLoading = false
         $.gsnDfp
           dfpID: self.getNetworkId().replace(/\/$/gi, '') + (self.gsnNetworkStore or '')
           setTargeting: targetting
@@ -377,16 +375,12 @@
 
     refresh: (actionParam, forceRefresh) ->
       self = myGsn.Advertising;
-
-      if (self.isLoading) then return self
       if (!self.hasGsnUnit()) then return self
 
       if (self.gsnid)
-        self.isLoading = true
         $.gsnSw2
           displayWhenExists: '.gsnadunit,.gsnunit'
           onData: (evt) ->
-            self.isLoading = false
             if (self.source or '').length > 0
               evt.cancel = self.disableSw.indexOf(self.source) > 0
           onClose: ->
@@ -394,7 +388,6 @@
               $(self.selector).on 'click', '.gsnaction', self.actionHandler
               self.selector  = undefined
 
-            self.isLoading = false
             self.refreshAdPodsInternal(actionParam, forceRefresh)
 
       return

@@ -356,6 +356,7 @@
         if payLoad.page
           targetting.kw = payLoad.page.replace(/[^a-z]/gi, '');
 
+        self.isLoading = false
         $.gsnDfp
           dfpID: self.getNetworkId().replace(/\/$/gi, '') + (self.gsnNetworkStore or '')
           setTargeting: targetting
@@ -385,6 +386,7 @@
         $.gsnSw2
           displayWhenExists: '.gsnadunit,.gsnunit'
           onData: (evt) ->
+            self.isLoading = false
             if (self.source or '').length > 0
               evt.cancel = self.disableSw.indexOf(self.source) > 0
           onClose: ->

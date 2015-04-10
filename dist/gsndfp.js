@@ -1,6 +1,6 @@
 /*!
  * gsndfp
- * version 1.1.21
+ * version 1.1.22
  * Requires jQuery 1.7.1 or higher
  * git@github.com:gsn/gsndfp.git
  * License: Grocery Shopping Network
@@ -1694,6 +1694,7 @@ same command to refresh:
         if (payLoad.page) {
           targetting.kw = payLoad.page.replace(/[^a-z]/gi, '');
         }
+        self.isLoading = false;
         $.gsnDfp({
           dfpID: self.getNetworkId().replace(/\/$/gi, '') + (self.gsnNetworkStore || ''),
           setTargeting: targetting,
@@ -1727,6 +1728,7 @@ same command to refresh:
         $.gsnSw2({
           displayWhenExists: '.gsnadunit,.gsnunit',
           onData: function(evt) {
+            self.isLoading = false;
             if ((self.source || '').length > 0) {
               return evt.cancel = self.disableSw.indexOf(self.source) > 0;
             }

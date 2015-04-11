@@ -47,7 +47,6 @@
     "gulp-coffee": "*",
     "gulp-concat": "~2.3.4",
     "gulp-util": "*",
-    "forever": "*",
     "del": "*",
     "gulp-bump": "*",
     "jshint-stylish": "^1.0.0"

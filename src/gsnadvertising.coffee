@@ -15,20 +15,12 @@
 
 # the semi-colon before function invocation is a safety net against concatenated
 # scripts and/or other plugins which may not be closed properly.
-(($, oldGsn, win, doc, gsnContext) ->
-  sessionStorageX = win.sessionStorage
-  lastRefreshTime = 0
-
-  if typeof sessionStorageX == 'undefined'
-    sessionStorageX =
-      getItem: ->
-      setItem: ->
-
+((oldGsn, win, doc, gsnContext, gsnDfp, gsnSw2, circplus, trakless) ->
   tickerFrame = undefined
-  parent$ = undefined
   myGsn = oldGsn or {}
   oldGsnAdvertising = myGsn.Advertising
   if typeof oldGsnAdvertising != 'undefined'
+    # prevent multiple load
     if oldGsnAdvertising.pluginLoaded
       return
 
@@ -54,26 +46,7 @@
         tickerFrame = doc.frames['gsnticker']
     return
 
-  buildQueryString = (keyWord, keyValue) ->
-    if keyValue != null
-      keyValue = new String(keyValue)
-      if keyWord != 'ProductDescription'
-        # some product descriptions have '&amp;' which should not be replaced with '`'.
-        keyValue = keyValue.replace(/&/, '`')
-      keyWord + '=' + keyValue.toString()
-    else
-      ''
-  ##region The actual plugin constructor
-
-  Plugin = ->
-    #/ <summary>Plugin constructor</summary>
-    @init()
-    return
-
-  Plugin.prototype =
-    init: ->
-      #/ <summary>Initialization logic goes here</summary>
-      return
+  class Plugin
     pluginLoaded: true
     defaultActionParam:
       # default action parameters *optional* means it will not break but we would want it if possible
@@ -110,7 +83,6 @@
        # example: page (order summary), evtcategory (checkout), evtname (transaction total), evtvalue (100) for $100
       evtvalue: 0
       # additional parameters TBD
-    data: {}
     translator:
       siteid: 'sid'
       page: 'pg'
@@ -150,74 +122,118 @@
       pods: false
     circPlusDept: undefined
     timer: undefined
-    getNetworkId: () ->
+
+    ###*
+    # get network id
+    #
+    # @return {Object}
+    ###
+    getNetworkId: ->
       self = @
       return self.gsnNetworkId + if (self.source or "").length > 0 then ".#{self.source}" else "" 
-    trigger: (eventName, eventData) ->
-      if eventName.indexOf('gsnevent') < 0
-        eventName = 'gsnevent:' + eventName
+
+    ###*
+    # trigger a gsnevent
+    #
+    # @param {String} en - event name
+    # @param {Object} ed - event data
+    # @return {Object}
+    ###
+    trigger: (en, ed) ->
+      if en.indexOf('gsnevent') < 0
+        en = 'gsnevent:' + en
+
       # a little timeout to make sure click tracking stick
       win.setTimeout (->
-        if parent$
-          parent$.event.trigger
-            type: eventName
-            detail: eventData
-        else
-          $.event.trigger
-            type: eventName
-            detail: eventData
+        trakless.util.trigger en,
+            type: en
+            detail: ed
+
         if typeof @onAllEvents == 'function'
           @onAllEvents
-            type: eventName
-            detail: eventData
+            type: en
+            detail: ed
         return
       ), 100
-      return
-    on: (eventName, callback) ->
-      if eventName.indexOf('gsnevent') < 0
-        eventName = 'gsnevent:' + eventName
-      $(doc).on eventName, callback
-      return
+      @
 
-    off: (eventName, callback) ->
-      if eventName.indexOf('gsnevent') < 0
-        eventName = 'gsnevent:' + eventName
-      $(doc).off eventName, callback
-      return
+    ###*
+    # listen to a gsnevent
+    #
+    # @param {String} en - event name
+    # @param {Function} cb - callback
+    # @return {Object}
+    ###
+    on: (en, cb) ->
+      if en.indexOf('gsnevent') < 0
+        en = 'gsnevent:' + en
+
+      trakless.util.on en, cb
+      @
+
+    ###*
+    # detach from event
+    #
+    # @param {String} en - event name
+    # @param {Function} cb - cb
+    # @return {Object}
+    ###
+    off: (en, cb) ->
+      if en.indexOf('gsnevent') < 0
+        en = 'gsnevent:' + en
+
+      trakless.util.off en, cb
+      @
 
     log: (message) ->
       self = myGsn.Advertising
+
       if (self.isDebug and console)
         console.log message
+      @
 
-      return self
-
+    ###*
+    # trigger action tracking
+    #
+    # @param {String} actionParam
+    # @return {Object}
+    ###
     trackAction: (actionParam) ->
       self = myGsn.Advertising
+      translatedParam = {}
+      if actionParam?
+        for v, k in actionParam
+          translatedParam[self.translator[k]] = v
 
-      url = '//pi.gsngrocers.com/pi.gif?nc=' + (new Date()).getTime()
-      if (actionParam)
-        $.each actionParam, (idx, attr) ->
-          url += '&' + self.translator[idx] + '=' + encodeURI(attr)
-          return
-      $.ajax
-        async: false
-        url: url
+        traker = trakless.getDefaultTracker()
+        traker.track('gsn', translatedParam)
 
-      if (JSON)
-        if (JSON.stringify)
-          self.log JSON.stringify actionParam
+      self.log trakless.util.stringToJSON(actionParam)
 
-      return self
+      @
+
+    ###*
+    # utility method to normalize category
+    #
+    # @param {String} keyword
+    # @return {String}
+    ###
     cleanKeyword: (keyword) ->
       result = keyword.replace(/[^a-zA-Z0-9]+/gi, '_').replace(/^[_]+/gi, '')
       if result.toLowerCase?
         result = result.toLowerCase()
-      result
 
+      return result
+
+    ###*
+    # add a dept
+    #
+    # @param {String} dept
+    # @return {Object}
+    ###
     addDept: (dept) ->
       self =  myGsn.Advertising
-      if (dept)
+      if dept?
         oldDepts = self.depts
         depts = []
         goodDepts = {}
@@ -225,7 +241,7 @@
         goodDepts[depts[0]] = 1
         self.circPlusDept = depts[0]
         for dept in oldDepts
-          if (!goodDepts[dept]?)
+          if !goodDepts[dept]?
             depts.push dept
           goodDepts[dept] = 1
 
@@ -233,28 +249,31 @@
           depts.pop()
 
         self.depts = depts
+      @
 
-    ajaxFireUrl: (url, sync) ->
+    ###*
+    # fire a tracking url
+    #
+    # @param {String} url
+    # @return {Object}
+    ###
+    ajaxFireUrl: (url) ->
       #/ <summary>Hit a URL.  Good for click and impression tracking</summary>
       if typeof url == 'string'
         if url.length < 10
           return
+
         # this is to cover the cache buster situation
         url = url.replace('%%CACHEBUSTER%%', (new Date).getTime())
-        if sync
-          $.ajax
-            async: false
-            url: url
-          adUrlIndex = url.indexOf('adurl=')
-          if adUrlIndex > 0
-            newUrl = url.substr(adUrlIndex + 6)
-            @ajaxFireUrl newUrl, sync
-        else
-          createFrame()
-          tickerFrame.src = url
-      return
+        createFrame()
+        tickerFrame.src = url
+      @
+
+    ###*
+    # Trigger when a product is clicked.  AKA: clickThru
+    #
+    ###
     clickProduct: (click, categoryId, brandName, productDescription, productCode, quantity, displaySize, regularPrice, currentPrice, savingsAmount, savingsStatement, adCode, creativeId) ->
-      #/ <summary>Trigger when a product is clicked.  AKA: clickThru</summary>
       @ajaxFireUrl click
       @trigger 'clickProduct',
         myPlugin: this
@@ -270,36 +289,56 @@
         AdCode: adCode
         CreativeId: creativeId
         Quantity: quantity or 1
-      return
+      @
+
+    ###*
+    # Trigger when a brick offer is clicked.  AKA: brickRedirect
+    #
+    ###
     clickBrickOffer: (click, offerCode, checkCode) ->
-      #/ <summary>Trigger when a brick offer is clicked.  AKA: brickRedirect</summary>
       @ajaxFireUrl click
       @trigger 'clickBrickOffer',
         myPlugin: this
         OfferCode: offerCode or 0
-      return
+      @
+
+    ###*
+    # Trigger when a brand offer or shopper welcome is clicked.
+    #
+    ###
     clickBrand: (click, brandName) ->
-      #/ <summary>Trigger when a brand offer or shopper welcome is clicked.</summary>
       @ajaxFireUrl click
       @setBrand brandName
       @trigger 'clickBrand',
         myPlugin: this
         BrandName: brandName
-      return
+      @
+
+    ###*
+    # Trigger when a promotion is clicked.  AKA: promotionRedirect
+    #
+    ###
     clickPromotion: (click, adCode) ->
-      #/ <summary>Trigger when a promotion is clicked.  AKA: promotionRedirect</summary>
       @ajaxFireUrl click
       @trigger 'clickPromotion',
         myPlugin: this
         AdCode: adCode
-      return
+      @
+
+    ###*
+    # Trigger when a recipe is clicked.  AKA: recipeRedirect
+    #
+    ###
     clickRecipe: (click, recipeId) ->
-      #/ <summary>Trigger when a recipe is clicked.  AKA: recipeRedirect</summary>
       @ajaxFireUrl click
       @trigger 'clickRecipe', RecipeId: recipeId
-      return
+      @
+
+    ###*
+    # Trigger when a generic link is clicked.  AKA: verifyClickThru
+    #
+    ###
     clickLink: (click, url, target) ->
-      #/ <summary>Trigger when a generic link is clicked.  AKA: verifyClickThru</summary>
       if target == undefined or target == ''
         target = '_top'
       @ajaxFireUrl click
@@ -307,34 +346,47 @@
         myPlugin: this
         Url: url
         Target: target
-      return
-    setBrand: (brandName) ->
-      @data.BrandName = brandName
-      sessionStorageX.setItem 'Gsn.Advertisement.data.BrandName', brandName
-      return
-    getBrand: ->
-      @data.BrandName or sessionStorageX.getItem('Gsn.Advertisement.data.BrandName')
+      @
 
+    ###*
+    # set the brand for the session
+    #
+    ###
+    setBrand: (brandName) ->
+      trakless.util.session('gsndfp:brand', brandName)
+      @
+
+    ###*
+    # get the brand currently in session
+    #
+    ###
+    getBrand: ->
+      trakless.util.session('gsndfp:brand')
+
+    ###*
+    # handle a dom event
+    #
+    ###
     actionHandler: (evt) ->
       self = myGsn.Advertising
       elem = if evt.target then evt.target else evt.srcElement
-      target = $(elem)
       payLoad = {}
-      allData = target.data()
-      $.each allData, (index, attr) ->
-        if /^gsn/gi.test(index)
-          payLoad[index.replace('gsn', '').toLowerCase()] = attr;
-        return
+      if elem?
+        allData = trakless.util.allData(elem)
+        for k, v in allData when /^gsn/gi.test(k)
+          realk = /^gsn/i.replace(k, '').toLowerCase()
+          payLoad[realk] = v
+      
       self.refresh payLoad
       return self
 
+    ###*
+    # internal method for refreshing adpods
+    #
+    ###
     refreshAdPodsInternal: (actionParam, forceRefresh) ->
       self = myGsn.Advertising
-      payLoad = {}
-      $.extend payLoad, self.defaultActionParam
-
-      if (actionParam)
-        $.extend payLoad, actionParam
+      payLoad = trakless.util.applyDefaults actionParam, self.defaultActionParam
 
       # track payLoad
       payLoad.siteid = self.gsnid
@@ -355,7 +407,7 @@
         if payLoad.page
           targetting.kw = payLoad.page.replace(/[^a-z]/gi, '');
 
-        $.gsnDfp
+        gsnDfp
           dfpID: self.getNetworkId().replace(/\/$/gi, '') + (self.gsnNetworkStore or '')
           setTargeting: targetting
           refreshExisting: self.refreshExisting.pods
@@ -363,7 +415,7 @@
 
         if self.enableCircPlus
           targetting.dept = [self.circPlusDept || 'produce']
-          $.circPlus
+          circPlus
             dfpID: self.getNetworkId().replace(/\/$/gi, '') + (self.gsnNetworkStore or '')
             setTargeting: targetting
             circPlusBody: self.circPlusBody
@@ -371,42 +423,70 @@
           self.refreshExisting.circPlus = true
 
 
-      return self
+      @
 
+    ###*
+    # adpods refresh
+    #
+    ###
     refresh: (actionParam, forceRefresh) ->
-      self = myGsn.Advertising;
+      self = myGsn.Advertising
       if (!self.hasGsnUnit()) then return self
 
       if (self.gsnid)
-        $.gsnSw2
+        gsnSw2
           displayWhenExists: '.gsnadunit,.gsnunit'
           onData: (evt) ->
             if (self.source or '').length > 0
               evt.cancel = self.disableSw.indexOf(self.source) > 0
+
           onClose: ->
-            if self.selector
-              $(self.selector).on 'click', '.gsnaction', self.actionHandler
-              self.selector  = undefined
+            # make sure selector is always wired-up
+            if self.selector?
+              trakless.util.onClick self.selector, self.actionHandler, '.gsnaction'
+              self.selector  = null
 
             self.refreshAdPodsInternal(actionParam, forceRefresh)
 
-      return
+      @
+
+    ###*
+    # determine if there are adpods on the page
+    #
+    ###
     hasGsnUnit: () ->
-      return $('.gsnadunit,.gsnunit,.circplus').length > 0
+      return trakless.util.$('.gsnadunit,.gsnunit,.circplus').length > 0
 
+    ###*
+    # set global defaults
+    #
+    ###
     setDefault: (defaultParam) ->
-      self = this
-      $.extend self.defaultActionParam, defaultParam
+      self = myGsn.Advertising
+      self.defaultActionParam = trakless.util.applyDefaults defaultParam, self.defaultActionParam
+      @
 
+    ###*
+    # method for support refreshing with timer
+    #
+    ###
     refreshWithTimer: (actionParam) ->
       self = myGsn.Advertising
+      if (!actionParam?)
+        actionParam = { evtname: 'refresh-timer' }
+
       self.refresh(actionParam, true)
       timer = (self.timer || 0) * 1000
 
       if (timer > 0)
         setTimeout self.refreshWithTimer, timer
 
-      return self
+      @
+
+    ###*
+    # the onload method, document ready friendly
+    #
+    ###
     load: (gsnid, isDebug) ->
       self = myGsn.Advertising
       if (gsnid)
@@ -415,8 +495,7 @@
 
       return self.refreshWithTimer({ evtname: 'loading' })
 
-  # #endregion
-  # create the plugin and map function for backward compatibility
+  # create the plugin and map function for backward compatibility with Virtual Store
   myPlugin = new Plugin
   myGsn.Advertising = myPlugin
   myGsn.Advertising.brickRedirect = myPlugin.clickBrickOffer
@@ -425,28 +504,39 @@
   myGsn.Advertising.refreshAdPods = myPlugin.refresh
 
   myGsn.Advertising.logAdImpression = ->
-
   # empty function, does nothing
 
   myGsn.Advertising.logAdRequest = ->
-
   # empty function, does nothing
+
   myGsn.Advertising.promotionRedirect = myPlugin.clickPromotion
   myGsn.Advertising.verifyClickThru = myPlugin.clickLink
   myGsn.Advertising.recipeRedirect = myPlugin.clickRecipe
 
   # put GSN back online
   win.Gsn = myGsn
-  ##region support for classic GSN
-  if typeof gsnContext != 'undefined'
+
+  buildQueryString = (keyWord, keyValue) ->
+    if keyValue != null
+      keyValue = new String(keyValue)
+      if keyWord != 'ProductDescription'
+        # some product descriptions have '&amp;' which should not be replaced with '`'.
+        keyValue = keyValue.replace(/&/, '`')
+      keyWord + '=' + keyValue.toString()
+    else
+      ''
+
+  if (gsnContext?)
     myGsn.Advertising.on 'clickRecipe', (data) ->
       if data.type != 'gsnevent:clickRecipe'
         return
       win.location.replace '/Recipes/RecipeFull.aspx?recipeid=' + data.detail.RecipeId
       return
+
     myGsn.Advertising.on 'clickProduct', (data) ->
       if data.type != 'gsnevent:clickProduct'
         return
+
       product = data.detail
       if product
         queryString = new String('')
@@ -477,9 +567,11 @@
         if typeof AddAdToShoppingList == 'function'
           AddAdToShoppingList queryString
       return
+
     myGsn.Advertising.on 'clickLink', (data) ->
       if data.type != 'gsnevent:clickLink'
         return
+        
       linkData = data.detail
       if linkData
         if linkData.Target == undefined or linkData.Target == ''
@@ -491,41 +583,32 @@
           # assume this is an internal redirect
           win.location.replace linkData.Url
       return
+
     myGsn.Advertising.on 'clickPromotion', (data) ->
       if data.type != 'gsnevent:clickPromotion'
         return
+
       linkData = data.detail
       if linkData
         win.location.replace '/Ads/Promotion.aspx?adcode=' + linkData.AdCode
       return
+
     myGsn.Advertising.on 'clickBrickOffer', (data) ->
       if data.type != 'gsnevent:clickBrickOffer'
         return
+
       linkData = data.detail
       if linkData
         url = myGsn.Advertising.apiUrl + '/profile/BrickOffer/' + gsnContext.ConsumerID + '/' + linkData.OfferCode
         # open brick offer using the new api URL
         win.open url, ''
       return
-  ##endregion
-  # allow event to be pass to anybody listening on the parent
-  if win.top
-    # this should match the initialization entry below
-    myParent$ = null
-    try
-      myParent$ = win.top.$
-    catch e
-      myParent$ = win.parent.$
 
-    if myParent$ != $
-      parent$ = myParent$
-  return
-
-) window.jQuery or window.Zepto or window.tire, window.Gsn or {}, window, document, window.GSNContext
+) window.Gsn or {}, window, document, window.GSNContext, $.gsnDfp, $.gsnSw2, $.circplus, trakless
 
 #auto init with attributes
 # at this point, we expect Gsn.Advertising to be available from above
-(($) ->
+((trakless)->
   aPlugin = Gsn.Advertising
   if !aPlugin then return
   
@@ -542,6 +625,7 @@
     gsnid: (value) ->
       return unless value
       aPlugin.gsnid = value
+      trakless.setSiteId(value)
     timer: (value) ->
       return unless value
       aPlugin.timer = value
@@ -554,12 +638,16 @@
       for prefix in ['','data-']
         for k,fn of attrs
           fn script.getAttribute prefix+k
+
+
+  trakless.setPixel('//pi.gsngrocers.com/pi.gif')
+
   if aPlugin.hasGsnUnit() 
    aPlugin.load() 
   else 
-    $( -> 
+    trakless.util.ready( -> 
       aPlugin.load()
     )
 
   return
-) window.jQuery or window.Zepto or window.tire
+) window.trakless

@@ -10,8 +10,8 @@
   gmodal = require('gmodal')
   swcss = require('./sw.css')
   circplusTemplate = require('./circplus.html')
-  $ = win.trakless.util.$
   $win = win
+  qsel = $win.trakless.util.$
   $doc = $win.document
   gsnSw = null
 
@@ -29,6 +29,7 @@
     $adCollection: undefined
     adBlockerOn: false
     storeAs: 'gsnunit'
+    lastRefresh: 0
 
     # for circplus
     bodyTemplate: circplusTemplate
@@ -43,40 +44,42 @@
         self.dfpID = id
 
       self.setOptions(options)
+      self.dfpSelector = options.dfpSelector or '.gsnunit'
       options = self.dfpOptions
-      selector = options.dfpSelector
+      selector = self.dfpSelector
 
       # handle circplus
       if (selector == '.circplus')
-        if $(selector).innerHTML == ''
+        if qsel(selector).length > 0
           if options.templateSelector
-            $(selector).fill $(options.templateSelector).innerHTML
+            qsel(selector).ht qsel(options.templateSelector).innerHTML
           else
-            $(selector).fill options.bodyTemplate or bodyTemplate
+            qsel(selector).ht options.bodyTemplate or self.bodyTemplate
      
         # real selector is use above to append bodyTemplate
-        self.$adCollection = $($('.cpslot').get().reverse())
+        self.$adCollection = [qsel('.cpslot1')[0], qsel('.cpslot2')[0]]
         self.storeAs = 'circplus'
-
+        self.createAds()
+        self.displayAds()
       # handle sw
       else if (selector == '.gsnsw')
-        if $(options.displayWhenExists or '.gsnunit').length <= 0
+        if qsel(options.displayWhenExists or '.gsnunit').length <= 0
           return
 
         self.storeAs = 'gsnsw'
         if self.getCookie('gsnsw2') == null
           self.getPopup selector
           Gsn.Advertising.on 'clickBrand', (e) ->
-            gmodal.hide()
+            $win.gmodal.hide()
             return
         else
-          onCloseCallback cancel: true
+          self.onCloseCallback cancel: true
 
         gsnSw = self
         return self
       # handle adpods
       else
-        self.$adCollection = $(selector)
+        self.$adCollection = qsel(selector)
         self.createAds()
         self.displayAds()
 
@@ -110,22 +113,22 @@
       self.didOpen = true   
 
       # remove any class that is tagged to be remove
-      $('.remove').remove()
-      self.$adCollection = $(self.dfpSelector)
+      qsel('.remove').remove()
+      self.$adCollection = qsel(self.dfpSelector)
       self.createAds()
       self.displayAds()    
       setTimeout (->
         # adblocking detection  
         if self.adBlockerOn
-          $('.sw-msg')[0].style.display = 'block';
-          $('.sw-header-copy')[0].style.display = 'none';
-          $('.sw-row')[0].style.display = 'none';
+          qsel('.sw-msg')[0].style.display = 'block';
+          qsel('.sw-header-copy')[0].style.display = 'none';
+          qsel('.sw-row')[0].style.display = 'none';
         return
       ), 150
       return
 
     onCloseCallback: (event) ->
-      self = @
+      self = gsnSw
       $win.scrollTo 0, 0            
       if !self.getCookie('gsnsw2')
         self.setCookie 'gsnsw2', "#{Gsn.Advertising.gsnNetworkId},#{Gsn.Advertising.enableCircPlus},#{Gsn.Advertising.disableSw}", 1
@@ -163,7 +166,7 @@
         )
 
         # open the modal to show shopper welcome
-        $win.gmodal.show({ content: "<div id='sw'>#{data}<div>"})
+        $win.gmodal.show({content: "<div id='sw'>#{data}<div>", closeCls: 'sw-close'})
       else
         self.onCloseCallback cancel: true
       
@@ -188,7 +191,7 @@
       if (dataType is 'jsonp')
         # do jsonp
       else
-        $.request('GET', url).then(self.swSucccess)
+        qsel.request('GET', url).then(self.swSucccess)
       @
 
     getCookie: (nameOfCookie) ->
@@ -226,7 +229,7 @@
       self.dfpID = Gsn.Advertising.getNetworkId() 
       # Loops through on page Ad units and gets ads for them.
       for adUnit, k in self.$adCollection
-        $adUnit = $(adUnit)
+        $adUnit = qsel(adUnit)
         allData = trakless.util.allData(adUnit)
         self.count++
         # adUnit id - this will use an existing id or an auto generated one.
@@ -236,7 +239,7 @@
         # get existing content
         $existingContent = adUnit.innerHTML
         # wipe html clean ready for ad and set the default display class.
-        $adUnit.fill('').set('$', '+display-none')
+        $adUnit.ht('').set('$', '+display-none')
         # Push commands to DFP to create ads
         $win.googletag.cmd.push ->
           googleAdUnit = undefined
@@ -350,20 +353,27 @@
       return
 
     isInView: (elem) ->
-      docViewTop = $($win).scrollTop()
-      docViewBottom = docViewTop + $($win).height()
+      ###*
+      docViewTop = $win.scrollTop()
+      docViewBottom = docViewTop + $win.height()
       elemTop = elem.offset().top
       elemBottom = elemTop + elem.height()
 
       # is more than half of the element visible
       elemTop + (elemBottom - elemTop) / 2 >= docViewTop and elemTop + (elemBottom - elemTop) / 2 <= docViewBottom
-
+###
+      return true
     displayAds: ->
       self = @
+      currentTime = (new Date()).getTime()
+      if (currentTime - self.lastRefresh) < 1000
+        return self
+
+      self.lastRefresh = currentTime
       toPush = []
       # Display each ad
       for adUnit, k in self.$adCollection
-        $adUnit = $(adUnit)
+        $adUnit = qsel(adUnit)
         $adUnitData = adUnit[self.storeAs]
         if self.dfpOptions.refreshExisting and $adUnitData and adUnit['gsnDfpExisting']
           # determine if element is in view

@@ -1,0 +1,9 @@
+.gsnsw {
+  float: left;
+}
+
+.gmodal {
+  filter: alpha(opacity=75); /* IE8 */
+  background: #000; /* IE8 */
+  background: rgba(0,0,0,0.75);
+}

@@ -99,9 +99,12 @@ class Plugin
   #
   # @return {Object}
   ###
-  getNetworkId: ->
+  getNetworkId: (includeStore)->
     self = @
-    return self.gsnNetworkId + if (self.source or "").length > 0 then ".#{self.source}" else "" 
+    result = self.gsnNetworkId + if (self.source or "").length > 0 then ".#{self.source}" else "" 
+    if (includeStore)
+      result = result.replace(/\/$/gi, '') + (self.gsnNetworkStore or '')
+    return result
 
   ###*
   # emit a gsnevent
@@ -366,6 +369,8 @@ class Plugin
   refreshAdPodsInternal: (actionParam, forceRefresh) ->
     self = myGsn.Advertising
     payLoad = defaults actionParam, self.defaultActionParam
+    if (gsnSw2.isVisible)
+      return self
 
     # track payLoad
     payLoad.siteid = self.gsnid
@@ -386,7 +391,7 @@ class Plugin
       if payLoad.page
         targetting.kw = payLoad.page.replace(/[^a-z]/gi, '');
 
-      gsnDfp.init(self.getNetworkId().replace(/\/$/gi, '') + (self.gsnNetworkStore or ''),
+      gsnDfp.refresh(
         setTargeting: targetting
         refreshExisting: self.refreshExisting.pods
       )
@@ -394,7 +399,7 @@ class Plugin
 
       if self.enableCircPlus
         targetting.dept = [self.circPlusDept || 'produce']
-        circPlus.init(self.getNetworkId().replace(/\/$/gi, '') + (self.gsnNetworkStore or ''),
+        circPlus.refresh(
           setTargeting: targetting
           circPlusBody: self.circPlusBody
           dfpSelector: '.circplus'
@@ -414,7 +419,7 @@ class Plugin
     if (!self.hasGsnUnit()) then return self
 
     if (self.gsnid)
-      gsnSw2.init(self.gsnid, 
+      gsnSw2.refresh(
         displayWhenExists: '.gsnadunit,.gsnunit'
         dfpSelector: '.gsnsw'
         onData: (evt) ->
@@ -424,9 +429,13 @@ class Plugin
         onClose: ->
           # make sure selector is always wired-up
           if self.selector?
-            trakless.util.onClick self.selector, self.actionHandler, '.gsnaction'
+            trakless.util.$(self.selector)[0].onclick = (e) ->
+              e = e or win.event
+              e.target = e.target or e.srcElement or e.parentNode
+              if (win.gmodal.hasCls(e.target, 'gsnaction'))
+                self.actionHandler e
+              
             self.selector  = null
-
           self.refreshAdPodsInternal(actionParam, forceRefresh)
       )
 

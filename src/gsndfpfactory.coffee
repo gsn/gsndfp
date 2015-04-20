@@ -31,16 +31,15 @@
     storeAs: 'gsnunit'
     lastRefresh: 0
     didOpen: false
+    isVisible: false
 
     # for circplus
     bodyTemplate: circplusTemplate
-    init: (id, options) ->
+    refresh: (options) ->
       self = @
       self.dfpLoader()
       options = options or {}
-      if (id?)
-        self.dfpID = id
-
+      self.dfpID = Gsn.Advertising.getNetworkId(true)
       self.setOptions(options)
       self.dfpSelector = options.dfpSelector or '.gsnunit'
       options = self.dfpOptions
@@ -61,6 +60,7 @@
         self.displayAds()
       # handle sw
       else if (selector == '.gsnsw')
+        self.dfpID = Gsn.Advertising.getNetworkId()
         if qsel(options.displayWhenExists or '.gsnunit').length <= 0
           return
 
@@ -109,6 +109,7 @@
     onOpenCallback: (event) ->
       self = gsnSw
       self.didOpen = true   
+      self.isVisible = true
 
       # remove any class that is tagged to be remove
       qsel('.remove').remove()
@@ -127,6 +128,7 @@
 
     onCloseCallback: (event) ->
       self = gsnSw
+      self.isVisible = false
       $win.scrollTo 0, 0            
       if !self.getCookie('gsnsw2')
         self.setCookie 'gsnsw2', "#{Gsn.Advertising.gsnNetworkId},#{Gsn.Advertising.enableCircPlus},#{Gsn.Advertising.disableSw}", 1
@@ -350,17 +352,15 @@
         return
       return
 
-    isInView: (elem) ->
-      ###*
-      docViewTop = $win.scrollTop()
-      docViewBottom = docViewTop + $win.height()
-      elemTop = elem.offset().top
-      elemBottom = elemTop + elem.height()
+    isHeightInView: (el) ->
+      # check for 50% visible
+      percentVisible = 0.50;
+      rect = el.getBoundingClientRect()
+      overhang = rect.height * (1 - percentVisible)
 
-      # is more than half of the element visible
-      elemTop + (elemBottom - elemTop) / 2 >= docViewTop and elemTop + (elemBottom - elemTop) / 2 <= docViewBottom
-###
-      return true
+      isVisible = (rect.top >= -overhang) && (rect.bottom <= window.innerHeight + overhang)
+      return isVisible;
+
     displayAds: ->
       self = @
       currentTime = (new Date()).getTime()
@@ -375,7 +375,7 @@
         $adUnitData = adUnit[self.storeAs]
         if self.dfpOptions.refreshExisting and $adUnitData and adUnit['gsnDfpExisting']
           # determine if element is in view
-          if !self.dfpOptions.inViewOnly or self.isInView($adUnit)
+          if !self.dfpOptions.inViewOnly or self.isHeightInView($adUnit)
             toPush.push $adUnitData
         else
           adUnit['gsnDfpExisting'] = true

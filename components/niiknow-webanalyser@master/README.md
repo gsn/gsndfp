@@ -1,2 +1,0 @@
-# webanalyser
-Web analyser.

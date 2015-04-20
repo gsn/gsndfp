@@ -30,12 +30,10 @@
     adBlockerOn: false
     storeAs: 'gsnunit'
     lastRefresh: 0
+    didOpen: false
 
     # for circplus
     bodyTemplate: circplusTemplate
-    
-    didOpen = false
-
     init: (id, options) ->
       self = @
       self.dfpLoader()
@@ -67,13 +65,13 @@
           return
 
         self.storeAs = 'gsnsw'
-        if self.getCookie('gsnsw2') == null
+        if self.didOpen or self.getCookie('gsnsw2')?
+          self.onCloseCallback cancel: true
+        else
           self.getPopup selector
           Gsn.Advertising.on 'clickBrand', (e) ->
             $win.gmodal.hide()
-            return
-        else
-          self.onCloseCallback cancel: true
+            return self
 
         gsnSw = self
         return self

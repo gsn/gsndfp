@@ -1,0 +1,16 @@
+{
+  "name": "flashdetect",
+  "version": "1.0.4",
+  "description": "A JavaScript library designed to simplify the process of detecting if the Adobe Flash Player is installed in a Web Browser.",
+  "main": "index.js",
+  "repository": "git://github.com/niiknow/FlashDetect.git",
+  "keywords": [
+    "detect",
+    "adobe",
+    "shockwave",
+    "flash",
+    "plugin"
+  ],
+  "author": "Carl S. Yestrau, http://www.featureblend.com/",
+  "license": "http://www.featureblend.com/license.txt"
+}

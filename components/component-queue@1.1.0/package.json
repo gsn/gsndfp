@@ -1,0 +1,26 @@
+{
+  "name": "component-queue",
+  "version": "1.1.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/component/queue.git"
+  },
+  "devDependencies": {
+    "should": "~1.2.2",
+    "mocha": "~1.9.0",
+    "superagent": "~0.14.2"
+  },
+  "dependencies": {
+    "component-emitter": "1.2.0",
+    "component-bind": "1.0.0"
+  },
+  "browser": {
+    "emitter": "component-emitter",
+    "bind": "component-bind"
+  },
+  "component": {
+    "scripts": {
+      "queue/index.js": "index.js"
+    }
+  }
+}

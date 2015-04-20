@@ -1,0 +1,26 @@
+{
+  "name": "xstore",
+  "main": "lib/index.js",
+  "repo": "niiknow/xstore",
+  "description": "Cross domain storage",
+  "version": "1.0.0",
+  "keywords": [
+    "modal",
+    "web"
+  ],
+  "dependencies": {
+    "component/queue": "*",
+    "segmentio/load-iframe": "*",
+    "marcuswestin/store.js": "*"
+  },
+  "development": {
+    "yields/coverage": "*",
+    "component/jquery": "*",
+    "component/assert": "*",
+    "ianstormtaylor/trigger-event": "*",
+    "jkroso/equals": "*",
+    "ianstormtaylor/sinon": "duo",
+    "timoxley/next-tick": "*",
+    "yields/gravy": "*"
+  }
+}

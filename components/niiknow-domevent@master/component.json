@@ -1,0 +1,14 @@
+{
+  "name": "domevent",
+  "main": "index.js",
+  "repo": "niiknow/domevent",
+  "description": "DOM event utilities",
+  "version": "1.0.0",
+  "keywords": [
+    "event",
+    "web",
+    "dom"
+  ],
+  "dependencies": {},
+  "development": {}
+}

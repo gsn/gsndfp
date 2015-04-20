@@ -1,0 +1,16 @@
+{
+  "name": "flashdetect",
+  "version": "1.0.4",
+  "repo": "niiknow/flashdetect",
+  "description": "A JavaScript library designed to simplify the process of detecting if the Adobe Flash Player is installed in a Web Browser.",
+  "main": "index.js",
+  "keywords": [
+    "detect",
+    "adobe",
+    "shockwave",
+    "flash",
+    "plugin"
+  ],
+  "dependencies": {},
+  "development": {}
+}

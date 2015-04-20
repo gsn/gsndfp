@@ -1,0 +1,21 @@
+{
+  "name": "querystring-component",
+  "description": "Simple key/value pair query-string parsing",
+  "version": "1.2.0",
+  "dependencies": {
+    "trim": "*"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "should": "*"
+  },
+  "component": {
+    "scripts": {
+      "querystring": "index.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/component/querystring.git"
+  }
+}

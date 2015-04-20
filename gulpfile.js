@@ -34,14 +34,12 @@ gulp.task('clean', function(){
 });
 
 gulp.task('coffee', function() {
-  
-
-  gulp.src(['./src/circplus.coffee','./src/gsndfp.coffee','./src/gsnsw2.coffee','./src/jquery.easymodal.coffee', './src/gsnadvertising.coffee'])
+  gulp.src(['./src/gsndfpfactory.coffee', 'index.coffee'])
     .pipe(concat('build' + (new Date().getTime()) + '.coffee'))
     .pipe(coffee({bare: true}).on('error', gutil.log))
     .pipe(gulp.dest('dist'));
 
-  return gulp.src(['./vendor/*.js', './build/build*.js'])
+  return gulp.src(['./vendor/*.js', './dist/build*.js'])
     .pipe(concat('gsndfp.js'))
     .pipe(header(banner, {pkg: pkg}))
     .pipe(gulp.dest('dist'));

@@ -19,5 +19,20 @@
     "jquery-plugin",
     "jquery",
     "zepto"
-  ]
+  ],
+  "dependencies": { 
+    "avetisk/defaults": "0.0.4",
+    "niiknow/trakless": "*",
+    "niiknow/gmodal": "*"
+  },
+  "development": {
+    "yields/coverage": "*",
+    "component/jquery": "*",
+    "component/assert": "*",
+    "ianstormtaylor/trigger-event": "*",
+    "jkroso/equals": "*",
+    "ianstormtaylor/sinon": "duo",
+    "timoxley/next-tick": "*",
+    "yields/gravy": "*"
+  }
 }

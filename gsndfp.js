@@ -3651,7 +3651,7 @@ function parse(html, doc) {
       gsndfpfactory.prototype.bodyTemplate = circplusTemplate;
 
       gsndfpfactory.prototype.refresh = function(options) {
-        var cp, selector, self;
+        var cp, currentTime, selector, self;
         self = this;
         self.dfpLoader();
         options = options || {};
@@ -3683,8 +3683,12 @@ function parse(html, doc) {
               cancel: true
             });
           } else {
+            currentTime = (new Date()).getTime();
+            if ((currentTime - self.lastRefresh) < 1000) {
+              return self;
+            }
+            self.lastRefresh = currentTime;
             self.getPopup(selector);
-            gsndfp.on('clickBrand', win.gmodal.hide);
           }
           return self;
         } else {
@@ -3723,6 +3727,7 @@ function parse(html, doc) {
       gsndfpfactory.prototype.onOpenCallback = function(event) {
         var self;
         self = gsnSw;
+        gsndfp.on('clickBrand', win.gmodal.hide);
         self.didOpen = true;
         self.isVisible = true;
         qsel('.remove').remove();

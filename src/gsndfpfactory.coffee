@@ -73,9 +73,13 @@
         if self.didOpen or self.getCookie('gsnsw2')?
           self.onCloseCallback cancel: true
         else
+          currentTime = (new Date()).getTime()
+          if (currentTime - self.lastRefresh) < 1000
+            return self
+
+          self.lastRefresh = currentTime
+
           self.getPopup selector
-          # hide on brand click
-          gsndfp.on 'clickBrand', win.gmodal.hide
 
         return self
       # handle adpods
@@ -113,6 +117,10 @@
 
     onOpenCallback: (event) ->
       self = gsnSw
+
+      # hide on brand click
+      gsndfp.on 'clickBrand', win.gmodal.hide
+      
       self.didOpen = true   
       self.isVisible = true
 

@@ -69,6 +69,9 @@
         if qsel(options.displayWhenExists or '.gsnunit').length <= 0
           return
 
+        # hide on brand click
+        gsndfp.on 'clickBrand', $win.gmodal.hide
+      
         self.storeAs = 'gsnsw'
         if self.didOpen or self.getCookie('gsnsw2')?
           self.onCloseCallback cancel: true
@@ -114,9 +117,6 @@
 
     onOpenCallback: (event) ->
       self = gsnSw
-      
-      # hide on brand click
-      gsndfp.on 'clickBrand', $win.gmodal.hide
 
       self.didOpen = true   
       self.isVisible = true

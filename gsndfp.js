@@ -4025,14 +4025,15 @@ function parse(html, doc) {
           $adUnit = qsel(adUnit);
           id = $adUnit.get('@id');
           $adUnitData = self.adUnitById[id];
-          if (self.dops.refreshExisting && $adUnitData) {
-            if (!self.dops.inViewOnly || self.isHeightInView(adUnit)) {
-              toPush.push($adUnitData);
-            }
-          } else {
+          if (!$adUnitData.existing) {
+            $adUnitData.existing = true;
             $win.googletag.cmd.push(function() {
               return $win.googletag.display(id);
             });
+          } else {
+            if (!self.dops.inViewOnly || self.isHeightInView(adUnit)) {
+              toPush.push($adUnitData);
+            }
           }
         }
         if (toPush.length > 0) {

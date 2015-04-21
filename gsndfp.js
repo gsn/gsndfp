@@ -4208,7 +4208,11 @@ modal = (function() {
       el = self.doc.createElement('style');
       el.id = id;
       el.type = 'text/css';
-      el.appendChild(self.doc.createTextNode(data));
+      if (el.styleSheet) {
+        el.styleSheet.cssText = data;
+      } else {
+        el.appendChild(self.doc.createTextNode(data));
+      }
       (self.doc.head || self.doc.getElementsByTagName('head')[0]).appendChild(el);
     }
     return this;
@@ -4467,7 +4471,7 @@ Emitter.prototype.hasListeners = function(event){
 
 }, {}],
 25: [function(require, module, exports) {
-module.exports = '.gsnsw {\n  float: left;\n}\n.gmodal {\n  filter: alpha(opacity=75); /* IE8 */\n  background: #000; /* IE8 */\n  background: rgba(0,0,0,0.75);\n}';
+module.exports = '.gsnsw {\n  	float: left;\n}\n.gmodal {\n\n	/* works for IE 5+. */\n	filter:alpha(opacity=90); \n\n	/* works for IE 8. */\n	-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=90)";\n\n	/* works for old school versions of the Mozilla browsers like Netscape Navigator. */\n	-moz-opacity: 0.9; \n\n	/* This is for old versions of Safari (1.x) with KHTML rendering engine */\n	-khtml-opacity: 0.9; \n\n	/* This is the "most important" one because it\'s the current standard in CSS. This will work in most versions of Firefox, Safari, and Opera. */  \n	opacity: 0.9; \n\n  	background: #000; /* IE5+ */\n  	background: rgba(0,0,0,0.90);\n}';
 }, {}],
 26: [function(require, module, exports) {
 module.exports = '<div class="gsn-slot-container"><div class="cpslot cpslot2" data-companion="true" data-dimensions="300x50"></div></div><div class="gsn-slot-container"><div class="cpslot cpslot1" data-dimensions="300x100,300x120"></div></div>';

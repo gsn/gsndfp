@@ -463,7 +463,8 @@ class Plugin
   ###
   setDefault: (defaultParam) ->
     self = myGsn.Advertising
-    self.defaultActionParam = defaults defaultParam, self.defaultActionParam
+    for v, k of defaultParam when !v?
+      self.defaultActionParam[k] = v
     @
 
   ###*

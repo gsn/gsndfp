@@ -665,9 +665,14 @@
      */
 
     Plugin.prototype.setDefault = function(defaultParam) {
-      var self;
+      var k, self, v;
       self = myGsn.Advertising;
-      self.defaultActionParam = defaults(defaultParam, self.defaultActionParam);
+      for (v in defaultParam) {
+        k = defaultParam[v];
+        if (v == null) {
+          self.defaultActionParam[k] = v;
+        }
+      }
       return this;
     };
 

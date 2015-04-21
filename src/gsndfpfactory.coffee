@@ -24,13 +24,15 @@
     dfpID: ''
     count: 0
     rendered: 0
-    dfpSelector: '.gsnunit'
-    dfpOptions: {}
-    dfpIsLoaded: false
-    $adCollection: undefined
+    sel: '.gsnunit'
+    dops: {}
+    isLoaded: false
+    $ads: undefined
     adBlockerOn: false
     storeAs: 'gsnunit'
     lastRefresh: 0
+
+    # for shopper welcome
     didOpen: false
     isVisible: false
 
@@ -40,11 +42,11 @@
       self = @
       self.dfpLoader()
       options = options or {}
-      self.dfpID = Gsn.Advertising.getNetworkId(true)
+      self.dfpID = gsndfp.getNetworkId(true)
       self.setOptions(options)
-      self.dfpSelector = options.dfpSelector or '.gsnunit'
-      options = self.dfpOptions
-      selector = self.dfpSelector
+      self.sel = options.sel or '.gsnunit'
+      options = self.dops
+      selector = self.sel
 
       # handle circplus
       if (selector == '.circplus')
@@ -53,13 +55,13 @@
           trakless.util.html(cp[0], options.bodyTemplate or self.bodyTemplate)
      
         # real selector is use above to append bodyTemplate
-        self.$adCollection = [qsel('.cpslot1')[0], qsel('.cpslot2')[0]]
+        self.$ads = [qsel('.cpslot1')[0], qsel('.cpslot2')[0]]
         self.storeAs = 'circplus'
         self.createAds()
         self.displayAds()
       # handle sw
       else if (selector == '.gsnsw')
-        self.dfpID = Gsn.Advertising.getNetworkId()
+        self.dfpID = gsndfp.getNetworkId()
         if qsel(options.displayWhenExists or '.gsnunit').length <= 0
           return
 
@@ -68,7 +70,7 @@
           self.onCloseCallback cancel: true
         else
           self.getPopup selector
-          Gsn.Advertising.on 'clickBrand', (e) ->
+          gsndfp.on 'clickBrand', (e) ->
             $win.gmodal.hide()
             return self
 
@@ -76,7 +78,7 @@
         return self
       # handle adpods
       else
-        self.$adCollection = qsel(selector)
+        self.$ads = qsel(selector)
         self.createAds()
         self.displayAds()
 
@@ -85,7 +87,7 @@
     setOptions: (options) ->
       self = @
       # Set default options
-      dfpOptions =
+      dops =
         setTargeting: {}
         setCategoryExclusion: ''
         setLocation: ''
@@ -99,9 +101,9 @@
 
       # Merge options objects
       for k, v of options
-        dfpOptions[k] = v
+        dops[k] = v
 
-      self.dfpOptions = dfpOptions
+      self.dops = dops
       
       @
 
@@ -112,7 +114,7 @@
 
       # remove any class that is tagged to be remove
       qsel('.remove').remove()
-      self.$adCollection = qsel(self.dfpSelector)
+      self.$ads = qsel(self.sel)
       self.createAds()
       self.displayAds()    
       setTimeout (->
@@ -130,9 +132,9 @@
       self.isVisible = false
       $win.scrollTo 0, 0            
       if !self.getCookie('gsnsw2')
-        self.setCookie 'gsnsw2', "#{Gsn.Advertising.gsnNetworkId},#{Gsn.Advertising.enableCircPlus},#{Gsn.Advertising.disableSw}", 1
-      if typeof self.dfpOptions.onClose == 'function'
-        self.dfpOptions.onClose self.didOpen
+        self.setCookie 'gsnsw2', "#{gsndfp.gsnNetworkId},#{gsndfp.enableCircPlus},#{gsndfp.disableSw}", 1
+      if typeof self.dops.onClose == 'function'
+        self.dops.onClose self.didOpen
       return
 
     swSucccess: (myrsp) ->
@@ -143,22 +145,22 @@
       self = gsnSw
       if rsp
         # allow for local value to override remote value
-        if (!Gsn.Advertising.gsnNetworkId)
-          Gsn.Advertising.gsnNetworkId = rsp.NetworkId
+        if (!gsndfp.gsnNetworkId)
+          gsndfp.gsnNetworkId = rsp.NetworkId
 
-        Gsn.Advertising.enableCircPlus = rsp.EnableCircPlus
-        Gsn.Advertising.disableSw = rsp.DisableSw
+        gsndfp.enableCircPlus = rsp.EnableCircPlus
+        gsndfp.disableSw = rsp.DisableSw
         data = rsp.Template
                                              
-      self.dfpID = Gsn.Advertising.getNetworkId() 
+      self.dfpID = gsndfp.getNetworkId() 
       evt = { data: rsp, cancel: false }                      
-      self.dfpOptions.onData evt
+      self.dops.onData evt
 
       if evt.cancel
         data = null 
       if data
         #add the random cachebuster
-        data = data.replace(/%%CACHEBUSTER%%/g, (new Date).getTime()).replace(/%%CHAINID%%/g, Gsn.Advertising.gsnid)
+        data = data.replace(/%%CACHEBUSTER%%/g, (new Date).getTime()).replace(/%%CHAINID%%/g, gsndfp.gsnid)
         $win.gmodal.injectStyle('swcss', swcss)
         $win.gmodal.on('show', self.onOpenCallback)
         $win.gmodal.on('hide', self.onCloseCallback)
@@ -177,7 +179,7 @@
 
     getPopup: (selector) ->
       self = @
-      url = "#{Gsn.Advertising.apiUrl}/ShopperWelcome/Get/#{Gsn.Advertising.gsnid}"
+      url = "#{gsndfp.apiUrl}/ShopperWelcome/Get/#{gsndfp.gsnid}"
       dataType = 'json'
       
       # fallback to jsonp for IE lt 10
@@ -209,9 +211,9 @@
           cookieData = decodeURI($doc.cookie.substring(begin, end))
           if (cookieData.indexOf(',') > 0)
             cookieDatas = cookieData.split(',')
-            Gsn.Advertising.gsnNetworkId = cookieDatas[0]
-            Gsn.Advertising.enableCircPlus = cookieData[1]
-            Gsn.Advertising.disableSw = cookieData[2]
+            gsndfp.gsnNetworkId = cookieDatas[0]
+            gsndfp.enableCircPlus = cookieData[1]
+            gsndfp.disableSw = cookieData[2]
           return cookieData
       null
 
@@ -229,9 +231,9 @@
 
     createAds: ->
       self = @
-      self.dfpID = Gsn.Advertising.getNetworkId() 
+      self.dfpID = gsndfp.getNetworkId() 
       # Loops through on page Ad units and gets ads for them.
-      for adUnit, k in self.$adCollection
+      for adUnit, k in self.$ads
         $adUnit = qsel(adUnit)
         allData = trakless.util.allData(adUnit)
         self.count++
@@ -273,7 +275,7 @@
               targeting = eval('(' + targeting + ')')
             for k, v of targeting
               if k == 'brand'
-                Gsn.Advertising.setBrand(v)
+                gsndfp.setBrand(v)
               googleAdUnit.setTargeting k, v
               return
           # Sets custom exclusions for just THIS ad unit if it has been specified
@@ -299,11 +301,11 @@
               googleAdUnit.oldRenderEnded()
 
             # Excute afterEachAdLoaded callback if provided
-            if typeof dfpOptions.afterEachAdLoaded == 'function'
-              dfpOptions.afterEachAdLoaded.call this, $adUnit
+            if typeof dops.afterEachAdLoaded == 'function'
+              dops.afterEachAdLoaded.call this, $adUnit
             # Excute afterAllAdsLoaded callback if provided
-            if typeof dfpOptions.afterAllAdsLoaded == 'function' and rendered == self.count
-              dfpOptions.afterAllAdsLoaded.call this, $adCollection
+            if typeof dops.afterAllAdsLoaded == 'function' and rendered == self.count
+              dops.afterAllAdsLoaded.call this, $ads
             return
 
           # Store googleAdUnit reference
@@ -311,45 +313,45 @@
           return
       # Push DFP config options
       $win.googletag.cmd.push ->
-        if typeof self.dfpOptions.setTargeting['brand'] == 'undefined'
-          brand = Gsn.Advertising.getBrand()
+        if typeof self.dops.setTargeting['brand'] == 'undefined'
+          brand = gsndfp.getBrand()
           if brand?
-            self.dfpOptions.setTargeting['brand'] = brand
+            self.dops.setTargeting['brand'] = brand
 
-        if self.dfpOptions.enableSingleRequest
+        if self.dops.enableSingleRequest
           $win.googletag.pubads().enableSingleRequest()
 
-        for k, v of self.dfpOptions.setTargeting
+        for k, v of self.dops.setTargeting
           if k == 'brand'
-            Gsn.Advertising.setBrand(v)
+            gsndfp.setBrand(v)
           $win.googletag.pubads().setTargeting k, v
 
-        if typeof self.dfpOptions.setLocation == 'object'
-          if typeof self.dfpOptions.setLocation.latitude == 'number' and typeof self.dfpOptions.setLocation.longitude == 'number' and typeof self.dfpOptions.setLocation.precision == 'number'
-            $win.googletag.pubads().setLocation self.dfpOptions.setLocation.latitude, self.dfpOptions.setLocation.longitude, self.dfpOptions.setLocation.precision
-          else if typeof self.dfpOptions.setLocation.latitude == 'number' and typeof self.dfpOptions.setLocation.longitude == 'number'
-            $win.googletag.pubads().setLocation self.dfpOptions.setLocation.latitude, self.dfpOptions.setLocation.longitude
+        if typeof self.dops.setLocation == 'object'
+          if typeof self.dops.setLocation.latitude == 'number' and typeof self.dops.setLocation.longitude == 'number' and typeof self.dops.setLocation.precision == 'number'
+            $win.googletag.pubads().setLocation self.dops.setLocation.latitude, self.dops.setLocation.longitude, self.dops.setLocation.precision
+          else if typeof self.dops.setLocation.latitude == 'number' and typeof self.dops.setLocation.longitude == 'number'
+            $win.googletag.pubads().setLocation self.dops.setLocation.latitude, self.dops.setLocation.longitude
 
-        if self.dfpOptions.setCategoryExclusion.length > 0
-          exclusionsGroup = self.dfpOptions.setCategoryExclusion.split(',')
+        if self.dops.setCategoryExclusion.length > 0
+          exclusionsGroup = self.dops.setCategoryExclusion.split(',')
           for v, k in exclusionsGroup
             valueTrimmed = trakless.util.trim(v)
             if valueTrimmed.length > 0
               $win.googletag.pubads().setCategoryExclusion valueTrimmed
 
-        if self.dfpOptions.collapseEmptyDivs or self.dfpOptions.collapseEmptyDivs == 'original'
+        if self.dops.collapseEmptyDivs or self.dops.collapseEmptyDivs == 'original'
           $win.googletag.pubads().collapseEmptyDivs()
 
-        if self.dfpOptions.disablePublisherConsole
+        if self.dops.disablePublisherConsole
           $win.googletag.pubads().disablePublisherConsole()
 
-        if self.dfpOptions.disableInitialLoad
+        if self.dops.disableInitialLoad
           $win.googletag.pubads().disableInitialLoad()
 
-        if self.dfpOptions.noFetch
+        if self.dops.noFetch
           $win.googletag.pubads().noFetch()
 
-        if self.dfpSelector == '.circplus'
+        if self.sel == '.circplus'
           $win.googletag.companionAds().setRefreshUnfilledSlots true
 
         $win.googletag.enableServices()
@@ -374,12 +376,12 @@
       self.lastRefresh = currentTime
       toPush = []
       # Display each ad
-      for adUnit, k in self.$adCollection
+      for adUnit, k in self.$ads
         $adUnit = qsel(adUnit)
         $adUnitData = adUnit[self.storeAs]
-        if self.dfpOptions.refreshExisting and $adUnitData and adUnit['gsnDfpExisting']
+        if self.dops.refreshExisting and $adUnitData and adUnit['gsnDfpExisting']
           # determine if element is in view
-          if !self.dfpOptions.inViewOnly or self.isHeightInView($adUnit)
+          if !self.dops.inViewOnly or self.isHeightInView($adUnit)
             toPush.push $adUnitData
         else
           adUnit['gsnDfpExisting'] = true
@@ -394,7 +396,7 @@
 
     getID: ($adUnit, adUnitName, count, adUnit) ->
       self = @
-      if !self.dfpOptions.refreshExisting
+      if !self.dops.refreshExisting
         adUnit[self.storeAs] = null
         adUnit['gsnDfpExisting'] = null
         if $adUnit.get('@id')
@@ -418,7 +420,7 @@
       dimensions
 
     dfpLoader: ->
-      if self.dfpIsLoaded
+      if self.isLoaded
         return
 
       $win.googletag = $win.googletag or {}
@@ -434,7 +436,7 @@
         return
 
       loadScript('//www.googletagservices.com/tag/js/gpt.js')
-      self.dfpIsLoaded = true
+      self.isLoaded = true
 
       # Adblock plus seems to hide blocked scripts... so we check for that
       if gads.style.display == 'none'
@@ -485,7 +487,7 @@
             _defineSlot name, [], id, true
           display: (id) ->
             $win.googletag.ads[id].renderEnded.call self
-            this
+            @
 
         # Execute any stored commands
         for v, k in commands

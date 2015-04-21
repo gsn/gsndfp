@@ -1,18 +1,23 @@
-win = window
+debug = require('debug')
+log = debug('gsndfp')
 defaults = require('defaults')
 trakless2 = require('trakless')
 loadiframe = require('load-iframe')
 gsndfpfactory = require('./gsndfpfactory.coffee')
+
+if console?
+  log.log = console.log.bind(console); 
+
+win = window
 doc = win.document
 gsnContext = win.gsnContext
 trakless = win.trakless
-tickerFrame = undefined
 myGsn = win.Gsn or {}
 oldGsnAdvertising = myGsn.Advertising
 gsnSw2 = new gsndfpfactory()
-gsnDfp = new gsndfpfactory()
+gsnAdpods = new gsndfpfactory()
 circPlus = new gsndfpfactory()
-if typeof oldGsnAdvertising != 'undefined'
+if oldGsnAdvertising?
   # prevent multiple load
   if oldGsnAdvertising.pluginLoaded
     return
@@ -168,8 +173,10 @@ class Plugin
   log: (message) ->
     self = myGsn.Advertising
 
-    if (self.isDebug and console)
-      console.log message
+    if (debug.enabled('gsndfp'))
+      if (typeof message is 'object')
+        message = trakless.util.stringToJSON(message)
+      log(message)
     @
 
   ###*
@@ -188,7 +195,7 @@ class Plugin
       traker = trakless.getDefaultTracker()
       traker.track('gsn', translatedParam)
 
-    self.log trakless.util.stringToJSON(actionParam)
+    self.log actionParam
 
     @
 
@@ -245,10 +252,8 @@ class Plugin
 
       # this is to cover the cache buster situation
       url = url.replace('%%CACHEBUSTER%%', (new Date).getTime())
-      if typeof tickerFrame == 'undefined'
-        tickerFrame = loadiframe url
-      else
-        tickerFrame.src = url
+      img = new Image(1,1)
+      img.src = url
     @
 
   ###*
@@ -391,7 +396,7 @@ class Plugin
       if payLoad.page
         targetting.kw = payLoad.page.replace(/[^a-z]/gi, '');
 
-      gsnDfp.refresh(
+      gsnAdpods.refresh(
         setTargeting: targetting
         refreshExisting: self.refreshExisting.pods
       )
@@ -402,7 +407,7 @@ class Plugin
         circPlus.refresh(
           setTargeting: targetting
           circPlusBody: self.circPlusBody
-          dfpSelector: '.circplus'
+          sel: '.circplus'
           refreshExisting: self.refreshExisting.circPlus
         )
         self.refreshExisting.circPlus = true
@@ -425,7 +430,7 @@ class Plugin
         
       gsnSw2.refresh(
         displayWhenExists: '.gsnadunit,.gsnunit'
-        dfpSelector: '.gsnsw'
+        sel: '.gsnsw'
         onData: (evt) ->
           if (self.source or '').length > 0
             evt.cancel = self.disableSw.indexOf(self.source) > 0
@@ -486,7 +491,8 @@ class Plugin
     self = myGsn.Advertising
     if (gsnid)
       self.gsnid = gsnid
-      self.isDebug = isDebug unless self.isDebug
+      if (isDebug)
+        debug.enable('gsndfp')
 
     return self.refreshWithTimer({ evtname: 'loading' })
 
@@ -510,6 +516,7 @@ myGsn.Advertising.recipeRedirect = myPlugin.clickRecipe
 
 # put GSN back online
 win.Gsn = myGsn
+win.gsndfp = myGsn.Advertising
 
 if (gsnContext?)
   buildqs = (k, v) ->
@@ -597,6 +604,8 @@ attrs =
   debug: (value) ->
     return unless typeof value is "string"
     aPlugin.isDebug = value isnt "false"
+    if (value) 
+      debug.enable('gsndfp')
   api: (value) ->
     return unless typeof value is "string"
     aPlugin.apiUrl = value

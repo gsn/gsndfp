@@ -3694,10 +3694,8 @@ function parse(html, doc) {
           return self;
         } else {
           self.$ads = qsel(selector);
-          if (self.$ads[0]) {
-            self.createAds();
-            self.displayAds();
-          }
+          self.createAds();
+          self.displayAds();
         }
         return this;
       };

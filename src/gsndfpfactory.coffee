@@ -84,10 +84,8 @@
       # handle adpods
       else
         self.$ads = qsel(selector)
-        # only proceed if there are ads
-        if (self.$ads[0])
-          self.createAds()
-          self.displayAds()
+        self.createAds()
+        self.displayAds()
 
       @
 

@@ -163,7 +163,8 @@
         $win.gmodal.on('show', self.onOpenCallback)
         $win.gmodal.on('hide', self.onCloseCallback)
         $win.gmodal.on('click', (evt) ->
-          if (evt.target.className.indexOf('sw-close') >= 0)
+          target = evt.target or evt.srcElement
+          if (target.className.indexOf('sw-close') >= 0)
             $win.gmodal.hide()
         )
 

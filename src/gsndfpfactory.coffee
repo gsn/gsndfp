@@ -41,8 +41,6 @@
     bodyTemplate: circplusTemplate
     refresh: (options) ->
       self = @
-      if !self.adUnitById
-        self.adUnitById = {}
       self.dfpLoader()
       options = options or {}
       self.dfpID = gsndfp.getNetworkId(true)
@@ -264,8 +262,7 @@
         $adUnit.set('$', '+display-none')
         # Push commands to DFP to create ads
         $win.googletag.cmd.push ->
-          googleAdUnit = undefined
-          $adUnitData = self.adUnitById[adUnitID]
+          $adUnitData = adUnitById[adUnitID]
           if $adUnitData
             return
           # remove double slash and any space, trim ending slash
@@ -273,16 +270,17 @@
           # append single front slash
           if self.dfpID.indexOf('/') != 0
             self.dfpID = '/' + dfpID
+
           # Create the ad - out of page or normal
           if allData['outofpage']
-            googleAdUnit = $win.googletag.defineOutOfPageSlot(self.dfpID, adUnitID).addService($win.googletag.pubads())
+            $adUnitData = $win.googletag.defineOutOfPageSlot(self.dfpID, adUnitID).addService($win.googletag.pubads())
           else
-            googleAdUnit = $win.googletag.defineSlot(self.dfpID, dimensions, adUnitID).addService($win.googletag.pubads())
+            $adUnitData = $win.googletag.defineSlot(self.dfpID, dimensions, adUnitID).addService($win.googletag.pubads())
 
           # mark as companion ad
           companion = allData['companion']
           if companion?
-            googleAdUnit.addService $win.googletag.companionAds()
+            $adUnitData.addService $win.googletag.companionAds()
 
           # Sets custom targeting for just THIS ad unit if it has been specified
           targeting = allData['targeting']
@@ -292,8 +290,8 @@
             for k, v of targeting
               if k == 'brand'
                 gsndfp.setBrand(v)
-              googleAdUnit.setTargeting k, v
-              return
+              $adUnitData.setTargeting k, v
+
           # Sets custom exclusions for just THIS ad unit if it has been specified
           exclusions = allData['exclusions']
           if exclusions
@@ -302,29 +300,28 @@
             for v, k in exclusionsGroup
               valueTrimmed = trakless.util.trim(v)
               if valueTrimmed.length > 0
-                googleAdUnit.setCategoryExclusion valueTrimmed
+                $adUnitData.setCategoryExclusion valueTrimmed
               return
 
-          $adUnitData = googleAdUnit
           # Store googleAdUnit reference
-          self.adUnitById[adUnitID] = $adUnitData
+          adUnitById[adUnitID] = $adUnitData
 
           # The following hijacks an internal google method to check if the div has been
           # collapsed after the ad has been attempted to be loaded.
-          googleAdUnit.oldRenderEnded = googleAdUnit.oldRenderEnded or googleAdUnit.renderEnded
+          $adUnitData.oldRenderEnded = $adUnitData.oldRenderEnded or $adUnitData.renderEnded
 
-          googleAdUnit.renderEnded = ->
-            rendered++
+          $adUnitData.renderEnded = ->
+            self.rendered++
             display = adUnit.style.display
             $adUnit.set('$', '-display-none').set('$', '+display-' + display)
             $adUnitData.existing = true
 
-            if googleAdUnit.oldRenderEnded?
-              googleAdUnit.oldRenderEnded()
+            if $adUnitData.oldRenderEnded?
+              $adUnitData.oldRenderEnded()
 
             # Excute afterEachAdLoaded callback if provided
-            if typeof dops.afterEachAdLoaded == 'function'
-              dops.afterEachAdLoaded.call this, $adUnit
+            if typeof self.dops.afterEachAdLoaded == 'function'
+              self.dops.afterEachAdLoaded.call self, $adUnit, $adUnitData
             # Excute afterAllAdsLoaded callback if provided
             #if typeof dops.afterAllAdsLoaded == 'function' and rendered == self.count
             #  dops.afterAllAdsLoaded.call this, $ads
@@ -394,7 +391,7 @@
       for adUnit, k in self.$ads
         $adUnit = qsel(adUnit)
         id = $adUnit.get('@id')
-        $adUnitData = self.adUnitById[id]
+        $adUnitData = adUnitById[id]
         
         if ($adUnitData?)
           # determine if element is in view

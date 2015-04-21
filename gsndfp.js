@@ -3658,9 +3658,6 @@ function parse(html, doc) {
       gsndfpfactory.prototype.refresh = function(options) {
         var cp, currentTime, selector, self;
         self = this;
-        if (!self.adUnitById) {
-          self.adUnitById = {};
-        }
         self.dfpLoader();
         options = options || {};
         self.dfpID = gsndfp.getNetworkId(true);
@@ -3890,9 +3887,8 @@ function parse(html, doc) {
           trakless.util.html(adUnit, '');
           $adUnit.set('$', '+display-none');
           $win.googletag.cmd.push(function() {
-            var $adUnitData, companion, exclusions, exclusionsGroup, googleAdUnit, j, len1, targeting, v, valueTrimmed;
-            googleAdUnit = void 0;
-            $adUnitData = self.adUnitById[adUnitID];
+            var $adUnitData, companion, exclusions, exclusionsGroup, j, len1, targeting, v, valueTrimmed;
+            $adUnitData = adUnitById[adUnitID];
             if ($adUnitData) {
               return;
             }
@@ -3901,13 +3897,13 @@ function parse(html, doc) {
               self.dfpID = '/' + dfpID;
             }
             if (allData['outofpage']) {
-              googleAdUnit = $win.googletag.defineOutOfPageSlot(self.dfpID, adUnitID).addService($win.googletag.pubads());
+              $adUnitData = $win.googletag.defineOutOfPageSlot(self.dfpID, adUnitID).addService($win.googletag.pubads());
             } else {
-              googleAdUnit = $win.googletag.defineSlot(self.dfpID, dimensions, adUnitID).addService($win.googletag.pubads());
+              $adUnitData = $win.googletag.defineSlot(self.dfpID, dimensions, adUnitID).addService($win.googletag.pubads());
             }
             companion = allData['companion'];
             if (companion != null) {
-              googleAdUnit.addService($win.googletag.companionAds());
+              $adUnitData.addService($win.googletag.companionAds());
             }
             targeting = allData['targeting'];
             if (targeting) {
@@ -3919,8 +3915,7 @@ function parse(html, doc) {
                 if (k === 'brand') {
                   gsndfp.setBrand(v);
                 }
-                googleAdUnit.setTargeting(k, v);
-                return;
+                $adUnitData.setTargeting(k, v);
               }
             }
             exclusions = allData['exclusions'];
@@ -3931,25 +3926,24 @@ function parse(html, doc) {
                 v = exclusionsGroup[k];
                 valueTrimmed = trakless.util.trim(v);
                 if (valueTrimmed.length > 0) {
-                  googleAdUnit.setCategoryExclusion(valueTrimmed);
+                  $adUnitData.setCategoryExclusion(valueTrimmed);
                 }
                 return;
               }
             }
-            $adUnitData = googleAdUnit;
-            self.adUnitById[adUnitID] = $adUnitData;
-            googleAdUnit.oldRenderEnded = googleAdUnit.oldRenderEnded || googleAdUnit.renderEnded;
-            googleAdUnit.renderEnded = function() {
+            adUnitById[adUnitID] = $adUnitData;
+            $adUnitData.oldRenderEnded = $adUnitData.oldRenderEnded || $adUnitData.renderEnded;
+            $adUnitData.renderEnded = function() {
               var display;
-              rendered++;
+              self.rendered++;
               display = adUnit.style.display;
               $adUnit.set('$', '-display-none').set('$', '+display-' + display);
               $adUnitData.existing = true;
-              if (googleAdUnit.oldRenderEnded != null) {
-                googleAdUnit.oldRenderEnded();
+              if ($adUnitData.oldRenderEnded != null) {
+                $adUnitData.oldRenderEnded();
               }
-              if (typeof dops.afterEachAdLoaded === 'function') {
-                dops.afterEachAdLoaded.call(this, $adUnit);
+              if (typeof self.dops.afterEachAdLoaded === 'function') {
+                self.dops.afterEachAdLoaded.call(self, $adUnit, $adUnitData);
               }
             };
           });
@@ -4027,7 +4021,7 @@ function parse(html, doc) {
           adUnit = ref[k];
           $adUnit = qsel(adUnit);
           id = $adUnit.get('@id');
-          $adUnitData = self.adUnitById[id];
+          $adUnitData = adUnitById[id];
           if (($adUnitData != null)) {
             if (!self.dops.inViewOnly || self.isHeightInView(adUnit)) {
               if ($adUnitData.existing) {

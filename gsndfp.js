@@ -3718,7 +3718,10 @@ function parse(html, doc) {
 
       gsndfpfactory.prototype.swSucccess = function(myrsp) {
         var data, evt, rsp, self;
-        rsp = JSON.parse(myrsp);
+        rsp = myrsp;
+        if (typeof myrsp === 'string') {
+          rsp = JSON.parse(myrsp);
+        }
         self = gsnSw;
         if (rsp) {
           if (!Gsn.Advertising.gsnNetworkId) {

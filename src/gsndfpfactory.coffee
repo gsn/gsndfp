@@ -136,7 +136,10 @@
       return
 
     swSucccess: (myrsp) ->
-      rsp = JSON.parse(myrsp)
+      rsp = myrsp
+      if (typeof myrsp is 'string')
+        rsp = JSON.parse(myrsp)
+        
       self = gsnSw
       if rsp
         # allow for local value to override remote value

@@ -116,10 +116,10 @@
 
     onOpenCallback: (event) ->
       self = gsnSw
-
-      # hide on brand click
-      gsndfp.on 'clickBrand', win.gmodal.hide
       
+      # hide on brand click
+      gsndfp.on 'clickBrand', $win.gmodal.hide
+
       self.didOpen = true   
       self.isVisible = true
 

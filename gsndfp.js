@@ -3728,7 +3728,7 @@ function parse(html, doc) {
       gsndfpfactory.prototype.onOpenCallback = function(event) {
         var self;
         self = gsnSw;
-        gsndfp.on('clickBrand', win.gmodal.hide);
+        gsndfp.on('clickBrand', $win.gmodal.hide);
         self.didOpen = true;
         self.isVisible = true;
         qsel('.remove').remove();

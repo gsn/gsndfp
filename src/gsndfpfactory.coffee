@@ -391,11 +391,11 @@
         $adUnitData = adUnitById[id]
         if self.dops.refreshExisting and $adUnitData
           # determine if element is in view
-          if !self.dops.inViewOnly or self.isHeightInView($adUnit)
+          if !self.dops.inViewOnly or self.isHeightInView(adUnit)
             toPush.push $adUnitData
         else
           $win.googletag.cmd.push ->
-            $win.googletag.display $adUnit.get('@id')
+            $win.googletag.display id
 
       if toPush.length > 0
         $win.googletag.cmd.push ->

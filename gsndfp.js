@@ -4026,12 +4026,12 @@ function parse(html, doc) {
           id = $adUnit.get('@id');
           $adUnitData = adUnitById[id];
           if (self.dops.refreshExisting && $adUnitData) {
-            if (!self.dops.inViewOnly || self.isHeightInView($adUnit)) {
+            if (!self.dops.inViewOnly || self.isHeightInView(adUnit)) {
               toPush.push($adUnitData);
             }
           } else {
             $win.googletag.cmd.push(function() {
-              return $win.googletag.display($adUnit.get('@id'));
+              return $win.googletag.display(id);
             });
           }
         }

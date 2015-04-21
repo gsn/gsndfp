@@ -31,7 +31,6 @@
     adBlockerOn: false
     storeAs: 'gsnunit'
     lastRefresh: 0
-    adUnitById: {}
 
     # for shopper welcome
     didOpen: false
@@ -41,6 +40,8 @@
     bodyTemplate: circplusTemplate
     refresh: (options) ->
       self = @
+      if !self.adUnitById
+        self.adUnitById = {}
       self.dfpLoader()
       options = options or {}
       self.dfpID = gsndfp.getNetworkId(true)
@@ -86,6 +87,7 @@
         return self
       # handle adpods
       else
+        self.storeAs = 'gsnunit'
         self.$ads = qsel(selector)
         self.createAds()
         self.displayAds()

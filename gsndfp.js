@@ -599,6 +599,7 @@
         }
         gsnAdpods.refresh({
           setTargeting: targetting,
+          sel: '.gsnunit',
           refreshExisting: self.refreshExisting.pods
         });
         self.refreshExisting.pods = true;
@@ -3647,8 +3648,6 @@ function parse(html, doc) {
 
       gsndfpfactory.prototype.lastRefresh = 0;
 
-      gsndfpfactory.prototype.adUnitById = {};
-
       gsndfpfactory.prototype.didOpen = false;
 
       gsndfpfactory.prototype.isVisible = false;
@@ -3658,6 +3657,9 @@ function parse(html, doc) {
       gsndfpfactory.prototype.refresh = function(options) {
         var cp, currentTime, selector, self;
         self = this;
+        if (!self.adUnitById) {
+          self.adUnitById = {};
+        }
         self.dfpLoader();
         options = options || {};
         self.dfpID = gsndfp.getNetworkId(true);
@@ -3699,6 +3701,7 @@ function parse(html, doc) {
           }
           return self;
         } else {
+          self.storeAs = 'gsnunit';
           self.$ads = qsel(selector);
           self.createAds();
           self.displayAds();

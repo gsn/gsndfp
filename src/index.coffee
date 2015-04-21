@@ -403,6 +403,7 @@ class Plugin
 
       gsnAdpods.refresh(
         setTargeting: targetting
+        sel: '.gsnunit'
         refreshExisting: self.refreshExisting.pods
       )
       self.refreshExisting.pods = true

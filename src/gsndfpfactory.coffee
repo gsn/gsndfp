@@ -407,8 +407,8 @@
       self = @
       if !self.dops.refreshExisting
         if ($adUnit.get('@id') or '').length <= 0
-          $adUnit.set '@id', adUnitName + '-auto-gen-id-' + count
-      $adUnit.get('@id') or $adUnit.set('@id', adUnitName + '-auto-gen-id-' + count).get('@id')
+          $adUnit.set '@id', adUnitName + '$auto$gen$id$' + count
+      $adUnit.get('@id') or $adUnit.set('@id', adUnitName + '$auto$gen$id$' + count).get('@id')
 
     getDimensions: ($adUnit, allData) ->
       dimensions = []

@@ -4047,10 +4047,10 @@ function parse(html, doc) {
         self = this;
         if (!self.dops.refreshExisting) {
           if (($adUnit.get('@id') || '').length <= 0) {
-            $adUnit.set('@id', adUnitName + '-auto-gen-id-' + count);
+            $adUnit.set('@id', adUnitName + '$auto$gen$id$' + count);
           }
         }
-        return $adUnit.get('@id') || $adUnit.set('@id', adUnitName + '-auto-gen-id-' + count).get('@id');
+        return $adUnit.get('@id') || $adUnit.set('@id', adUnitName + '$auto$gen$id$' + count).get('@id');
       };
 
       gsndfpfactory.prototype.getDimensions = function($adUnit, allData) {

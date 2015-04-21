@@ -3609,7 +3609,7 @@ function parse(html, doc) {
 (function() {
   (function(win) {
     'use strict';
-    var $doc, $win, circplusTemplate, gmodal, gsnSw, gsndfpfactory, loadScript, qsel, swcss, trakless, trakless2;
+    var $doc, $win, adUnitById, circplusTemplate, gmodal, gsnSw, gsndfpfactory, loadScript, qsel, swcss, trakless, trakless2;
     trakless2 = require('trakless');
     trakless = win.trakless;
     gmodal = require('gmodal');
@@ -3620,6 +3620,7 @@ function parse(html, doc) {
     qsel = $win.trakless.util.$;
     $doc = $win.document;
     gsnSw = null;
+    adUnitById = {};
 
     /** 
      * gsndfpfactory

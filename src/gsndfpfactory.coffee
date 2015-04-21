@@ -15,6 +15,7 @@
   qsel = $win.trakless.util.$
   $doc = $win.document
   gsnSw = null
+  adUnitById = {}
 
   ###* 
   # gsndfpfactory

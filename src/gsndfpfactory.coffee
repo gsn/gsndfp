@@ -15,7 +15,6 @@
   qsel = $win.trakless.util.$
   $doc = $win.document
   gsnSw = null
-  adUnitById = {}
 
   ###* 
   # gsndfpfactory
@@ -32,6 +31,7 @@
     adBlockerOn: false
     storeAs: 'gsnunit'
     lastRefresh: 0
+    adUnitById: {}
 
     # for shopper welcome
     didOpen: false
@@ -263,7 +263,7 @@
         # Push commands to DFP to create ads
         $win.googletag.cmd.push ->
           googleAdUnit = undefined
-          $adUnitData = adUnitById[adUnitID]
+          $adUnitData = self.adUnitById[adUnitID]
           if $adUnitData
             return
           # remove double slash and any space, trim ending slash
@@ -323,7 +323,7 @@
             return
 
           # Store googleAdUnit reference
-          adUnitById[adUnitID] = googleAdUnit
+          self.adUnitById[adUnitID] = googleAdUnit
           return
       # Push DFP config options
       $win.googletag.cmd.push ->
@@ -388,8 +388,8 @@
       for adUnit, k in self.$ads
         $adUnit = qsel(adUnit)
         id = $adUnit.get('@id')
-        $adUnitData = adUnitById[id]
-        if self.dops.refreshExisting and $adUnitData
+        $adUnitData = self.adUnitById[id]
+        if $adUnitData
           # determine if element is in view
           if !self.dops.inViewOnly or self.isHeightInView(adUnit)
             toPush.push $adUnitData

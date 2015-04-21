@@ -3608,7 +3608,7 @@ function parse(html, doc) {
 (function() {
   (function(win) {
     'use strict';
-    var $doc, $win, adUnitById, circplusTemplate, gmodal, gsnSw, gsndfpfactory, loadScript, qsel, swcss, trakless, trakless2;
+    var $doc, $win, circplusTemplate, gmodal, gsnSw, gsndfpfactory, loadScript, qsel, swcss, trakless, trakless2;
     trakless2 = require('trakless');
     trakless = win.trakless;
     gmodal = require('gmodal');
@@ -3619,7 +3619,6 @@ function parse(html, doc) {
     qsel = $win.trakless.util.$;
     $doc = $win.document;
     gsnSw = null;
-    adUnitById = {};
 
     /** 
      * gsndfpfactory
@@ -3647,6 +3646,8 @@ function parse(html, doc) {
       gsndfpfactory.prototype.storeAs = 'gsnunit';
 
       gsndfpfactory.prototype.lastRefresh = 0;
+
+      gsndfpfactory.prototype.adUnitById = {};
 
       gsndfpfactory.prototype.didOpen = false;
 
@@ -3888,7 +3889,7 @@ function parse(html, doc) {
           $win.googletag.cmd.push(function() {
             var $adUnitData, companion, exclusions, exclusionsGroup, googleAdUnit, j, len1, targeting, v, valueTrimmed;
             googleAdUnit = void 0;
-            $adUnitData = adUnitById[adUnitID];
+            $adUnitData = self.adUnitById[adUnitID];
             if ($adUnitData) {
               return;
             }
@@ -3948,7 +3949,7 @@ function parse(html, doc) {
                 dops.afterAllAdsLoaded.call(this, $ads);
               }
             };
-            adUnitById[adUnitID] = googleAdUnit;
+            self.adUnitById[adUnitID] = googleAdUnit;
           });
         }
         $win.googletag.cmd.push(function() {
@@ -4024,8 +4025,8 @@ function parse(html, doc) {
           adUnit = ref[k];
           $adUnit = qsel(adUnit);
           id = $adUnit.get('@id');
-          $adUnitData = adUnitById[id];
-          if (self.dops.refreshExisting && $adUnitData) {
+          $adUnitData = self.adUnitById[id];
+          if ($adUnitData) {
             if (!self.dops.inViewOnly || self.isHeightInView(adUnit)) {
               toPush.push($adUnitData);
             }

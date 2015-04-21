@@ -64,13 +64,12 @@
           self.displayAds()
       # handle sw
       else if (selector == '.gsnsw')
+        $win.gmodal.injectStyle('swcss', swcss)
         gsnSw = self
+        self.dops.enableSingleRequest = true
         self.dfpID = gsndfp.getNetworkId()
         if qsel(options.displayWhenExists or '.gsnunit').length <= 0
           return
-
-        # hide on brand click
-        gsndfp.on 'clickBrand', $win.gmodal.hide
       
         self.storeAs = 'gsnsw'
         if self.didOpen or self.getCookie('gsnsw2')?
@@ -118,17 +117,23 @@
     onOpenCallback: (event) ->
       self = gsnSw
 
-      self.didOpen = true   
-      self.isVisible = true
+      # hide on brand click
+      gsndfp.on 'clickBrand', (e) ->
+        $win.gmodal.hide()
+        return
 
-      # remove any class that is tagged to be remove
-      qsel('.remove').remove()
+      self.didOpen = true  
+      self.isVisible = true
       self.$ads = qsel(self.sel)
       self.createAds()
-      self.displayAds()    
-      setTimeout (->
+      self.displayAds()
+
+      setTimeout (->  
         # adblocking detection  
         if self.adBlockerOn
+
+          # remove any class that is tagged to be remove
+          qsel('.remove').remove()
           qsel('.sw-msg')[0].style.display = 'block';
           qsel('.sw-header-copy')[0].style.display = 'none';
           qsel('.sw-row')[0].style.display = 'none';
@@ -170,7 +175,6 @@
       if data
         #add the random cachebuster
         data = data.replace(/%%CACHEBUSTER%%/g, (new Date).getTime()).replace(/%%CHAINID%%/g, gsndfp.gsnid)
-        $win.gmodal.injectStyle('swcss', swcss)
         $win.gmodal.on('show', self.onOpenCallback)
         $win.gmodal.on('hide', self.onCloseCallback)
         $win.gmodal.on('click', (evt) ->

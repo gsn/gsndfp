@@ -15,6 +15,7 @@
   qsel = $win.trakless.util.$
   $doc = $win.document
   gsnSw = null
+  adUnitById = {}
 
   ###* 
   # gsndfpfactory
@@ -262,7 +263,7 @@
         # Push commands to DFP to create ads
         $win.googletag.cmd.push ->
           googleAdUnit = undefined
-          $adUnitData = adUnit[self.storeAs]
+          $adUnitData = adUnitById[adUnitID]
           if $adUnitData
             return
           # remove double slash and any space, trim ending slash
@@ -322,7 +323,7 @@
             return
 
           # Store googleAdUnit reference
-          adUnit[self.storeAs] = googleAdUnit
+          adUnitById[adUnitID] = googleAdUnit
           return
       # Push DFP config options
       $win.googletag.cmd.push ->
@@ -386,13 +387,13 @@
       # Display each ad
       for adUnit, k in self.$ads
         $adUnit = qsel(adUnit)
-        $adUnitData = adUnit[self.storeAs]
-        if self.dops.refreshExisting and $adUnitData and adUnit['gsnDfpExisting']
+        id = $adUnit.get('@id')
+        $adUnitData = adUnitById[id]
+        if self.dops.refreshExisting and $adUnitData
           # determine if element is in view
           if !self.dops.inViewOnly or self.isHeightInView($adUnit)
             toPush.push $adUnitData
         else
-          adUnit['gsnDfpExisting'] = true
           $win.googletag.cmd.push ->
             $win.googletag.display $adUnit.get('@id')
 
@@ -405,9 +406,7 @@
     getID: ($adUnit, adUnitName, count, adUnit) ->
       self = @
       if !self.dops.refreshExisting
-        adUnit[self.storeAs] = null
-        adUnit['gsnDfpExisting'] = null
-        if $adUnit.get('@id')
+        if ($adUnit.get('@id') or '').length <= 0
           $adUnit.set '@id', adUnitName + '-auto-gen-id-' + count
       $adUnit.get('@id') or $adUnit.set('@id', adUnitName + '-auto-gen-id-' + count).get('@id')
 

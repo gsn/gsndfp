@@ -3608,7 +3608,7 @@ function parse(html, doc) {
 (function() {
   (function(win) {
     'use strict';
-    var $doc, $win, circplusTemplate, gmodal, gsnSw, gsndfpfactory, loadScript, qsel, swcss, trakless, trakless2;
+    var $doc, $win, adUnitById, circplusTemplate, gmodal, gsnSw, gsndfpfactory, loadScript, qsel, swcss, trakless, trakless2;
     trakless2 = require('trakless');
     trakless = win.trakless;
     gmodal = require('gmodal');
@@ -3619,6 +3619,7 @@ function parse(html, doc) {
     qsel = $win.trakless.util.$;
     $doc = $win.document;
     gsnSw = null;
+    adUnitById = {};
 
     /** 
      * gsndfpfactory
@@ -3887,7 +3888,7 @@ function parse(html, doc) {
           $win.googletag.cmd.push(function() {
             var $adUnitData, companion, exclusions, exclusionsGroup, googleAdUnit, j, len1, targeting, v, valueTrimmed;
             googleAdUnit = void 0;
-            $adUnitData = adUnit[self.storeAs];
+            $adUnitData = adUnitById[adUnitID];
             if ($adUnitData) {
               return;
             }
@@ -3947,7 +3948,7 @@ function parse(html, doc) {
                 dops.afterAllAdsLoaded.call(this, $ads);
               }
             };
-            adUnit[self.storeAs] = googleAdUnit;
+            adUnitById[adUnitID] = googleAdUnit;
           });
         }
         $win.googletag.cmd.push(function() {
@@ -4015,20 +4016,20 @@ function parse(html, doc) {
       };
 
       gsndfpfactory.prototype.displayAds = function() {
-        var $adUnit, $adUnitData, adUnit, i, k, len, ref, self, toPush;
+        var $adUnit, $adUnitData, adUnit, i, id, k, len, ref, self, toPush;
         self = this;
         toPush = [];
         ref = self.$ads;
         for (k = i = 0, len = ref.length; i < len; k = ++i) {
           adUnit = ref[k];
           $adUnit = qsel(adUnit);
-          $adUnitData = adUnit[self.storeAs];
-          if (self.dops.refreshExisting && $adUnitData && adUnit['gsnDfpExisting']) {
+          id = $adUnit.get('@id');
+          $adUnitData = adUnitById[id];
+          if (self.dops.refreshExisting && $adUnitData) {
             if (!self.dops.inViewOnly || self.isHeightInView($adUnit)) {
               toPush.push($adUnitData);
             }
           } else {
-            adUnit['gsnDfpExisting'] = true;
             $win.googletag.cmd.push(function() {
               return $win.googletag.display($adUnit.get('@id'));
             });
@@ -4045,9 +4046,7 @@ function parse(html, doc) {
         var self;
         self = this;
         if (!self.dops.refreshExisting) {
-          adUnit[self.storeAs] = null;
-          adUnit['gsnDfpExisting'] = null;
-          if ($adUnit.get('@id')) {
+          if (($adUnit.get('@id') || '').length <= 0) {
             $adUnit.set('@id', adUnitName + '-auto-gen-id-' + count);
           }
         }

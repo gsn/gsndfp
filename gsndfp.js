@@ -4026,7 +4026,7 @@ function parse(html, doc) {
           $adUnit = qsel(adUnit);
           id = $adUnit.get('@id');
           $adUnitData = self.adUnitById[id];
-          if ($adUnitData) {
+          if (self.dops.refreshExisting && $adUnitData) {
             if (!self.dops.inViewOnly || self.isHeightInView(adUnit)) {
               toPush.push($adUnitData);
             }

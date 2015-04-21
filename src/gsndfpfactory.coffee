@@ -389,7 +389,7 @@
         $adUnit = qsel(adUnit)
         id = $adUnit.get('@id')
         $adUnitData = self.adUnitById[id]
-        if $adUnitData
+        if self.dops.refreshExisting and $adUnitData
           # determine if element is in view
           if !self.dops.inViewOnly or self.isHeightInView(adUnit)
             toPush.push $adUnitData

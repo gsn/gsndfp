@@ -1,6 +1,5 @@
 debug = require('debug')
 log = debug('gsndfp')
-defaults = require('defaults')
 trakless2 = require('trakless')
 loadiframe = require('load-iframe')
 gsndfpfactory = require('./gsndfpfactory.coffee')
@@ -42,7 +41,7 @@ class Plugin
      # optional* - the id you use to uniquely identify your consumer
     consumerid: undefined
      # optional* - determine if consumer is anonymous or registered with your site
-    isanon: undefined
+    isanon: false
      # optional * - string identify consumer loyalty card id
     loyaltyid: undefined
     # -- Consumer Interest --
@@ -373,7 +372,11 @@ class Plugin
   ###
   refreshAdPodsInternal: (actionParam, forceRefresh) ->
     self = myGsn.Advertising
-    payLoad = defaults actionParam, self.defaultActionParam
+    payLoad = actionParam or {}
+    for v, k of self.defaultActionParam when v?
+      if (!payLoad[k])
+        payLoad[k] = v
+
     if (gsnSw2.isVisible)
       return self
 

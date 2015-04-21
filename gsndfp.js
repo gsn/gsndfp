@@ -84,7 +84,7 @@
 })({
 1: [function(require, module, exports) {
 (function() {
-  var Plugin, aPlugin, attrs, buildqs, circPlus, debug, doc, fn, gsnAdpods, gsnContext, gsnSw2, gsndfpfactory, i, j, k, len, len1, loadiframe, log, myGsn, myPlugin, oldGsnAdvertising, prefix, ref, ref1, script, trakless, trakless2, win;
+  var Plugin, aPlugin, attrs, buildqs, circPlus, debug, doc, fn, gsnAdpods, gsnContext, gsnSw2, gsndfpfactory, i, j, k, lastRefreshTime, len, len1, loadiframe, log, myGsn, myPlugin, oldGsnAdvertising, prefix, ref, ref1, script, trakless, trakless2, win;
 
   debug = require('debug');
 
@@ -117,6 +117,8 @@
   gsnAdpods = new gsndfpfactory();
 
   circPlus = new gsndfpfactory();
+
+  lastRefreshTime = 0;
 
   if (oldGsnAdvertising != null) {
     if (oldGsnAdvertising.pluginLoaded) {
@@ -563,7 +565,7 @@
      */
 
     Plugin.prototype.refreshAdPodsInternal = function(actionParam, forceRefresh) {
-      var canRefresh, k, lastRefreshTime, payLoad, ref, self, targetting, v;
+      var canRefresh, k, payLoad, ref, self, targetting, v;
       self = myGsn.Advertising;
       payLoad = actionParam || {};
       ref = self.defaultActionParam;

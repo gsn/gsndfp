@@ -16,6 +16,7 @@ oldGsnAdvertising = myGsn.Advertising
 gsnSw2 = new gsndfpfactory()
 gsnAdpods = new gsndfpfactory()
 circPlus = new gsndfpfactory()
+lastRefreshTime = 0
 if oldGsnAdvertising?
   # prevent multiple load
   if oldGsnAdvertising.pluginLoaded

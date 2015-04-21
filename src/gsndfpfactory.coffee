@@ -390,13 +390,15 @@
         $adUnit = qsel(adUnit)
         id = $adUnit.get('@id')
         $adUnitData = self.adUnitById[id]
-        if self.dops.refreshExisting and $adUnitData
+        
+        if (!$adUnitData.existing)
+          $adUnitData.existing = true
+          $win.googletag.cmd.push ->
+            $win.googletag.display id
+        else
           # determine if element is in view
           if !self.dops.inViewOnly or self.isHeightInView(adUnit)
             toPush.push $adUnitData
-        else
-          $win.googletag.cmd.push ->
-            $win.googletag.display id
 
       if toPush.length > 0
         $win.googletag.cmd.push ->

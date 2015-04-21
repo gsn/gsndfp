@@ -303,6 +303,11 @@
               if valueTrimmed.length > 0
                 googleAdUnit.setCategoryExclusion valueTrimmed
               return
+
+          $adUnitData = googleAdUnit
+          # Store googleAdUnit reference
+          self.adUnitById[adUnitID] = $adUnitData
+
           # The following hijacks an internal google method to check if the div has been
           # collapsed after the ad has been attempted to be loaded.
           googleAdUnit.oldRenderEnded = googleAdUnit.oldRenderEnded or googleAdUnit.renderEnded
@@ -311,6 +316,7 @@
             rendered++
             display = adUnit.style.display
             $adUnit.set('$', '-display-none').set('$', '+display-' + display)
+            $adUnitData.existing = true
 
             if googleAdUnit.oldRenderEnded?
               googleAdUnit.oldRenderEnded()
@@ -323,8 +329,6 @@
             #  dops.afterAllAdsLoaded.call this, $ads
             return
 
-          # Store googleAdUnit reference
-          self.adUnitById[adUnitID] = googleAdUnit
           return
       # Push DFP config options
       $win.googletag.cmd.push ->
@@ -391,19 +395,18 @@
         id = $adUnit.get('@id')
         $adUnitData = self.adUnitById[id]
         
-        if (!$adUnitData)
-          $win.googletag.cmd.push ->
-            $adUnitData.existing = true
-            $win.googletag.display id
-        else
+        if ($adUnitData?)
           # determine if element is in view
           if !self.dops.inViewOnly or self.isHeightInView(adUnit)
             if ($adUnitData.existing)
               toPush.push $adUnitData
             else
               $win.googletag.cmd.push ->
-                $adUnitData.existing = true
                 $win.googletag.display id
+        else
+          $win.googletag.cmd.push ->
+            $win.googletag.display id
+       
 
       if toPush.length > 0
         $win.googletag.cmd.push ->

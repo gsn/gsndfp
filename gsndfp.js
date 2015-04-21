@@ -3935,12 +3935,15 @@ function parse(html, doc) {
                 return;
               }
             }
+            $adUnitData = googleAdUnit;
+            self.adUnitById[adUnitID] = $adUnitData;
             googleAdUnit.oldRenderEnded = googleAdUnit.oldRenderEnded || googleAdUnit.renderEnded;
             googleAdUnit.renderEnded = function() {
               var display;
               rendered++;
               display = adUnit.style.display;
               $adUnit.set('$', '-display-none').set('$', '+display-' + display);
+              $adUnitData.existing = true;
               if (googleAdUnit.oldRenderEnded != null) {
                 googleAdUnit.oldRenderEnded();
               }
@@ -3948,7 +3951,6 @@ function parse(html, doc) {
                 dops.afterEachAdLoaded.call(this, $adUnit);
               }
             };
-            self.adUnitById[adUnitID] = googleAdUnit;
           });
         }
         $win.googletag.cmd.push(function() {
@@ -4025,15 +4027,20 @@ function parse(html, doc) {
           $adUnit = qsel(adUnit);
           id = $adUnit.get('@id');
           $adUnitData = self.adUnitById[id];
-          if (!$adUnitData || !$adUnitData.existing) {
+          if (($adUnitData != null)) {
+            if (!self.dops.inViewOnly || self.isHeightInView(adUnit)) {
+              if ($adUnitData.existing) {
+                toPush.push($adUnitData);
+              } else {
+                $win.googletag.cmd.push(function() {
+                  return $win.googletag.display(id);
+                });
+              }
+            }
+          } else {
             $win.googletag.cmd.push(function() {
-              $adUnitData.existing = true;
               return $win.googletag.display(id);
             });
-          } else {
-            if (!self.dops.inViewOnly || self.isHeightInView(adUnit)) {
-              toPush.push($adUnitData);
-            }
           }
         }
         if (toPush.length > 0) {

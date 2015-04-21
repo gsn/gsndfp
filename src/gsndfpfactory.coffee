@@ -250,9 +250,8 @@
       for adUnit, k in self.$ads
         $adUnit = qsel(adUnit)
         allData = trakless.util.allData(adUnit)
-        self.count++
         # adUnit id - this will use an existing id or an auto generated one.
-        adUnitID = self.getID($adUnit, self.storeAs, self.count, adUnit)
+        adUnitID = self.getID($adUnit, self.storeAs, adUnit)
         # get dimensions of the adUnit
         dimensions = self.getDimensions($adUnit, allData)
         # get existing content
@@ -318,8 +317,8 @@
             if typeof dops.afterEachAdLoaded == 'function'
               dops.afterEachAdLoaded.call this, $adUnit
             # Excute afterAllAdsLoaded callback if provided
-            if typeof dops.afterAllAdsLoaded == 'function' and rendered == self.count
-              dops.afterAllAdsLoaded.call this, $ads
+            #if typeof dops.afterAllAdsLoaded == 'function' and rendered == self.count
+            #  dops.afterAllAdsLoaded.call this, $ads
             return
 
           # Store googleAdUnit reference
@@ -403,12 +402,13 @@
 
       return
 
-    getID: ($adUnit, adUnitName, count, adUnit) ->
+    getID: ($adUnit, adUnitName, adUnit) ->
       self = @
-      if !self.dops.refreshExisting
-        if ($adUnit.get('@id') or '').length <= 0
-          $adUnit.set '@id', adUnitName + '$auto$gen$id$' + count
-      $adUnit.get('@id') or $adUnit.set('@id', adUnitName + '$auto$gen$id$' + count).get('@id')
+      id = $adUnit.get('@id')
+      if (id or '').length <= 0
+        id = adUnitName + '$auto$gen$id$' + self.count++
+        $adUnit.set '@id', id
+      return id
 
     getDimensions: ($adUnit, allData) ->
       dimensions = []

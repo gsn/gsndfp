@@ -3880,8 +3880,7 @@ function parse(html, doc) {
           adUnit = ref[k];
           $adUnit = qsel(adUnit);
           allData = trakless.util.allData(adUnit);
-          self.count++;
-          adUnitID = self.getID($adUnit, self.storeAs, self.count, adUnit);
+          adUnitID = self.getID($adUnit, self.storeAs, adUnit);
           dimensions = self.getDimensions($adUnit, allData);
           $existingContent = adUnit.innerHTML;
           trakless.util.html(adUnit, '');
@@ -3944,9 +3943,6 @@ function parse(html, doc) {
               }
               if (typeof dops.afterEachAdLoaded === 'function') {
                 dops.afterEachAdLoaded.call(this, $adUnit);
-              }
-              if (typeof dops.afterAllAdsLoaded === 'function' && rendered === self.count) {
-                dops.afterAllAdsLoaded.call(this, $ads);
               }
             };
             self.adUnitById[adUnitID] = googleAdUnit;
@@ -4043,15 +4039,15 @@ function parse(html, doc) {
         }
       };
 
-      gsndfpfactory.prototype.getID = function($adUnit, adUnitName, count, adUnit) {
-        var self;
+      gsndfpfactory.prototype.getID = function($adUnit, adUnitName, adUnit) {
+        var id, self;
         self = this;
-        if (!self.dops.refreshExisting) {
-          if (($adUnit.get('@id') || '').length <= 0) {
-            $adUnit.set('@id', adUnitName + '$auto$gen$id$' + count);
-          }
+        id = $adUnit.get('@id');
+        if ((id || '').length <= 0) {
+          id = adUnitName + '$auto$gen$id$' + self.count++;
+          $adUnit.set('@id', id);
         }
-        return $adUnit.get('@id') || $adUnit.set('@id', adUnitName + '$auto$gen$id$' + count).get('@id');
+        return id;
       };
 
       gsndfpfactory.prototype.getDimensions = function($adUnit, allData) {

@@ -138,7 +138,7 @@
       deviceid: void 0,
       storeid: void 0,
       consumerid: void 0,
-      isanon: false,
+      isanon: true,
       loyaltyid: void 0,
       aisle: void 0,
       category: void 0,

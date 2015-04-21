@@ -42,7 +42,7 @@ class Plugin
      # optional* - the id you use to uniquely identify your consumer
     consumerid: undefined
      # optional* - determine if consumer is anonymous or registered with your site
-    isanon: false
+    isanon: true
      # optional * - string identify consumer loyalty card id
     loyaltyid: undefined
     # -- Consumer Interest --

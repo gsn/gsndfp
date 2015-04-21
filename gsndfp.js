@@ -4025,8 +4025,7 @@ function parse(html, doc) {
           $adUnit = qsel(adUnit);
           id = $adUnit.get('@id');
           $adUnitData = self.adUnitById[id];
-          if (!$adUnitData.existing) {
-            $adUnitData.existing = true;
+          if ($adUnitData) {
             $win.googletag.cmd.push(function() {
               return $win.googletag.display(id);
             });

@@ -391,8 +391,7 @@
         id = $adUnit.get('@id')
         $adUnitData = self.adUnitById[id]
         
-        if (!$adUnitData.existing)
-          $adUnitData.existing = true
+        if ($adUnitData)
           $win.googletag.cmd.push ->
             $win.googletag.display id
         else

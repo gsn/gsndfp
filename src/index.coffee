@@ -385,7 +385,7 @@ class Plugin
     # track payLoad
     payLoad.siteid = self.gsnid
     self.trackAction payLoad
-    canRefresh = lastRefreshTime <= 0 || ( (new Date).getTime() / 1000 - lastRefreshTime) >= self.minSecondBetweenRefresh
+    canRefresh = ((new Date).getTime() / 1000 - lastRefreshTime) >= self.minSecondBetweenRefresh
 
     if (forceRefresh || canRefresh)
       lastRefreshTime = (new Date()).getTime() / 1000;

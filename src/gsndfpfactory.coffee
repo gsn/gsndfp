@@ -47,11 +47,9 @@
 
       # handle circplus
       if (selector == '.circplus')
-        if qsel(selector).length > 0
-          if options.templateSelector
-            qsel(selector).ht qsel(options.templateSelector).innerHTML
-          else
-            qsel(selector).ht options.bodyTemplate or self.bodyTemplate
+        cp = qsel(selector)
+        if cp.length > 0
+          trakless.util.html(cp[0], options.bodyTemplate or self.bodyTemplate)
      
         # real selector is use above to append bodyTemplate
         self.$adCollection = [qsel('.cpslot1')[0], qsel('.cpslot2')[0]]
@@ -157,7 +155,7 @@
       if data
         #add the random cachebuster
         data = data.replace(/%%CACHEBUSTER%%/g, (new Date).getTime()).replace(/%%CHAINID%%/g, Gsn.Advertising.gsnid)
-
+        $win.gmodal.injectStyle('swcss', swcss)
         $win.gmodal.on('show', self.onOpenCallback)
         $win.gmodal.on('hide', self.onCloseCallback)
         $win.gmodal.on('click', (evt) ->
@@ -239,7 +237,8 @@
         # get existing content
         $existingContent = adUnit.innerHTML
         # wipe html clean ready for ad and set the default display class.
-        $adUnit.ht('').set('$', '+display-none')
+        trakless.util.html(adUnit, '')
+        $adUnit.set('$', '+display-none')
         # Push commands to DFP to create ads
         $win.googletag.cmd.push ->
           googleAdUnit = undefined

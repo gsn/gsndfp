@@ -1689,15 +1689,15 @@ tracker = (function() {
       myData.ht = ht;
       if (!self.uuid) {
         self.uuid = uuid();
-      }
-      if (self.store != null) {
-        self.store.get('trakless-uuid').then(function(id) {
-          if (!id) {
-            self.store.set('trakless-uuid', self.uuid);
-          }
-          self.uuid = id || self.uuid;
-          return self._trackit(myData, pixel);
-        });
+        if (self.store != null) {
+          self.store.get('trakless-uuid').then(function(id) {
+            if (!id) {
+              self.store.set('trakless-uuid', self.uuid);
+            }
+            self.uuid = id || self.uuid;
+            return self._trackit(myData, pixel);
+          });
+        }
       } else {
         self._trackit(myData, pixel);
       }
@@ -4012,13 +4012,8 @@ function parse(html, doc) {
       };
 
       gsndfpfactory.prototype.displayAds = function() {
-        var $adUnit, $adUnitData, adUnit, currentTime, i, k, len, ref, self, toPush;
+        var $adUnit, $adUnitData, adUnit, i, k, len, ref, self, toPush;
         self = this;
-        currentTime = (new Date()).getTime();
-        if ((currentTime - self.lastRefresh) < 1000) {
-          return self;
-        }
-        self.lastRefresh = currentTime;
         toPush = [];
         ref = self.$ads;
         for (k = i = 0, len = ref.length; i < len; k = ++i) {

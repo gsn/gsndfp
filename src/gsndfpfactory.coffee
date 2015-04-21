@@ -78,7 +78,6 @@
             return self
 
           self.lastRefresh = currentTime
-
           self.getPopup selector
 
         return self
@@ -381,11 +380,6 @@
 
     displayAds: ->
       self = @
-      currentTime = (new Date()).getTime()
-      if (currentTime - self.lastRefresh) < 1000
-        return self
-
-      self.lastRefresh = currentTime
       toPush = []
       # Display each ad
       for adUnit, k in self.$ads

@@ -64,6 +64,7 @@
           self.displayAds()
       # handle sw
       else if (selector == '.gsnsw')
+        gsnSw = self
         self.dfpID = gsndfp.getNetworkId()
         if qsel(options.displayWhenExists or '.gsnunit').length <= 0
           return
@@ -76,7 +77,6 @@
           # hide on brand click
           gsndfp.on 'clickBrand', win.gmodal.hide
 
-        gsnSw = self
         return self
       # handle adpods
       else

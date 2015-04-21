@@ -3660,6 +3660,7 @@ function parse(html, doc) {
             self.displayAds();
           }
         } else if (selector === '.gsnsw') {
+          gsnSw = self;
           self.dfpID = gsndfp.getNetworkId();
           if (qsel(options.displayWhenExists || '.gsnunit').length <= 0) {
             return;
@@ -3673,7 +3674,6 @@ function parse(html, doc) {
             self.getPopup(selector);
             gsndfp.on('clickBrand', win.gmodal.hide);
           }
-          gsnSw = self;
           return self;
         } else {
           self.$ads = qsel(selector);

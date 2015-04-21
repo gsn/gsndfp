@@ -299,7 +299,8 @@
     Plugin.prototype.log = function(message) {
       var self;
       self = myGsn.Advertising;
-      if (debug.enabled('gsndfp')) {
+      if (self.isDebug || debug.enabled('gsndfp')) {
+        self.isDebug = true;
         if (typeof message === 'object') {
           message = trakless.util.stringToJSON(message);
         }
@@ -566,8 +567,8 @@
       self = myGsn.Advertising;
       payLoad = actionParam || {};
       ref = self.defaultActionParam;
-      for (v in ref) {
-        k = ref[v];
+      for (k in ref) {
+        v = ref[k];
         if (v != null) {
           if (!payLoad[k]) {
             payLoad[k] = v;
@@ -674,8 +675,8 @@
     Plugin.prototype.setDefault = function(defaultParam) {
       var k, self, v;
       self = myGsn.Advertising;
-      for (v in defaultParam) {
-        k = defaultParam[v];
+      for (k in defaultParam) {
+        v = defaultParam[k];
         if (v == null) {
           self.defaultActionParam[k] = v;
         }

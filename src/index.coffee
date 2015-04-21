@@ -172,7 +172,8 @@ class Plugin
   log: (message) ->
     self = myGsn.Advertising
 
-    if (debug.enabled('gsndfp'))
+    if (self.isDebug or debug.enabled('gsndfp'))
+      self.isDebug = true
       if (typeof message is 'object')
         message = trakless.util.stringToJSON(message)
       log(message)
@@ -373,7 +374,7 @@ class Plugin
   refreshAdPodsInternal: (actionParam, forceRefresh) ->
     self = myGsn.Advertising
     payLoad = actionParam or {}
-    for v, k of self.defaultActionParam when v?
+    for k, v of self.defaultActionParam when v?
       if (!payLoad[k])
         payLoad[k] = v
 
@@ -466,7 +467,7 @@ class Plugin
   ###
   setDefault: (defaultParam) ->
     self = myGsn.Advertising
-    for v, k of defaultParam when !v?
+    for k, v of defaultParam when !v?
       self.defaultActionParam[k] = v
     @
 

@@ -880,6 +880,11 @@
 
   trakless.setPixel('//pi.gsngrocers.com/pi.gif');
 
+  trakless.store.init({
+    url: '//cdn.gsngrocers.com/script/xstore.html',
+    dntIgnore: true
+  });
+
   if (aPlugin.hasGsnUnit()) {
     aPlugin.load();
   } else {

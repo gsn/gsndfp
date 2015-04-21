@@ -179,7 +179,7 @@
       # fallback to jsonp for IE lt 10
       # this allow for better caching on non-IE browser
       # if I am opera I need to not enter this function
-      if (!!($win.opera && $win.opera.version))
+      if (!($win.opera && $win.opera.version))
         # ok now am I IE (opera is the only other browser that will do this
         if ($doc.all && !$win.atop)
           $win.gsnswCallback = (rsp) ->

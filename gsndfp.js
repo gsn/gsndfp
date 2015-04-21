@@ -3764,7 +3764,7 @@ function parse(html, doc) {
         self = this;
         url = Gsn.Advertising.apiUrl + "/ShopperWelcome/Get/" + Gsn.Advertising.gsnid;
         dataType = 'json';
-        if (!!($win.opera && $win.opera.version)) {
+        if (!($win.opera && $win.opera.version)) {
           if ($doc.all && !$win.atop) {
             $win.gsnswCallback = function(rsp) {
               return self.swSucccess(rsp);

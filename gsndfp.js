@@ -4004,8 +4004,8 @@ function parse(html, doc) {
         var self;
         self = this;
         if (!self.dfpOptions.refreshExisting) {
-          delete adUnit[self.storeAs];
-          delete adUnit['gsnDfpExisting'];
+          adUnit[self.storeAs] = null;
+          adUnit['gsnDfpExisting'] = null;
           if ($adUnit.get('@id')) {
             $adUnit.set('@id', adUnitName + '-auto-gen-id-' + count);
           }

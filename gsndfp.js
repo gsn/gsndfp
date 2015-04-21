@@ -612,6 +612,9 @@
         return self;
       }
       if (self.gsnid) {
+        if (gsnSw2.isVisible) {
+          return self;
+        }
         gsnSw2.refresh({
           displayWhenExists: '.gsnadunit,.gsnunit',
           dfpSelector: '.gsnsw',
@@ -4471,7 +4474,7 @@ Emitter.prototype.hasListeners = function(event){
 
 }, {}],
 25: [function(require, module, exports) {
-module.exports = '.gsnsw {\n  	float: left;\n}\n.gmodal {\n\n	/* works for IE 5+. */\n	filter:alpha(opacity=90); \n\n	/* works for IE 8. */\n	-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=90)";\n\n	/* works for old school versions of the Mozilla browsers like Netscape Navigator. */\n	-moz-opacity: 0.9; \n\n	/* This is for old versions of Safari (1.x) with KHTML rendering engine */\n	-khtml-opacity: 0.9; \n\n	/* This is the "most important" one because it\'s the current standard in CSS. This will work in most versions of Firefox, Safari, and Opera. */  \n	opacity: 0.9; \n\n  	background: #000; /* IE5+ */\n  	background: rgba(0,0,0,0.90);\n}';
+module.exports = '.gsnsw {\n  	float: left;\n}\n.gmodal {\n\n	/* IE 8- */\n	filter:alpha(opacity=90); \n	-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=90)";\n    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);\n\n	/* works for old school versions of the Mozilla browsers like Netscape Navigator. */\n	-moz-opacity: 0.9; \n\n	/* This is for old versions of Safari (1.x) with KHTML rendering engine */\n	-khtml-opacity: 0.9; \n\n	/* This is the "most important" one because it\'s the current standard in CSS. This will work in most versions of Firefox, Safari, and Opera. */  \n	opacity: 0.9; \n  	background: #000; /* IE5+ */\n  	background: rgba(0,0,0,0.90);\n}\n.swpop {\n	filter: alpha(opacity=100);\n    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";\n    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);\n	-moz-opacity: 1; \n	-khtml-opacity: 1; \n	opacity: 1; \n	background: #777;\n	background: rgba(119, 119, 119, 1);\n}';
 }, {}],
 26: [function(require, module, exports) {
 module.exports = '<div class="gsn-slot-container"><div class="cpslot cpslot2" data-companion="true" data-dimensions="300x50"></div></div><div class="gsn-slot-container"><div class="cpslot cpslot1" data-dimensions="300x100,300x120"></div></div>';

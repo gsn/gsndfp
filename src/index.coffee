@@ -419,6 +419,10 @@ class Plugin
     if (!self.hasGsnUnit()) then return self
 
     if (self.gsnid)
+
+      if (gsnSw2.isVisible)
+        return self
+        
       gsnSw2.refresh(
         displayWhenExists: '.gsnadunit,.gsnunit'
         dfpSelector: '.gsnsw'

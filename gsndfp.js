@@ -3649,14 +3649,16 @@ function parse(html, doc) {
         options = self.dops;
         selector = self.sel;
         if (selector === '.circplus') {
+          self.storeAs = 'circplus';
           cp = qsel(selector);
           if (cp.length > 0) {
             trakless.util.html(cp[0], options.bodyTemplate || self.bodyTemplate);
           }
           self.$ads = [qsel('.cpslot1')[0], qsel('.cpslot2')[0]];
-          self.storeAs = 'circplus';
-          self.createAds();
-          self.displayAds();
+          if (self.$ads[0]) {
+            self.createAds();
+            self.displayAds();
+          }
         } else if (selector === '.gsnsw') {
           self.dfpID = gsndfp.getNetworkId();
           if (qsel(options.displayWhenExists || '.gsnunit').length <= 0) {
@@ -3669,17 +3671,16 @@ function parse(html, doc) {
             });
           } else {
             self.getPopup(selector);
-            gsndfp.on('clickBrand', function(e) {
-              $win.gmodal.hide();
-              return self;
-            });
+            gsndfp.on('clickBrand', win.gmodal.hide);
           }
           gsnSw = self;
           return self;
         } else {
           self.$ads = qsel(selector);
-          self.createAds();
-          self.displayAds();
+          if (self.$ads[0]) {
+            self.createAds();
+            self.displayAds();
+          }
         }
         return this;
       };

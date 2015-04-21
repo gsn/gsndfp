@@ -50,15 +50,18 @@
 
       # handle circplus
       if (selector == '.circplus')
+        self.storeAs = 'circplus'
         cp = qsel(selector)
         if cp.length > 0
           trakless.util.html(cp[0], options.bodyTemplate or self.bodyTemplate)
-     
+
         # real selector is use above to append bodyTemplate
         self.$ads = [qsel('.cpslot1')[0], qsel('.cpslot2')[0]]
-        self.storeAs = 'circplus'
-        self.createAds()
-        self.displayAds()
+
+        # only proceed if there are ads
+        if (self.$ads[0])
+          self.createAds()
+          self.displayAds()
       # handle sw
       else if (selector == '.gsnsw')
         self.dfpID = gsndfp.getNetworkId()
@@ -70,17 +73,18 @@
           self.onCloseCallback cancel: true
         else
           self.getPopup selector
-          gsndfp.on 'clickBrand', (e) ->
-            $win.gmodal.hide()
-            return self
+          # hide on brand click
+          gsndfp.on 'clickBrand', win.gmodal.hide
 
         gsnSw = self
         return self
       # handle adpods
       else
         self.$ads = qsel(selector)
-        self.createAds()
-        self.displayAds()
+        # only proceed if there are ads
+        if (self.$ads[0])
+          self.createAds()
+          self.displayAds()
 
       @
 

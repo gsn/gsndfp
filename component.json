@@ -23,6 +23,7 @@
   "dependencies": { 
     "avetisk/defaults": "0.0.4",
     "segmentio/load-iframe": "*",
+    "segmentio/load-script": "*",
     "component/emitter": "*",
     "niiknow/trakless": "*",
     "niiknow/gmodal": "*"

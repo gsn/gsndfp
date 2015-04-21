@@ -10,6 +10,7 @@
   gmodal = require('gmodal')
   swcss = require('./sw.css')
   circplusTemplate = require('./circplus.html')
+  loadScript = require('load-script')
   $win = win
   qsel = $win.trakless.util.$
   $doc = $win.document
@@ -187,7 +188,7 @@
           dataType = 'jsonp'  
   
       if (dataType is 'jsonp')
-        # do jsonp
+        loadScript(url)
       else
         qsel.request('GET', url).then(self.swSucccess)
       @
@@ -428,10 +429,7 @@
         self.dfpBlocked()
         return
 
-      useSsl = 'https:' == $doc.location.protocol
-      gads.src = (if useSsl then 'https:' else 'http:') + '//www.googletagservices.com/tag/js/gpt.js'
-      node = $doc.getElementsByTagName('script')[0]
-      node.parentNode.insertBefore gads, node
+      loadScript('//www.googletagservices.com/tag/js/gpt.js')
       self.dfpIsLoaded = true
 
       # Adblock plus seems to hide blocked scripts... so we check for that

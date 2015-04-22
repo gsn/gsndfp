@@ -7294,11 +7294,20 @@ function match(el, selector) {
     gsndfpfactory.prototype.bodyTemplate = circplusTemplate;
 
     gsndfpfactory.prototype.refresh = function(options) {
-      var cp, currentTime, self, slot1;
+      var self;
       self = this;
       self.dfpLoader();
       self.dfpID = gsndfp.getNetworkId(true);
       self.setOptions(options || {});
+      trakless.util.ready(function() {
+        return self.doIt();
+      });
+      return this;
+    };
+
+    gsndfpfactory.prototype.doIt = function() {
+      var cp, currentTime, self, slot1;
+      self = this;
       self.sel = self.dops.sel || '.gsnunit';
       if (typeof self.adUnitById !== 'object') {
         self.adUnitById = {};
@@ -7323,6 +7332,7 @@ function match(el, selector) {
           self.createAds().displayAds();
         }
       } else if (self.sel === '.gsnsw') {
+        self.dops.inViewOnly = false;
         $win.gmodal.injectStyle('swcss', swcss);
         gsnSw = self;
         self.dops.enableSingleRequest = true;
@@ -7337,11 +7347,13 @@ function match(el, selector) {
           });
         } else {
           currentTime = (new Date()).getTime();
-          if ((currentTime - self.lastRefresh) < 1000) {
+          if ((currentTime - self.lastRefresh) < 2000) {
             return self;
           }
           self.lastRefresh = currentTime;
-          self.getPopup(self.sel);
+          setTimeout(function() {
+            return self.getPopup(self.sel);
+          }, 200);
         }
         return self;
       } else {
@@ -7409,7 +7421,7 @@ function match(el, selector) {
     };
 
     gsndfpfactory.prototype.swSucccess = function(myrsp) {
-      var data, evt, rsp, self;
+      var $el, data, evt, rsp, self;
       rsp = myrsp;
       if (typeof myrsp === 'string') {
         rsp = JSON.parse(myrsp);
@@ -7443,8 +7455,15 @@ function match(el, selector) {
             return $win.gmodal.hide();
           }
         });
+        if (!self.rect) {
+          self.rect = {
+            w: Math.max($doc.documentElement.clientWidth, $win.innerWidth || 0),
+            h: Math.max($doc.documentElement.clientHeight, $win.innerHeight || 0)
+          };
+        }
+        $el = qsel("<div id='sw'>" + data + "<div>");
         $win.gmodal.show({
-          content: "<div id='sw'>" + data + "<div>",
+          content: $el[0],
           closeCls: 'sw-close'
         });
       } else {
@@ -7455,7 +7474,7 @@ function match(el, selector) {
       return this;
     };
 
-    gsndfpfactory.prototype.getPopup = function(selector) {
+    gsndfpfactory.prototype.getPopup = function() {
       var dataType, request, self, url;
       self = this;
       url = gsndfp.apiUrl + "/ShopperWelcome/Get/" + gsndfp.gsnid;
@@ -7849,12 +7868,12 @@ modal = (function() {
 
   modal.prototype.closeCls = 'gmodal-close';
 
-  modal.prototype.tpl = '<div class="gmodal-wrap gmodal-top">&nbsp;<div><div class="gmodal-wrap gmodal-left"></div><div class="gmodal-content" id="gmodalContent"></div><div class="gmodal-wrap gmodal-right"></div>';
+  modal.prototype.tpl = '<div class="gmodal-wrap gmodal-left"></div><div class="gmodal-content" id="gmodalContent"></div><div class="gmodal-wrap gmodal-right"></div>';
 
-  modal.prototype.css = '.gmodal{display:none;overflow:hidden;outline:0;-webkit-overflow-scrolling:touch;position:fixed;top:0;left:0;bottom:0;right:0;width:100%;height:100%;z-index:9999990}.gmodal-show{display:table}.gmodal-content,.gmodal-wrap{display:table-cell}.gmodal-wrap{width:50%}';
+  modal.prototype.css = '.gmodal{display:none;overflow:hidden;outline:0;-webkit-overflow-scrolling:touch;position:fixed;top:0;left:0;bottom:0;right:0;width:100%;height:100%;z-index:9999990;padding-top:50px}.body-gmodal .gmodal{display:table}.body-gmodal{overflow:hidden}.gmodal-content,.gmodal-wrap{display:table-cell}.gmodal-left,.gmodal-right{width:50%}';
 
   modal.prototype.show = function(options) {
-    var self;
+    var eCls, self;
     self = this;
     self.elWrapper = self.createModal();
     if (!self.el) {
@@ -7881,18 +7900,22 @@ modal = (function() {
       self.closeCls = self.options.closeCls;
     }
     self.elWrapper.style.display = self.elWrapper.style.visibility = "";
-    self.elWrapper.className = (self.baseCls + " gmodal-show ") + (self.options.cls || '');
+    self.elWrapper.className = (self.baseCls + " ") + (self.options.cls || '');
+    eCls = self.doc.getElementsByTagName('body')[0].className;
+    self.doc.getElementsByTagName('body')[0].className = eCls + " body-gmodal";
     self.emit('show');
     return this;
   };
 
   modal.prototype.hide = function() {
-    var self;
+    var eCls, self;
     self = this;
     if (!self.elWrapper) {
       return self;
     }
     self.elWrapper.className = "" + self.baseCls;
+    eCls = self.doc.getElementsByTagName('body')[0].className;
+    self.doc.getElementsByTagName('body')[0].className = eCls.replace(/\s+body\-gmodal/gi, '');
     self.emit('hide');
     return this;
   };
@@ -8341,7 +8364,7 @@ module.exports = function loadScript(options, fn){
 };
 }, {"script-onload":19,"next-tick":20,"type":21}],
 64: [function(require, module, exports) {
-module.exports = '.gsnsw {\n  	float: left;\n}\n.gmodal {\n\n	/* IE 8- */\n	filter:alpha(opacity=90); \n	-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=90)";\n    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);\n\n	/* works for old school versions of the Mozilla browsers like Netscape Navigator. */\n	-moz-opacity: 0.9; \n\n	/* This is for old versions of Safari (1.x) with KHTML rendering engine */\n	-khtml-opacity: 0.9; \n\n	/* This is the "most important" one because it\'s the current standard in CSS. This will work in most versions of Firefox, Safari, and Opera. */  \n	opacity: 0.9; \n  	background: #000; /* IE5+ */\n  	background: rgba(0,0,0,0.90);\n}\n.sw-pop {\n	filter: alpha(opacity=100);\n    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";\n    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);\n	-moz-opacity: 1; \n	-khtml-opacity: 1; \n	opacity: 1; \n	background: #777;\n	background: rgba(119, 119, 119, 1);\n}\n.gmodal-left, .gmodal-right {\n	width: 50%;\n}';
+module.exports = '.gsnsw {\n  	float: left;\n}\n.gmodal {\n\n	/* IE 8- */\n	filter:alpha(opacity=90); \n	-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=90)";\n    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);\n\n	/* works for old school versions of the Mozilla browsers like Netscape Navigator. */\n	-moz-opacity: 0.9; \n\n	/* This is for old versions of Safari (1.x) with KHTML rendering engine */\n	-khtml-opacity: 0.9; \n\n	/* This is the "most important" one because it\'s the current standard in CSS. This will work in most versions of Firefox, Safari, and Opera. */  \n	opacity: 0.9; \n  	background: #000; /* IE5+ */\n  	background: rgba(0,0,0,0.90);\n}\n.sw-pop {\n	filter: alpha(opacity=100);\n    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";\n    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);\n	-moz-opacity: 1; \n	-khtml-opacity: 1; \n	opacity: 1; \n	background: #777;\n	background: rgba(119, 119, 119, 1);\n}\n@media (max-width: 650px){\n    .gsnsw {\n        float:none !important;\n    }\n\n    .sw-header-cta, .sw-header-break, .sw-header-right-img {\n        display:none !important;\n    }\n\n    .sw-header-break{\n        display:none !important;\n    }\n\n    .sw-pop {\n        width: 280px !important;\n        left:0 !important;\n        margin-left:0 !important;\n    }\n\n    .sw-header-dismiss {\n        position: static !important;\n        left:0 !important;\n        top:0 !important;\n        vertical-align: middle !important;\n        text-align: center !important;\n    }\n\n    .sw-close{\n        padding:1px !important;\n    }\n}\n\n@media (max-height: 760px) {\n    .sw-body {\n        height: 340px;\n        overflow: scroll;\n    }\n    .gmodal {\n        padding-top: 5px !important;\n    }\n}\n\n@media (max-height: 460px) {\n    .sw-body {\n        height: 240px;\n        overflow: scroll;\n    }\n    .gmodal {\n        padding-top: 10px !important;\n    }\n}\n\n\n\n';
 }, {}],
 65: [function(require, module, exports) {
 module.exports = '<div class="gsn-slot-container"><div class="cpslot cpslot2" data-companion="true" data-dimensions="300x50"></div></div><div class="gsn-slot-container"><div class="cpslot cpslot1" data-dimensions="300x100,300x120"></div></div>';

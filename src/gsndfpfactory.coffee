@@ -37,6 +37,11 @@ class gsndfpfactory
     self.dfpLoader()
     self.dfpID = gsndfp.getNetworkId(true)
     self.setOptions(options or {})
+    trakless.util.ready ->
+      self.doIt()
+    @
+  doIt: () ->
+    self = @
     self.sel = self.dops.sel or '.gsnunit'
     if (typeof self.adUnitById != 'object')
       self.adUnitById = {}
@@ -66,6 +71,7 @@ class gsndfpfactory
 
     # handle sw
     else if (self.sel == '.gsnsw')
+      self.dops.inViewOnly = false
       $win.gmodal.injectStyle('swcss', swcss)
       gsnSw = self
       self.dops.enableSingleRequest = true
@@ -78,12 +84,13 @@ class gsndfpfactory
         self.onCloseCallback cancel: true
       else
         currentTime = (new Date()).getTime()
-        if (currentTime - self.lastRefresh) < 1000
+        if (currentTime - self.lastRefresh) < 2000
           return self
 
         self.lastRefresh = currentTime
-        self.getPopup self.sel
-
+        setTimeout ->
+          self.getPopup self.sel
+        , 200
       return self
     # handle adpods
     else
@@ -92,7 +99,6 @@ class gsndfpfactory
       self.createAds().displayAds()
 
     @
-
   setOptions: (ops) ->
     self = @
     # Set default options
@@ -182,15 +188,21 @@ class gsndfpfactory
         if (target.className.indexOf('sw-close') >= 0)
           $win.gmodal.hide()
       )
+      if !self.rect
+        self.rect = 
+          w: Math.max($doc.documentElement.clientWidth, $win.innerWidth || 0)
+          h: Math.max($doc.documentElement.clientHeight, $win.innerHeight || 0)
+      $el = qsel("<div id='sw'>#{data}<div>")
+      #$el.find('.sw-body').
 
       # open the modal to show shopper welcome
-      $win.gmodal.show({content: "<div id='sw'>#{data}<div>", closeCls: 'sw-close'})
+      $win.gmodal.show({content: $el[0], closeCls: 'sw-close'})
     else
       self.onCloseCallback cancel: true
     
     @
 
-  getPopup: (selector) ->
+  getPopup: () ->
     self = @
     url = "#{gsndfp.apiUrl}/ShopperWelcome/Get/#{gsndfp.gsnid}"
     dataType = 'json'
@@ -265,6 +277,7 @@ class gsndfpfactory
 
   createAds: ->
     self = @
+
     # Loops through on page Ad units and gets ads for them.
     for adUnit, k in self.$ads
       $adUnit = qsel(adUnit)

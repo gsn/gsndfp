@@ -226,7 +226,7 @@ class Plugin
     self =  myGsn.Advertising
     if dept?
       goodDept = self.cleanKeyword dept
-      goodDept = ",#{goodDepts}"
+      goodDept = ",#{goodDept}"
       if (self.depts.indexOf(goodDept) < 0)
         self.depts = "#{goodDept}#{self.depts}"
     @
@@ -396,10 +396,10 @@ class Plugin
       if payLoad.page
         targetting.kw = payLoad.page.replace(/[^a-z]/gi, '');
 
-      if (targetting.depts.length > 0)
-        self.depts = "," + targetting.depts.join(',')
+      if (targetting.dept.length > 0)
+        self.depts = "," + targetting.dept.join(',')
       else
-        targetting.depts = ['produce']
+        targetting.dept = ['produce']
         
       gsnpods.refresh(
         setTargeting: targetting

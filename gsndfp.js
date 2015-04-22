@@ -327,14 +327,18 @@
      */
 
     Plugin.prototype.trackAction = function(actionParam) {
-      var k, self, tsP, v;
+      var k, k2, self, tsP, v;
       self = myGsn.Advertising;
       tsP = {};
       if (typeof actionParam === 'object') {
         for (k in actionParam) {
           v = actionParam[k];
-          if (v != null) {
-            tsP[self.translator[k]] = v;
+          if (!(v != null)) {
+            continue;
+          }
+          k2 = self.translator[k];
+          if (k2) {
+            tsP[k2] = v;
           }
         }
       }
@@ -1673,9 +1677,11 @@ tracker = (function() {
       myData = {};
       for (k in data) {
         v = data[k];
-        if ((v != null) && (k != null)) {
+        if (v != null) {
           if (!(typeof v === "string") || (myutil.trim(v).length > 0)) {
-            myData[k] = v;
+            if ((k + '') !== 'undefined') {
+              myData[k] = v;
+            }
           }
         }
       }

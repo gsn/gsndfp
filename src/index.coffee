@@ -194,7 +194,9 @@ class Plugin
     tsP = {}
     if typeof actionParam is 'object'
       for k, v of actionParam when v?
-        tsP[self.translator[k]] = v
+        k2 = self.translator[k]
+        if (k2)
+          tsP[k2] = v
 
     trakless.getDefaultTracker().track('gsn', tsP)
       

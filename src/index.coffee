@@ -391,7 +391,7 @@ class Plugin
     if (forceRefresh || canRefresh)
       lastRefreshTime = (new Date()).getTime() / 1000;
 
-      if (payload.dept?)
+      if (payLoad.dept?)
         self.addDept payLoad.dept
 
       if (forceRefresh)

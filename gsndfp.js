@@ -587,7 +587,7 @@
       canRefresh = ((new Date).getTime() / 1000 - lastRefreshTime) >= self.minSecondBetweenRefresh;
       if (forceRefresh || canRefresh) {
         lastRefreshTime = (new Date()).getTime() / 1000;
-        if ((payload.dept != null)) {
+        if ((payLoad.dept != null)) {
           self.addDept(payLoad.dept);
         }
         if (forceRefresh) {

@@ -3655,6 +3655,8 @@ function parse(html, doc) {
 
       gsndfpfactory.prototype.isVisible = false;
 
+      gsndfpfactory.prototype.ieOld = false;
+
       gsndfpfactory.prototype.bodyTemplate = circplusTemplate;
 
       gsndfpfactory.prototype.refresh = function(options) {
@@ -3667,6 +3669,15 @@ function parse(html, doc) {
         self.sel = options.sel || '.gsnunit';
         options = self.dops;
         selector = self.sel;
+        if (typeof self.adUnitId !== 'object') {
+          self.adUnitById = {};
+        }
+        if (!($win.opera && $win.opera.version)) {
+          self.ieOld = $doc.all && !$win.atop;
+        }
+        if (self.ieOld) {
+          self.dops.inViewOnly = false;
+        }
         if (selector === '.circplus') {
           self.storeAs = 'circplus';
           cp = qsel(selector);
@@ -3818,14 +3829,12 @@ function parse(html, doc) {
         self = this;
         url = gsndfp.apiUrl + "/ShopperWelcome/Get/" + gsndfp.gsnid;
         dataType = 'json';
-        if (!($win.opera && $win.opera.version)) {
-          if ($doc.all && !$win.atop) {
-            $win.gsnswCallback = function(rsp) {
-              return self.swSucccess(rsp);
-            };
-            url += '?callback=gsnswCallback';
-            dataType = 'jsonp';
-          }
+        if (self.ieOld) {
+          $win.gsnswCallback = function(rsp) {
+            return self.swSucccess(rsp);
+          };
+          url += '?callback=gsnswCallback';
+          dataType = 'jsonp';
         }
         if (dataType === 'jsonp') {
           loadScript(url);
@@ -3890,7 +3899,7 @@ function parse(html, doc) {
           $adUnit.set('$', '+display-none');
           $win.googletag.cmd.push(function() {
             var $adUnitData, companion, exclusions, exclusionsGroup, j, len1, targeting, v, valueTrimmed;
-            $adUnitData = adUnitById[adUnitID];
+            $adUnitData = self.adUnitById[adUnitID];
             if ($adUnitData) {
               return;
             }
@@ -3933,7 +3942,7 @@ function parse(html, doc) {
                 return;
               }
             }
-            adUnitById[adUnitID] = $adUnitData;
+            self.adUnitById[adUnitID] = $adUnitData;
             $adUnitData.oldRenderEnded = $adUnitData.oldRenderEnded || $adUnitData.renderEnded;
             $adUnitData.renderEnded = function() {
               var display;
@@ -4023,7 +4032,7 @@ function parse(html, doc) {
           adUnit = ref[k];
           $adUnit = qsel(adUnit);
           id = $adUnit.get('@id');
-          $adUnitData = adUnitById[id];
+          $adUnitData = self.adUnitById[id];
           if (($adUnitData != null)) {
             if (!self.dops.inViewOnly || self.isHeightInView(adUnit)) {
               if ($adUnitData.existing) {

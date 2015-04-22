@@ -36,6 +36,7 @@
     # for shopper welcome
     didOpen: false
     isVisible: false
+    ieOld: false
 
     # for circplus
     bodyTemplate: circplusTemplate
@@ -48,6 +49,15 @@
       self.sel = options.sel or '.gsnunit'
       options = self.dops
       selector = self.sel
+      if (typeof self.adUnitId != 'object')
+        self.adUnitById = {}
+
+      if (!($win.opera && $win.opera.version))
+        # ok now am I IE (opera is the only other browser that will do this
+        self.ieOld = ($doc.all && !$win.atop)
+
+      if (self.ieOld)
+        self.dops.inViewOnly = false
 
       # handle circplus
       if (selector == '.circplus')
@@ -200,13 +210,11 @@
       # fallback to jsonp for IE lt 10
       # this allow for better caching on non-IE browser
       # if I am opera I need to not enter this function
-      if (!($win.opera && $win.opera.version))
-        # ok now am I IE (opera is the only other browser that will do this
-        if ($doc.all && !$win.atop)
-          $win.gsnswCallback = (rsp) ->
-            self.swSucccess(rsp)
-          url += '?callback=gsnswCallback' 
-          dataType = 'jsonp'  
+      if (self.ieOld)
+        $win.gsnswCallback = (rsp) ->
+          self.swSucccess(rsp)
+        url += '?callback=gsnswCallback' 
+        dataType = 'jsonp'  
   
       if (dataType is 'jsonp')
         loadScript(url)
@@ -262,7 +270,7 @@
         $adUnit.set('$', '+display-none')
         # Push commands to DFP to create ads
         $win.googletag.cmd.push ->
-          $adUnitData = adUnitById[adUnitID]
+          $adUnitData = self.adUnitById[adUnitID]
           if $adUnitData
             return
           # remove double slash and any space, trim ending slash
@@ -304,7 +312,7 @@
               return
 
           # Store googleAdUnit reference
-          adUnitById[adUnitID] = $adUnitData
+          self.adUnitById[adUnitID] = $adUnitData
 
           # The following hijacks an internal google method to check if the div has been
           # collapsed after the ad has been attempted to be loaded.
@@ -391,7 +399,7 @@
       for adUnit, k in self.$ads
         $adUnit = qsel(adUnit)
         id = $adUnit.get('@id')
-        $adUnitData = adUnitById[id]
+        $adUnitData = self.adUnitById[id]
         
         if ($adUnitData?)
           # determine if element is in view

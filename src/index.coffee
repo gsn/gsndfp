@@ -2,6 +2,7 @@ debug = require('debug')
 log = debug('gsndfp')
 trakless2 = require('trakless')
 loadiframe = require('load-iframe')
+dom = require('dom')
 gsndfpfactory = require('./gsndfpfactory.coffee')
 
 if console?
@@ -442,7 +443,7 @@ class Plugin
         onClose: ->
           # make sure selector is always wired-up
           if self.selector?
-            trakless.util.$(self.selector)[0].onclick = (e) ->
+            dom(self.selector)[0].onclick = (e) ->
               e = e or win.event
               e.target = e.target or e.srcElement or e.parentNode
               if (win.gmodal.hasCls(e.target, 'gsnaction'))
@@ -459,7 +460,7 @@ class Plugin
   #
   ###
   hasGsnUnit: () ->
-    return trakless.util.$('.gsnadunit,.gsnunit,.circplus').length > 0
+    return dom('.gsnadunit,.gsnunit,.circplus').length > 0
 
   ###*
   # set global defaults

@@ -73,8 +73,8 @@
 
         # only proceed if there are ads
         if (self.$ads[0])
-          self.createAds()
-          self.displayAds()
+          self.createAds().displayAds()
+
       # handle sw
       else if (selector == '.gsnsw')
         $win.gmodal.injectStyle('swcss', swcss)
@@ -100,8 +100,7 @@
       else
         self.storeAs = 'gsnunit'
         self.$ads = qsel(selector)
-        self.createAds()
-        self.displayAds()
+        self.createAds().displayAds()
 
       @
 
@@ -139,8 +138,7 @@
       self.didOpen = true  
       self.isVisible = true
       self.$ads = qsel(self.sel)
-      self.createAds()
-      self.displayAds()
+      self.createAds().displayAds()
 
       setTimeout (->  
         # adblocking detection  
@@ -254,6 +252,28 @@
         $doc.cookie = nameOfCookie + '=; expires=Thu, 01 Jan 1970 00:00:00 GMT'
       return
 
+    setTargeting: ($adUnitData, allData) ->
+      # Sets custom targeting for just THIS ad unit if it has been specified
+      targeting = allData['targeting']
+      if targeting
+        if typeof targeting == 'string'
+          targeting = eval('(' + targeting + ')')
+        for k, v of targeting
+          if k == 'brand'
+            gsndfp.setBrand(v)
+          $adUnitData.setTargeting k, v
+
+      # Sets custom exclusions for just THIS ad unit if it has been specified
+      exclusions = allData['exclusions']
+      if exclusions
+        exclusionsGroup = exclusions.split(',')
+        valueTrimmed = undefined
+        for v, k in exclusionsGroup
+          valueTrimmed = trakless.util.trim(v)
+          if valueTrimmed.length > 0
+            $adUnitData.setCategoryExclusion valueTrimmed
+          return
+
     createAds: ->
       self = @
       self.dfpID = gsndfp.getNetworkId() 
@@ -274,7 +294,9 @@
         $win.googletag.cmd.push ->
           $adUnitData = self.adUnitById[adUnitID]
           if $adUnitData
+            self.setTargeting $adUnitData, allData
             return
+
           # remove double slash and any space, trim ending slash
           self.dfpID = self.dfpID.replace(/(\/\/)+/gi, '/').replace(/\s+/gi, '').replace(/(\/)$/, '/')
           # append single front slash
@@ -292,26 +314,7 @@
           if companion?
             $adUnitData.addService $win.googletag.companionAds()
 
-          # Sets custom targeting for just THIS ad unit if it has been specified
-          targeting = allData['targeting']
-          if targeting
-            if typeof targeting == 'string'
-              targeting = eval('(' + targeting + ')')
-            for k, v of targeting
-              if k == 'brand'
-                gsndfp.setBrand(v)
-              $adUnitData.setTargeting k, v
-
-          # Sets custom exclusions for just THIS ad unit if it has been specified
-          exclusions = allData['exclusions']
-          if exclusions
-            exclusionsGroup = exclusions.split(',')
-            valueTrimmed = undefined
-            for v, k in exclusionsGroup
-              valueTrimmed = trakless.util.trim(v)
-              if valueTrimmed.length > 0
-                $adUnitData.setCategoryExclusion valueTrimmed
-              return
+          self.setTargeting $adUnitData, allData
 
           # Store googleAdUnit reference
           self.adUnitById[adUnitID] = $adUnitData
@@ -383,7 +386,8 @@
 
         $win.googletag.enableServices()
         return
-      return
+
+      return self
 
     isHeightInView: (el) ->
       # check for 50% visible

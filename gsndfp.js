@@ -3695,8 +3695,7 @@ function parse(html, doc) {
           }
           self.$ads = [qsel('.cpslot1')[0], qsel('.cpslot2')[0]];
           if (self.$ads[0]) {
-            self.createAds();
-            self.displayAds();
+            self.createAds().displayAds();
           }
         } else if (selector === '.gsnsw') {
           $win.gmodal.injectStyle('swcss', swcss);
@@ -3723,8 +3722,7 @@ function parse(html, doc) {
         } else {
           self.storeAs = 'gsnunit';
           self.$ads = qsel(selector);
-          self.createAds();
-          self.displayAds();
+          self.createAds().displayAds();
         }
         return this;
       };
@@ -3761,8 +3759,7 @@ function parse(html, doc) {
         self.didOpen = true;
         self.isVisible = true;
         self.$ads = qsel(self.sel);
-        self.createAds();
-        self.displayAds();
+        self.createAds().displayAds();
         setTimeout((function() {
           if (self.adBlockerOn) {
             qsel('.remove').remove();
@@ -3892,6 +3889,36 @@ function parse(html, doc) {
         }
       };
 
+      gsndfpfactory.prototype.setTargeting = function($adUnitData, allData) {
+        var exclusions, exclusionsGroup, i, k, len, targeting, v, valueTrimmed;
+        targeting = allData['targeting'];
+        if (targeting) {
+          if (typeof targeting === 'string') {
+            targeting = eval('(' + targeting + ')');
+          }
+          for (k in targeting) {
+            v = targeting[k];
+            if (k === 'brand') {
+              gsndfp.setBrand(v);
+            }
+            $adUnitData.setTargeting(k, v);
+          }
+        }
+        exclusions = allData['exclusions'];
+        if (exclusions) {
+          exclusionsGroup = exclusions.split(',');
+          valueTrimmed = void 0;
+          for (k = i = 0, len = exclusionsGroup.length; i < len; k = ++i) {
+            v = exclusionsGroup[k];
+            valueTrimmed = trakless.util.trim(v);
+            if (valueTrimmed.length > 0) {
+              $adUnitData.setCategoryExclusion(valueTrimmed);
+            }
+            return;
+          }
+        }
+      };
+
       gsndfpfactory.prototype.createAds = function() {
         var $adUnit, $existingContent, adUnit, adUnitID, allData, dimensions, i, k, len, ref, self;
         self = this;
@@ -3907,9 +3934,10 @@ function parse(html, doc) {
           trakless.util.html(adUnit, '');
           $adUnit.set('$', '+display-none');
           $win.googletag.cmd.push(function() {
-            var $adUnitData, companion, exclusions, exclusionsGroup, j, len1, targeting, v, valueTrimmed;
+            var $adUnitData, companion;
             $adUnitData = self.adUnitById[adUnitID];
             if ($adUnitData) {
+              self.setTargeting($adUnitData, allData);
               return;
             }
             self.dfpID = self.dfpID.replace(/(\/\/)+/gi, '/').replace(/\s+/gi, '').replace(/(\/)$/, '/');
@@ -3925,32 +3953,7 @@ function parse(html, doc) {
             if (companion != null) {
               $adUnitData.addService($win.googletag.companionAds());
             }
-            targeting = allData['targeting'];
-            if (targeting) {
-              if (typeof targeting === 'string') {
-                targeting = eval('(' + targeting + ')');
-              }
-              for (k in targeting) {
-                v = targeting[k];
-                if (k === 'brand') {
-                  gsndfp.setBrand(v);
-                }
-                $adUnitData.setTargeting(k, v);
-              }
-            }
-            exclusions = allData['exclusions'];
-            if (exclusions) {
-              exclusionsGroup = exclusions.split(',');
-              valueTrimmed = void 0;
-              for (k = j = 0, len1 = exclusionsGroup.length; j < len1; k = ++j) {
-                v = exclusionsGroup[k];
-                valueTrimmed = trakless.util.trim(v);
-                if (valueTrimmed.length > 0) {
-                  $adUnitData.setCategoryExclusion(valueTrimmed);
-                }
-                return;
-              }
-            }
+            self.setTargeting($adUnitData, allData);
             self.adUnitById[adUnitID] = $adUnitData;
             $adUnitData.oldRenderEnded = $adUnitData.oldRenderEnded || $adUnitData.renderEnded;
             $adUnitData.renderEnded = function() {
@@ -4021,6 +4024,7 @@ function parse(html, doc) {
           }
           $win.googletag.enableServices();
         });
+        return self;
       };
 
       gsndfpfactory.prototype.isHeightInView = function(el) {

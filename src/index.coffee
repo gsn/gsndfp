@@ -15,7 +15,7 @@ trakless = win.trakless
 myGsn = win.Gsn or {}
 oldGsnAdvertising = myGsn.Advertising
 gsnSw2 = new gsndfpfactory()
-gsnAdpods = new gsndfpfactory()
+gsnpods = new gsndfpfactory()
 circPlus = new gsndfpfactory()
 lastRefreshTime = 0
 if oldGsnAdvertising?
@@ -390,7 +390,10 @@ class Plugin
 
     if (forceRefresh || canRefresh)
       lastRefreshTime = (new Date()).getTime() / 1000;
-      self.addDept payLoad.dept
+
+      if (payload.dept?)
+        self.addDept payLoad.dept
+
       if (forceRefresh)
         self.refreshExisting.pods = false
         self.refreshExisting.circPlus = false
@@ -402,7 +405,7 @@ class Plugin
       if payLoad.page
         targetting.kw = payLoad.page.replace(/[^a-z]/gi, '');
 
-      gsnAdpods.refresh(
+      gsnpods.refresh(
         setTargeting: targetting
         sel: '.gsnunit'
         refreshExisting: self.refreshExisting.pods
@@ -413,7 +416,7 @@ class Plugin
         targetting.dept = [self.circPlusDept || 'produce']
         circPlus.refresh(
           setTargeting: targetting
-          circPlusBody: self.circPlusBody
+          bodyTemplate: self.bodyTemplate
           sel: '.circplus'
           refreshExisting: self.refreshExisting.circPlus
         )

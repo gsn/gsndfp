@@ -84,7 +84,7 @@
 })({
 1: [function(require, module, exports) {
 (function() {
-  var Plugin, aPlugin, attrs, buildqs, circPlus, debug, doc, fn, gsnAdpods, gsnContext, gsnSw2, gsndfpfactory, i, j, k, lastRefreshTime, len, len1, loadiframe, log, myGsn, myPlugin, oldGsnAdvertising, prefix, ref, ref1, script, trakless, trakless2, win;
+  var Plugin, aPlugin, attrs, buildqs, circPlus, debug, doc, fn, gsnContext, gsnSw2, gsndfpfactory, gsnpods, i, j, k, lastRefreshTime, len, len1, loadiframe, log, myGsn, myPlugin, oldGsnAdvertising, prefix, ref, ref1, script, trakless, trakless2, win;
 
   debug = require('debug');
 
@@ -116,7 +116,7 @@
 
   gsnSw2 = new gsndfpfactory();
 
-  gsnAdpods = new gsndfpfactory();
+  gsnpods = new gsndfpfactory();
 
   circPlus = new gsndfpfactory();
 
@@ -587,7 +587,9 @@
       canRefresh = ((new Date).getTime() / 1000 - lastRefreshTime) >= self.minSecondBetweenRefresh;
       if (forceRefresh || canRefresh) {
         lastRefreshTime = (new Date()).getTime() / 1000;
-        self.addDept(payLoad.dept);
+        if ((payload.dept != null)) {
+          self.addDept(payLoad.dept);
+        }
         if (forceRefresh) {
           self.refreshExisting.pods = false;
           self.refreshExisting.circPlus = false;
@@ -599,7 +601,7 @@
         if (payLoad.page) {
           targetting.kw = payLoad.page.replace(/[^a-z]/gi, '');
         }
-        gsnAdpods.refresh({
+        gsnpods.refresh({
           setTargeting: targetting,
           sel: '.gsnunit',
           refreshExisting: self.refreshExisting.pods
@@ -609,7 +611,7 @@
           targetting.dept = [self.circPlusDept || 'produce'];
           circPlus.refresh({
             setTargeting: targetting,
-            circPlusBody: self.circPlusBody,
+            bodyTemplate: self.bodyTemplate,
             sel: '.circplus',
             refreshExisting: self.refreshExisting.circPlus
           });

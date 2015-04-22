@@ -329,15 +329,15 @@
       var k, self, tsP, v;
       self = myGsn.Advertising;
       tsP = {};
-      if (actionParam != null) {
+      if (typeof actionParam === 'object') {
         for (k in actionParam) {
           v = actionParam[k];
-          if (v == null) {
+          if (v != null) {
             tsP[self.translator[k]] = v;
           }
         }
-        trakless.getDefaultTracker().track('gsn', tsP);
       }
+      trakless.getDefaultTracker().track('gsn', tsP);
       self.log(actionParam);
       return this;
     };
@@ -683,7 +683,7 @@
       if (typeof defParam === 'object') {
         for (k in defParam) {
           v = defParam[k];
-          if (v == null) {
+          if (v != null) {
             self.defP[k] = v;
           }
         }

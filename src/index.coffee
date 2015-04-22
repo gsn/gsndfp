@@ -192,11 +192,11 @@ class Plugin
   trackAction: (actionParam) ->
     self = myGsn.Advertising
     tsP = {}
-    if actionParam?
-      for k, v of actionParam when !v?
+    if typeof actionParam is 'object'
+      for k, v of actionParam when v?
         tsP[self.translator[k]] = v
 
-      trakless.getDefaultTracker().track('gsn', tsP)
+    trakless.getDefaultTracker().track('gsn', tsP)
       
     self.log actionParam
 
@@ -469,7 +469,7 @@ class Plugin
   setDefault: (defParam) ->
     self = myGsn.Advertising
     if (typeof defParam == 'object')
-      for k, v of defParam when !v?
+      for k, v of defParam when v?
         self.defP[k] = v
     @
 

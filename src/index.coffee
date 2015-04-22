@@ -5,7 +5,8 @@ loadiframe = require('load-iframe')
 gsndfpfactory = require('./gsndfpfactory.coffee')
 
 if console?
-  log.log = console.log.bind(console); 
+  if (console.log.bind?)
+    log.log = console.log.bind(console); 
 
 win = window
 doc = win.document

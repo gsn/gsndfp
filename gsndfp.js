@@ -97,7 +97,9 @@
   gsndfpfactory = require('./gsndfpfactory.coffee');
 
   if (typeof console !== "undefined" && console !== null) {
-    log.log = console.log.bind(console);
+    if ((console.log.bind != null)) {
+      log.log = console.log.bind(console);
+    }
   }
 
   win = window;
@@ -4199,9 +4201,9 @@ modal = (function() {
 
   modal.prototype.closeCls = 'gmodal-close';
 
-  modal.prototype.tpl = '<div class="gmodal-wrap gmodal-top">&nbsp;<div>\n<div class="gmodal-wrap gmodal-left"></div><div class="gmodal-content" id="gmodalContent"></div><div class="gmodal-wrap gmodal-right"></div>';
+  modal.prototype.tpl = '<div class="gmodal-wrap gmodal-top">&nbsp;<div><div class="gmodal-wrap gmodal-left"></div><div class="gmodal-content" id="gmodalContent"></div><div class="gmodal-wrap gmodal-right"></div>';
 
-  modal.prototype.css = '.gmodal {\n    display: none;\n    overflow: hidden;\n    outline: 0;\n    -webkit-overflow-scrolling: touch;\n    position: fixed;\n    top: 0;\n    left: 0;\n    bottom: 0;\n    right: 0;\n    width: 100%;\n    height: 100%;\n    z-index: 9999990;  /* based on safari 16777271 */ \n}\n.gmodal-show { display: table }\n.gmodal-wrap,\n.gmodal-content {\n    display: table-cell;\n    width: 33%;\n}';
+  modal.prototype.css = '.gmodal{display:none;overflow:hidden;outline:0;-webkit-overflow-scrolling:touch;position:fixed;top:0;left:0;bottom:0;right:0;width:100%;height:100%;z-index:9999990}.gmodal-show{display:table}.gmodal-content,.gmodal-wrap{display:table-cell}.gmodal-wrap{width:50%}';
 
   modal.prototype.show = function(options) {
     var self;
@@ -4514,7 +4516,7 @@ Emitter.prototype.hasListeners = function(event){
 
 }, {}],
 25: [function(require, module, exports) {
-module.exports = '.gsnsw {\n  	float: left;\n}\n.gmodal {\n\n	/* IE 8- */\n	filter:alpha(opacity=90); \n	-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=90)";\n    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);\n\n	/* works for old school versions of the Mozilla browsers like Netscape Navigator. */\n	-moz-opacity: 0.9; \n\n	/* This is for old versions of Safari (1.x) with KHTML rendering engine */\n	-khtml-opacity: 0.9; \n\n	/* This is the "most important" one because it\'s the current standard in CSS. This will work in most versions of Firefox, Safari, and Opera. */  \n	opacity: 0.9; \n  	background: #000; /* IE5+ */\n  	background: rgba(0,0,0,0.90);\n}\n.sw-pop {\n	filter: alpha(opacity=100);\n    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";\n    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);\n	-moz-opacity: 1; \n	-khtml-opacity: 1; \n	opacity: 1; \n	background: #777;\n	background: rgba(119, 119, 119, 1);\n}';
+module.exports = '.gsnsw {\n  	float: left;\n}\n.gmodal {\n\n	/* IE 8- */\n	filter:alpha(opacity=90); \n	-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=90)";\n    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);\n\n	/* works for old school versions of the Mozilla browsers like Netscape Navigator. */\n	-moz-opacity: 0.9; \n\n	/* This is for old versions of Safari (1.x) with KHTML rendering engine */\n	-khtml-opacity: 0.9; \n\n	/* This is the "most important" one because it\'s the current standard in CSS. This will work in most versions of Firefox, Safari, and Opera. */  \n	opacity: 0.9; \n  	background: #000; /* IE5+ */\n  	background: rgba(0,0,0,0.90);\n}\n.sw-pop {\n	filter: alpha(opacity=100);\n    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";\n    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);\n	-moz-opacity: 1; \n	-khtml-opacity: 1; \n	opacity: 1; \n	background: #777;\n	background: rgba(119, 119, 119, 1);\n}\n.gmodal-left, .gmodal-right {\n	width: 50%;\n}';
 }, {}],
 26: [function(require, module, exports) {
 module.exports = '<div class="gsn-slot-container"><div class="cpslot cpslot2" data-companion="true" data-dimensions="300x50"></div></div><div class="gsn-slot-container"><div class="cpslot cpslot1" data-dimensions="300x100,300x120"></div></div>';

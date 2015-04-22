@@ -29,3 +29,6 @@
 	background: #777;
 	background: rgba(119, 119, 119, 1);
 }
+.gmodal-left, .gmodal-right {
+	width: 50%;
+}

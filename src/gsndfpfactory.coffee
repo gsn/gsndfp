@@ -49,7 +49,7 @@
       self.sel = options.sel or '.gsnunit'
       options = self.dops
       selector = self.sel
-      if (typeof self.adUnitId != 'object')
+      if (typeof self.adUnitById != 'object')
         self.adUnitById = {}
 
       if (!($win.opera && $win.opera.version))
@@ -63,8 +63,10 @@
       if (selector == '.circplus')
         self.storeAs = 'circplus'
         cp = qsel(selector)
+        slot1 = qsel('.cpslot1')
         if cp.length > 0
-          trakless.util.html(cp[0], options.bodyTemplate or self.bodyTemplate)
+          if (!slot1[0])
+            trakless.util.html(cp[0], options.bodyTemplate or self.bodyTemplate)
 
         # real selector is use above to append bodyTemplate
         self.$ads = [qsel('.cpslot1')[0], qsel('.cpslot2')[0]]

@@ -177,7 +177,9 @@ class Plugin
     if (self.isDebug or debug.enabled('gsndfp'))
       self.isDebug = true
       if (typeof message is 'object')
-        message = trakless.util.stringToJSON(message)
+        try
+          message = trakless.util.$.toJSON(message)
+        catch
       log(message)
     @
 

@@ -306,7 +306,11 @@
       if (self.isDebug || debug.enabled('gsndfp')) {
         self.isDebug = true;
         if (typeof message === 'object') {
-          message = trakless.util.stringToJSON(message);
+          try {
+            message = trakless.util.$.toJSON(message);
+          } catch (_error) {
+
+          }
         }
         log(message);
       }
@@ -3662,7 +3666,7 @@ function parse(html, doc) {
       gsndfpfactory.prototype.bodyTemplate = circplusTemplate;
 
       gsndfpfactory.prototype.refresh = function(options) {
-        var cp, currentTime, selector, self;
+        var cp, currentTime, selector, self, slot1;
         self = this;
         self.dfpLoader();
         options = options || {};
@@ -3671,7 +3675,7 @@ function parse(html, doc) {
         self.sel = options.sel || '.gsnunit';
         options = self.dops;
         selector = self.sel;
-        if (typeof self.adUnitId !== 'object') {
+        if (typeof self.adUnitById !== 'object') {
           self.adUnitById = {};
         }
         if (!($win.opera && $win.opera.version)) {
@@ -3683,8 +3687,11 @@ function parse(html, doc) {
         if (selector === '.circplus') {
           self.storeAs = 'circplus';
           cp = qsel(selector);
+          slot1 = qsel('.cpslot1');
           if (cp.length > 0) {
-            trakless.util.html(cp[0], options.bodyTemplate || self.bodyTemplate);
+            if (!slot1[0]) {
+              trakless.util.html(cp[0], options.bodyTemplate || self.bodyTemplate);
+            }
           }
           self.$ads = [qsel('.cpslot1')[0], qsel('.cpslot2')[0]];
           if (self.$ads[0]) {

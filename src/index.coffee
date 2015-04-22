@@ -92,7 +92,7 @@ class Plugin
   disableSw: ''
   source: ''
   targetting: {}
-  depts: []
+  depts: ''
   circPlusBody: undefined
   refreshExisting:
     circPlus: false
@@ -225,21 +225,10 @@ class Plugin
   addDept: (dept) ->
     self =  myGsn.Advertising
     if dept?
-      oldDepts = self.depts
-      depts = []
-      goodDepts = {}
-      depts.push self.cleanKeyword dept
-      goodDepts[depts[0]] = 1
-      self.circPlusDept = depts[0]
-      for dept in oldDepts
-        if !goodDepts[dept]?
-          depts.push dept
-        goodDepts[dept] = 1
-
-      while depts.length > 5
-        depts.pop()
-
-      self.depts = depts
+      goodDept = self.cleanKeyword dept
+      goodDept = ",#{goodDepts}"
+      if (self.depts.indexOf(goodDept) < 0)
+        self.depts = "#{goodDept}#{self.depts}"
     @
 
   ###*
@@ -401,12 +390,17 @@ class Plugin
         self.refreshExisting.circPlus = false
 
       targetting =
-        dept: self.depts or []
+        dept: self.depts.split(',').slice(1,5)
         brand: self.getBrand()
 
       if payLoad.page
         targetting.kw = payLoad.page.replace(/[^a-z]/gi, '');
 
+      if (targetting.depts.length > 0)
+        self.depts = "," + targetting.depts.join(',')
+      else
+        targetting.depts = ['produce']
+        
       gsnpods.refresh(
         setTargeting: targetting
         sel: '.gsnunit'

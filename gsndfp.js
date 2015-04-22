@@ -200,7 +200,7 @@
 
     Plugin.prototype.targetting = {};
 
-    Plugin.prototype.depts = [];
+    Plugin.prototype.depts = '';
 
     Plugin.prototype.circPlusBody = void 0;
 
@@ -367,26 +367,14 @@
      */
 
     Plugin.prototype.addDept = function(dept) {
-      var depts, goodDepts, i, len, oldDepts, self;
+      var goodDept, self;
       self = myGsn.Advertising;
       if (dept != null) {
-        oldDepts = self.depts;
-        depts = [];
-        goodDepts = {};
-        depts.push(self.cleanKeyword(dept));
-        goodDepts[depts[0]] = 1;
-        self.circPlusDept = depts[0];
-        for (i = 0, len = oldDepts.length; i < len; i++) {
-          dept = oldDepts[i];
-          if (goodDepts[dept] == null) {
-            depts.push(dept);
-          }
-          goodDepts[dept] = 1;
+        goodDept = self.cleanKeyword(dept);
+        goodDept = "," + goodDepts;
+        if (self.depts.indexOf(goodDept) < 0) {
+          self.depts = "" + goodDept + self.depts;
         }
-        while (depts.length > 5) {
-          depts.pop();
-        }
-        self.depts = depts;
       }
       return this;
     };
@@ -599,11 +587,16 @@
           self.refreshExisting.circPlus = false;
         }
         targetting = {
-          dept: self.depts || [],
+          dept: self.depts.split(',').slice(1, 5),
           brand: self.getBrand()
         };
         if (payLoad.page) {
           targetting.kw = payLoad.page.replace(/[^a-z]/gi, '');
+        }
+        if (targetting.depts.length > 0) {
+          self.depts = "," + targetting.depts.join(',');
+        } else {
+          targetting.depts = ['produce'];
         }
         gsnpods.refresh({
           setTargeting: targetting,

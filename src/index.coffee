@@ -409,7 +409,7 @@ class Plugin
       self.refreshExisting.pods = true
 
       if self.enableCircPlus
-        targetting.dept = [self.circPlusDept || 'produce']
+        targetting.dept = [targetting.dept[0]]
         circPlus.refresh(
           setTargeting: targetting
           bodyTemplate: self.bodyTemplate

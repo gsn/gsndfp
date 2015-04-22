@@ -605,7 +605,7 @@
         });
         self.refreshExisting.pods = true;
         if (self.enableCircPlus) {
-          targetting.dept = [self.circPlusDept || 'produce'];
+          targetting.dept = [targetting.dept[0]];
           circPlus.refresh({
             setTargeting: targetting,
             bodyTemplate: self.bodyTemplate,
@@ -3883,7 +3883,7 @@ function parse(html, doc) {
       };
 
       gsndfpfactory.prototype.setTargeting = function($adUnitData, allData) {
-        var exclusions, exclusionsGroup, i, k, len, ref, targeting, v, valueTrimmed;
+        var exclusions, exclusionsGroup, i, k, len, targeting, v, valueTrimmed;
         targeting = allData['targeting'];
         if (targeting) {
           if (typeof targeting === 'string') {
@@ -3891,16 +3891,6 @@ function parse(html, doc) {
           }
           for (k in targeting) {
             v = targeting[k];
-            if (k === 'brand') {
-              gsndfp.setBrand(v);
-            }
-            $adUnitData.setTargeting(k, v);
-          }
-        }
-        if (typeof self.opts.setTargeting === 'object') {
-          ref = self.ops.setTargeting;
-          for (k in ref) {
-            v = ref[k];
             if (k === 'brand') {
               gsndfp.setBrand(v);
             }

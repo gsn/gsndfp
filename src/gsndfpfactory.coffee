@@ -262,12 +262,6 @@
           if k == 'brand'
             gsndfp.setBrand(v)
           $adUnitData.setTargeting k, v
-          
-      if (typeof self.opts.setTargeting is 'object')
-        for k, v of self.ops.setTargeting
-          if k == 'brand'
-            gsndfp.setBrand(v)
-          $adUnitData.setTargeting k, v
 
       # Sets custom exclusions for just THIS ad unit if it has been specified
       exclusions = allData['exclusions']

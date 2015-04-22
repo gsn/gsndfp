@@ -61,7 +61,6 @@ class Plugin
     evtvalue: undefined
     # additional parameters TBD
   translator:
-    siteid: 'sid'
     page: 'pg'
     evtname: 'en'
     dept: 'dpt'

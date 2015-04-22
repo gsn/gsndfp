@@ -154,7 +154,6 @@
     };
 
     Plugin.prototype.translator = {
-      siteid: 'sid',
       page: 'pg',
       evtname: 'en',
       dept: 'dpt',

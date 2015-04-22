@@ -133,7 +133,7 @@
 
     Plugin.prototype.pluginLoaded = true;
 
-    Plugin.prototype.defaultActionParam = {
+    Plugin.prototype.defP = {
       page: void 0,
       evtname: void 0,
       dept: void 0,
@@ -326,16 +326,17 @@
      */
 
     Plugin.prototype.trackAction = function(actionParam) {
-      var i, k, len, self, traker, translatedParam, v;
+      var k, self, tsP, v;
       self = myGsn.Advertising;
-      translatedParam = {};
+      tsP = {};
       if (actionParam != null) {
-        for (k = i = 0, len = actionParam.length; i < len; k = ++i) {
+        for (k in actionParam) {
           v = actionParam[k];
-          translatedParam[self.translator[k]] = v;
+          if (v == null) {
+            tsP[self.translator[k]] = v;
+          }
         }
-        traker = trakless.getDefaultTracker();
-        traker.track('gsn', translatedParam);
+        trakless.getDefaultTracker().trak('gsn', tsP);
       }
       self.log(actionParam);
       return this;
@@ -562,7 +563,7 @@
       var canRefresh, k, payLoad, ref, self, targetting, v;
       self = myGsn.Advertising;
       payLoad = actionParam || {};
-      ref = self.defaultActionParam;
+      ref = self.defP;
       for (k in ref) {
         v = ref[k];
         if (v != null) {
@@ -676,13 +677,15 @@
     #
      */
 
-    Plugin.prototype.setDefault = function(defaultParam) {
+    Plugin.prototype.setDefault = function(defParam) {
       var k, self, v;
       self = myGsn.Advertising;
-      for (k in defaultParam) {
-        v = defaultParam[k];
-        if (v == null) {
-          self.defaultActionParam[k] = v;
+      if (typeof defParam === 'object') {
+        for (k in defParam) {
+          v = defParam[k];
+          if (v == null) {
+            self.defP[k] = v;
+          }
         }
       }
       return this;

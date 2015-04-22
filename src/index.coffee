@@ -25,7 +25,7 @@ if oldGsnAdvertising?
 
 class Plugin
   pluginLoaded: true
-  defaultActionParam:
+  defP:
     # default action parameters *optional* means it will not break but we would want it if possible
      # required - example: registration, coupon, circular
     page: undefined
@@ -191,14 +191,13 @@ class Plugin
   ###
   trackAction: (actionParam) ->
     self = myGsn.Advertising
-    translatedParam = {}
+    tsP = {}
     if actionParam?
-      for v, k in actionParam
-        translatedParam[self.translator[k]] = v
+      for k, v of actionParam when !v?
+        tsP[self.translator[k]] = v
 
-      traker = trakless.getDefaultTracker()
-      traker.track('gsn', translatedParam)
-
+      trakless.getDefaultTracker().trak('gsn', tsP)
+      
     self.log actionParam
 
     @
@@ -367,7 +366,7 @@ class Plugin
   refreshAdPodsInternal: (actionParam, forceRefresh) ->
     self = myGsn.Advertising
     payLoad = actionParam or {}
-    for k, v of self.defaultActionParam when v?
+    for k, v of self.defP when v?
       if (!payLoad[k])
         payLoad[k] = v
 
@@ -467,10 +466,11 @@ class Plugin
   # set global defaults
   #
   ###
-  setDefault: (defaultParam) ->
+  setDefault: (defParam) ->
     self = myGsn.Advertising
-    for k, v of defaultParam when !v?
-      self.defaultActionParam[k] = v
+    if (typeof defParam == 'object')
+      for k, v of defParam when !v?
+        self.defP[k] = v
     @
 
   ###*

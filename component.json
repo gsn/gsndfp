@@ -25,6 +25,8 @@
     "segmentio/load-iframe": "*",
     "segmentio/load-script": "*",
     "component/emitter": "*",
+    "component/xmlhttprequest": "*",
+    "component/dom": "*",
     "niiknow/trakless": "*",
     "niiknow/gmodal": "*"
   },

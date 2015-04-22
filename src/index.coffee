@@ -178,7 +178,7 @@ class Plugin
       self.isDebug = true
       if (typeof message is 'object')
         try
-          message = trakless.util.$.toJSON(message)
+          message = JSON.stringify(message)
         catch
       log(message)
     @

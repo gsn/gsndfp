@@ -196,7 +196,7 @@ class Plugin
       for k, v of actionParam when !v?
         tsP[self.translator[k]] = v
 
-      trakless.getDefaultTracker().trak('gsn', tsP)
+      trakless.getDefaultTracker().track('gsn', tsP)
       
     self.log actionParam
 

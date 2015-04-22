@@ -336,7 +336,7 @@
             tsP[self.translator[k]] = v;
           }
         }
-        trakless.getDefaultTracker().trak('gsn', tsP);
+        trakless.getDefaultTracker().track('gsn', tsP);
       }
       self.log(actionParam);
       return this;

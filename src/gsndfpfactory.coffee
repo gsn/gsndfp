@@ -159,6 +159,8 @@ class gsndfpfactory
     return
 
   swSucccess: (myrsp) ->
+    # remove handler for security reason
+    $win.gsnswCallback = null
     rsp = myrsp
     if (typeof myrsp is 'string')
       rsp = JSON.parse(myrsp)
@@ -182,22 +184,24 @@ class gsndfpfactory
     if data
       #add the random cachebuster
       data = data.replace(/%%CACHEBUSTER%%/g, (new Date).getTime()).replace(/%%CHAINID%%/g, gsndfp.gsnid)
-      $win.gmodal.on('show', self.onOpenCallback)
-      $win.gmodal.on('hide', self.onCloseCallback)
-      $win.gmodal.on('click', (evt) ->
-        target = evt.target or evt.srcElement
-        if (target.className.indexOf('sw-close') >= 0)
-          $win.gmodal.hide()
-      )
+
       if !self.rect
         self.rect = 
           w: Math.max($doc.documentElement.clientWidth, $win.innerWidth || 0)
           h: Math.max($doc.documentElement.clientHeight, $win.innerHeight || 0)
-      $el = qsel("<div id='sw'>#{data}<div>")
-      #$el.find('.sw-body').
+
+      handleEvent = (target)->
+        if (target.className.indexOf('sw-close') >= 0)
+          $win.gmodal.off('click', handleEvent)
+          $win.gmodal.off('tap', handleEvent)
+          $win.gmodal.hide()
+
+      $win.gmodal.on('click', handleEvent)
+      $win.gmodal.on('tap', handleEvent)
 
       # open the modal to show shopper welcome
-      $win.gmodal.show({content: $el[0], closeCls: 'sw-close'})
+      if ($win.gmodal.show({content: "<div id='sw'>#{data}<div>", closeCls: 'sw-close'}, self.onCloseCallback))
+        self.onOpenCallback()
     else
       self.onCloseCallback cancel: true
     

@@ -73,6 +73,7 @@ class gsndfpfactory
     else if (self.sel == '.gsnsw')
       self.dops.inViewOnly = false
       $win.gmodal.injectStyle('swcss', swcss)
+
       gsnSw = self
       self.dops.enableSingleRequest = true
       self.dfpID = gsndfp.getNetworkId()

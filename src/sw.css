@@ -29,6 +29,17 @@
 	background: #777;
 	background: rgba(119, 119, 119, 1);
 }
+
+#gmodalContent {
+    vertical-align: top;
+    top: 50px;
+}
+
+.sw-body {
+    max-height: 60vh;
+    overflow-y: scroll;
+}
+
 @media (max-width: 650px){
     .gsnsw {
         float:none !important;
@@ -59,27 +70,10 @@
     .sw-close{
         padding:1px !important;
     }
-}
 
-@media (max-height: 760px) {
-    .sw-body {
-        height: 340px;
-        overflow: scroll;
-    }
-    .gmodal {
-        padding-top: 5px !important;
+    #gmodalContent {
+        vertical-align: middle;
+        height: 80vh;
+        top: auto;
     }
 }
-
-@media (max-height: 460px) {
-    .sw-body {
-        height: 240px;
-        overflow: scroll;
-    }
-    .gmodal {
-        padding-top: 10px !important;
-    }
-}
-
-
-

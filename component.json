@@ -1,24 +1,21 @@
 {
   "name": "gsndfp",
-  "version": "1.1.24",
+  "version": "1.2.0",
   "description": "gsndfp",
   "homepage": "http://www.groceryshopping.net",
   "author": "Tom Nguyen",
   "main": [
-    "dist/gsndfp.js",
-    "dist/gsndfp.min.js"
+    "gsndfp.js",
+    "gsndfp.min.js"
   ],
   "repository": {
     "type": "git",
     "url": "git@github.com:gsn/gsndfp.git"
   },
   "keywords": [
-    "jquery",
     "dfp",
-    "doubleclick",
-    "jquery-plugin",
-    "jquery",
-    "zepto"
+    "advertising",
+    "doubleclick"
   ],
   "dependencies": { 
     "visionmedia/debug": "*",

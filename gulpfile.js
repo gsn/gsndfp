@@ -16,7 +16,6 @@ var banner = [
   '/*!',
   ' * <%= pkg.name %>',
   ' * version <%= pkg.version %>',
-  ' * Requires jQuery 1.7.1 or higher',
   ' * <%= pkg.repository.url %>',
   ' * License: Grocery Shopping Network',
   ' *          MIT from derived work of Copyright (c) 2013 Matt Cooper: https://github.com/coop182/jquery.dfp.js  v1.0.18',

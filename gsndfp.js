@@ -181,7 +181,7 @@
 
     Plugin.prototype.selector = 'body';
 
-    Plugin.prototype.apiUrl = 'https://clientapi.gsn2.com/api/v1';
+    Plugin.prototype.apiUrl = 'https://clientapi.gsngrocers.com/api/v1';
 
     Plugin.prototype.gsnNetworkId = void 0;
 

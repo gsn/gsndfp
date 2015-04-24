@@ -1,7 +1,7 @@
 {
   "name": "gsndfp",
   "description": "GSN DFP Plugin",
-  "version": "1.1.24",
+  "version": "1.2.0",
   "homepage": "https://github.com/gsn/gsndfp",
   "author": {
     "name": "Grocery Shopping Network",
@@ -20,14 +20,11 @@
     "url": "git@github.com:gsn/gsndfp.git"
   },
   "keywords": [
-    "jquery",
     "dfp",
-    "doubleclick",
-    "jquery-plugin",
-    "jquery",
-    "zepto"
+    "advertising",
+    "doubleclick"
   ],
-  "main": "dist/gsndfp.js",
+  "main": "gsndfp.js",
   "directories": {
     "example": "demo",
     "test": "tests"
@@ -62,7 +59,6 @@
     "node": ">= 0.12.0"
   },
   "scripts": {
-    "test": "gulp test",
-    "postinstall": "node node_modules/bower/bin/bower install"
+    "test": "gulp test"
   }
 }

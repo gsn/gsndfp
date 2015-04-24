@@ -32,3 +32,4 @@ bower_components
 .DS_Store
 .idea
 src/*.js
+components

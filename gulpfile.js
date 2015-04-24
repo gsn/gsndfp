@@ -24,31 +24,34 @@ var banner = [
 ].join('\n');
 
 gulp.task('bump_version', function(){
-    return gulp.src(['./package.json', './bower.json', './component.json'])
-        .pipe(bump({type: 'patch'}))
-        .pipe(gulp.dest('./'));
+  return gulp.src(['./package.json', './bower.json', './component.json'])
+      .pipe(bump({type: 'patch'}))
+      .pipe(gulp.dest('./'));
 });
 
-gulp.task('clean', function() {
+gulp.task('clean', function(){
   del(['dist/*']);
 });
 
 gulp.task('coffee', function() {
-  return gulp.src(['./src/circplus.coffee','./src/gsndfp.coffee','./src/gsnsw2.coffee','./src/jquery.easymodal.coffee', './src/gsnadvertising.coffee'])
-    .pipe(concat('gsndfp.coffee'))
+  gulp.src(['./src/gsndfpfactory.coffee', 'index.coffee'])
+    .pipe(concat('build' + (new Date().getTime()) + '.coffee'))
     .pipe(coffee({bare: true}).on('error', gutil.log))
+    .pipe(gulp.dest('dist'));
+
+  return gulp.src(['./vendor/*.js', './dist/build*.js'])
+    .pipe(concat('gsndfp.js'))
     .pipe(header(banner, {pkg: pkg}))
     .pipe(gulp.dest('dist'));
 });
 
-gulp.task('default', ['clean', 'coffee', 'bump_version'], function() {
-  return gulp.src('./dist/*.js')
+gulp.task('default', ['clean', 'coffee'], function() {
+  return gulp.src(['./dist/gsndfp.js'])
     .pipe(uglify())
     .pipe(header(banner, {pkg: pkg}))
     .pipe(rename({suffix: '.min'}))
     .pipe(gulp.dest('dist'));
 });
-
 
 gulp.task('SpecRunner.update', function(){
 	var target  = './test/SpecRunner.html',

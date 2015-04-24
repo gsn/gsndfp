@@ -19,5 +19,24 @@
     "jquery-plugin",
     "jquery",
     "zepto"
-  ]
+  ],
+  "dependencies": { 
+    "visionmedia/debug": "*",
+    "segmentio/load-iframe": "*",
+    "segmentio/load-script": "*",
+    "component/emitter": "*",
+    "component/dom": "*",
+    "niiknow/trakless": "*",
+    "niiknow/gmodal": "*"
+  },
+  "development": {
+    "yields/coverage": "*",
+    "component/jquery": "*",
+    "component/assert": "*",
+    "ianstormtaylor/trigger-event": "*",
+    "jkroso/equals": "*",
+    "ianstormtaylor/sinon": "duo",
+    "timoxley/next-tick": "*",
+    "yields/gravy": "*"
+  }
 }

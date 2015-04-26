@@ -33,3 +33,5 @@ bower_components
 .idea
 src/*.js
 components
+build
+build.js

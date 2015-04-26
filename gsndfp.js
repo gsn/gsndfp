@@ -152,26 +152,31 @@
       pdesc: void 0,
       latlng: void 0,
       evtcategory: void 0,
+      evtproperty: void 0,
+      evtaction: void 0,
       evtvalue: void 0
     };
 
     Plugin.prototype.translator = {
-      page: 'pg',
+      page: 'dt',
       evtname: 'en',
       dept: 'dpt',
-      deviceid: 'dvc',
-      storeid: 'str',
+      deviceid: 'dvceid',
+      storeid: 'stid',
       consumerid: 'uid',
-      isanon: 'isa',
-      loyaltyid: 'loy',
-      aisle: 'asl',
+      isanon: 'anon',
+      loyaltyid: 'loyid',
+      aisle: 'aisle',
       category: 'cat',
       shelf: 'shf',
-      brand: 'brd',
-      pcode: 'pcd',
-      pdesc: 'pds',
-      latlng: 'latlng',
+      brand: 'bn',
+      pcode: 'ic',
+      pdesc: 'in',
+      latlng: 'lln',
       evtcategory: 'ec',
+      evtproperty: 'ep',
+      evtlabel: 'el',
+      evtaction: 'ea',
       evtvalue: 'ev'
     };
 

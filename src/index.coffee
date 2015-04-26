@@ -58,26 +58,35 @@ class Plugin
      # optional - describe how you want to categorize this event/action.
      # ie. this action is part of (checkout process, circular, coupon, etc...)
     evtcategory: undefined
+     # option - event property
+     # example: item id
+    evtproperty: undefined
+     # option - event action
+     # example: click
+    evtaction: undefined
      # example: page (order summary), evtcategory (checkout), evtname (transaction total), evtvalue (100) for $100
     evtvalue: undefined
     # additional parameters TBD
   translator:
-    page: 'pg'
+    page: 'dt'
     evtname: 'en'
     dept: 'dpt'
-    deviceid: 'dvc'
-    storeid: 'str'
+    deviceid: 'dvceid'
+    storeid: 'stid'
     consumerid: 'uid'
-    isanon: 'isa'
-    loyaltyid: 'loy'
-    aisle: 'asl'
+    isanon: 'anon'
+    loyaltyid: 'loyid'
+    aisle: 'aisle'
     category: 'cat'
     shelf: 'shf'
-    brand: 'brd'
-    pcode: 'pcd'
-    pdesc: 'pds'
-    latlng: 'latlng'
+    brand: 'bn'
+    pcode: 'ic'
+    pdesc: 'in'
+    latlng: 'lln'
     evtcategory: 'ec'
+    evtproperty: 'ep'
+    evtlabel: 'el'
+    evtaction: 'ea'
     evtvalue: 'ev'
   isDebug: false
   gsnid: 0

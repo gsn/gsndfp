@@ -67,7 +67,7 @@ class Plugin
     dept: 'dpt'
     deviceid: 'dvc'
     storeid: 'str'
-    consumerid: 'cust'
+    consumerid: 'uid'
     isanon: 'isa'
     loyaltyid: 'loy'
     aisle: 'asl'

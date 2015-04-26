@@ -12,7 +12,7 @@ if console?
 win = window
 doc = win.document
 gsnContext = win.gsnContext
-trakless = win.trakless
+_tk = win._tk
 myGsn = win.Gsn or {}
 oldGsnAdvertising = myGsn.Advertising
 gsnSw2 = new gsndfpfactory()
@@ -67,7 +67,7 @@ class Plugin
     dept: 'dpt'
     deviceid: 'dvc'
     storeid: 'str'
-    consumerid: 'cust'
+    consumerid: 'uid'
     isanon: 'isa'
     loyaltyid: 'loy'
     aisle: 'asl'
@@ -125,7 +125,7 @@ class Plugin
 
     # a little timeout to make sure click tracking stick
     win.setTimeout (->
-      trakless.broadcast en,
+      _tk.emitTop en,
           type: en
           detail: ed
 
@@ -198,7 +198,7 @@ class Plugin
         if (k2)
           tsP[k2] = v
 
-    trakless.getDefaultTracker().track('gsn', tsP)
+    _tk.track('gsn', tsP)
       
     self.log actionParam
 

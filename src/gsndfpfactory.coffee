@@ -5,7 +5,7 @@ qsel = require('dom')
 swcss = require('./sw.css')
 circplusTemplate = require('./circplus.html')
 $win = window
-trakless = $win.trakless
+_tk = $win._tk
 $doc = $win.document
 gsnSw = null
 
@@ -37,7 +37,7 @@ class gsndfpfactory
     self.dfpLoader()
     self.dfpID = gsndfp.getNetworkId(true)
     self.setOptions(options or {})
-    trakless.util.ready ->
+    _tk.util.ready ->
       self.doIt()
     @
   doIt: () ->
@@ -275,7 +275,7 @@ class gsndfpfactory
       exclusionsGroup = exclusions.split(',')
       valueTrimmed = undefined
       for v, k in exclusionsGroup
-        valueTrimmed = trakless.util.trim(v)
+        valueTrimmed = _tk.util.trim(v)
         if valueTrimmed.length > 0
           $adUnitData.setCategoryExclusion valueTrimmed
         return
@@ -286,7 +286,7 @@ class gsndfpfactory
     # Loops through on page Ad units and gets ads for them.
     for adUnit, k in self.$ads
       $adUnit = qsel(adUnit)
-      allData = trakless.util.allData(adUnit)
+      allData = _tk.util.allData(adUnit)
       # adUnit id - this will use an existing id or an auto generated one.
       adUnitID = self.getID($adUnit, self.storeAs, adUnit)
       # get dimensions of the adUnit
@@ -372,7 +372,7 @@ class gsndfpfactory
       if self.dops.setCategoryExclusion.length > 0
         exclusionsGroup = self.dops.setCategoryExclusion.split(',')
         for v, k in exclusionsGroup
-          valueTrimmed = trakless.util.trim(v)
+          valueTrimmed = _tk.util.trim(v)
           if valueTrimmed.length > 0
             $win.googletag.pubads().setCategoryExclusion valueTrimmed
 

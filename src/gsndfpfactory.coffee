@@ -82,7 +82,9 @@ class gsndfpfactory
     
       self.storeAs = 'gsnsw'
       if self.didOpen or self.getCookie('gsnsw2')?
-        self.onCloseCallback cancel: true
+        setTimeout ->
+          self.onCloseCallback cancel: true
+        , 200
       else
         currentTime = (new Date()).getTime()
         if (currentTime - self.lastRefresh) < 2000

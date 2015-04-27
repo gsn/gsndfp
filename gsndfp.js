@@ -7591,9 +7591,11 @@ function match(el, selector) {
         }
         self.storeAs = 'gsnsw';
         if (self.didOpen || (self.getCookie('gsnsw2') != null)) {
-          self.onCloseCallback({
-            cancel: true
-          });
+          setTimeout(function() {
+            return self.onCloseCallback({
+              cancel: true
+            });
+          }, 200);
         } else {
           currentTime = (new Date()).getTime();
           if ((currentTime - self.lastRefresh) < 2000) {

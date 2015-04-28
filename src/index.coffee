@@ -91,7 +91,7 @@ class Plugin
   isDebug: false
   gsnid: 0
   selector: 'body'
-  apiUrl: 'https://clientapi.gsngrocers.com/api/v1'
+  apiUrl: 'https://clientapi.gsn2.com/api/v1'
   gsnNetworkId: undefined
   gsnNetworkStore: undefined
   onAllEvents: undefined

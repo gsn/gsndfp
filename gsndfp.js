@@ -186,7 +186,7 @@
 
     Plugin.prototype.selector = 'body';
 
-    Plugin.prototype.apiUrl = 'https://clientapi.gsngrocers.com/api/v1';
+    Plugin.prototype.apiUrl = 'https://clientapi.gsn2.com/api/v1';
 
     Plugin.prototype.gsnNetworkId = void 0;
 
@@ -8168,6 +8168,7 @@ createModal = function(self) {
 
 showModalInternal = function(self, opts) {
   var eCls;
+  self.isVisible = true;
   if ((opts != null)) {
     self.opts = opts;
     if ((self.opts.content != null)) {
@@ -8190,6 +8191,7 @@ showModalInternal = function(self, opts) {
   eCls = self.doc.getElementsByTagName('body')[0].className;
   self.doc.getElementsByTagName('body')[0].className = trim(eCls + " body-gmodal");
   self.emit('show', self);
+  return self;
 };
 
 hideModalInternal = function(self) {
@@ -8261,7 +8263,7 @@ modal = (function() {
     } else {
       showModalInternal(self, opts);
     }
-    return self.isVisible = true;
+    return this;
   };
 
   modal.prototype.hide = function() {

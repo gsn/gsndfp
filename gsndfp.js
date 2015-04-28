@@ -7728,31 +7728,25 @@ function match(el, selector) {
     };
 
     gsndfpfactory.prototype.getPopup = function() {
-      var dataType, request, self, url;
+      var dataType, self, url;
       self = this;
       url = gsndfp.apiUrl + "/ShopperWelcome/Get/" + gsndfp.gsnid;
       dataType = 'json';
-      if (self.ieOld) {
-        $win.gsnswCallback = function(rsp) {
-          return self.swSucccess(rsp);
-        };
-        url += '?callback=gsnswCallback';
-        dataType = 'jsonp';
-      }
-      if (dataType === 'jsonp') {
-        loadScript(url);
-      } else {
-        request = new XMLHttpRequest();
-        request.open('GET', url, true);
-        request.onload = function() {
-          var req;
-          req = this;
-          if (req.status >= 200 && req.status < 400) {
-            return self.swSucccess(req.response);
-          }
-        };
-        request.send();
-      }
+      $win.gsnswCallback = function(rsp) {
+        return self.swSucccess(rsp);
+      };
+      url += '?callback=gsnswCallback';
+      loadScript(url);
+
+      /**else
+        request = new XMLHttpRequest()
+        request.open('GET', url, true)
+        request.onload = ->
+          req = @
+          if (req.status >= 200 and req.status < 400)
+            self.swSucccess req.response
+        request.send()
+       */
       return self;
     };
 

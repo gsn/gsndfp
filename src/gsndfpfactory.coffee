@@ -217,15 +217,15 @@ class gsndfpfactory
     # fallback to jsonp for IE lt 10
     # this allow for better caching on non-IE browser
     # if I am opera I need to not enter this function
-    if (self.ieOld)
-      $win.gsnswCallback = (rsp) ->
-        self.swSucccess(rsp)
-      url += '?callback=gsnswCallback' 
-      dataType = 'jsonp'  
+    #if (self.ieOld)
+    $win.gsnswCallback = (rsp) ->
+      self.swSucccess(rsp)
+    url += '?callback=gsnswCallback' 
+    #dataType = 'jsonp'  
 
-    if (dataType is 'jsonp')
-      loadScript(url)
-    else
+    #if (dataType is 'jsonp')
+    loadScript(url)
+    ###*else
       request = new XMLHttpRequest()
       request.open('GET', url, true)
       request.onload = ->
@@ -233,7 +233,7 @@ class gsndfpfactory
         if (req.status >= 200 and req.status < 400)
           self.swSucccess req.response
       request.send()
-
+    ###
     return self
 
   getCookie: (nameOfCookie) ->

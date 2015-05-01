@@ -2472,7 +2472,7 @@ module.exports = trakless;
   return module.exports = xstore;
 })(window);
 
-}, {"debug":2,"load-iframe":4,"store.js":19,"cookie":11}],
+}, {"debug":2,"load-iframe":4,"store.js":19,"cookie":20}],
 4: [function(require, module, exports) {
 
 /**
@@ -2535,8 +2535,8 @@ module.exports = function loadIframe(options, fn){
   // give it an ID or attributes.
   return iframe;
 };
-}, {"script-onload":20,"next-tick":21,"type":22}],
-20: [function(require, module, exports) {
+}, {"script-onload":21,"next-tick":22,"type":23}],
+21: [function(require, module, exports) {
 
 // https://github.com/thirdpartyjs/thirdpartyjs-code/blob/master/examples/templates/02/loading-files/index.html
 
@@ -2592,7 +2592,7 @@ function attach(el, fn){
 }
 
 }, {}],
-21: [function(require, module, exports) {
+22: [function(require, module, exports) {
 "use strict"
 
 if (typeof setImmediate == 'function') {
@@ -2628,7 +2628,7 @@ else if (typeof window == 'undefined' || window.ActiveXObject || !window.postMes
 }
 
 }, {}],
-22: [function(require, module, exports) {
+23: [function(require, module, exports) {
 /**
  * toString ref.
  */
@@ -2843,7 +2843,7 @@ module.exports = function(val){
 })(Function('return this')());
 
 }, {}],
-11: [function(require, module, exports) {
+20: [function(require, module, exports) {
 
 /**
  * Module dependencies.
@@ -2908,7 +2908,16 @@ function set(name, value, options) {
  */
 
 function all() {
-  return parse(document.cookie);
+  var str;
+  try {
+    str = document.cookie;
+  } catch (err) {
+    if (typeof console !== 'undefined' && typeof console.error === 'function') {
+      console.error(err.stack || err);
+    }
+    return {};
+  }
+  return parse(str);
 }
 
 /**
@@ -3134,8 +3143,8 @@ Emitter.prototype.hasListeners = function(event){
   return !! this.listeners(event).length;
 };
 
-}, {"indexof":23}],
-23: [function(require, module, exports) {
+}, {"indexof":24}],
+24: [function(require, module, exports) {
 module.exports = function(arr, obj){
   if (arr.indexOf) return arr.indexOf(obj);
   for (var i = 0; i < arr.length; ++i) {
@@ -3144,6 +3153,131 @@ module.exports = function(arr, obj){
   return -1;
 };
 }, {}],
+11: [function(require, module, exports) {
+
+/**
+ * Module dependencies.
+ */
+
+var debug = require('debug')('cookie');
+
+/**
+ * Set or get cookie `name` with `value` and `options` object.
+ *
+ * @param {String} name
+ * @param {String} value
+ * @param {Object} options
+ * @return {Mixed}
+ * @api public
+ */
+
+module.exports = function(name, value, options){
+  switch (arguments.length) {
+    case 3:
+    case 2:
+      return set(name, value, options);
+    case 1:
+      return get(name);
+    default:
+      return all();
+  }
+};
+
+/**
+ * Set cookie `name` to `value`.
+ *
+ * @param {String} name
+ * @param {String} value
+ * @param {Object} options
+ * @api private
+ */
+
+function set(name, value, options) {
+  options = options || {};
+  var str = encode(name) + '=' + encode(value);
+
+  if (null == value) options.maxage = -1;
+
+  if (options.maxage) {
+    options.expires = new Date(+new Date + options.maxage);
+  }
+
+  if (options.path) str += '; path=' + options.path;
+  if (options.domain) str += '; domain=' + options.domain;
+  if (options.expires) str += '; expires=' + options.expires.toUTCString();
+  if (options.secure) str += '; secure';
+
+  document.cookie = str;
+}
+
+/**
+ * Return all cookies.
+ *
+ * @return {Object}
+ * @api private
+ */
+
+function all() {
+  return parse(document.cookie);
+}
+
+/**
+ * Get cookie `name`.
+ *
+ * @param {String} name
+ * @return {String}
+ * @api private
+ */
+
+function get(name) {
+  return all()[name];
+}
+
+/**
+ * Parse cookie `str`.
+ *
+ * @param {String} str
+ * @return {Object}
+ * @api private
+ */
+
+function parse(str) {
+  var obj = {};
+  var pairs = str.split(/ *; */);
+  var pair;
+  if ('' == pairs[0]) return obj;
+  for (var i = 0; i < pairs.length; ++i) {
+    pair = pairs[i].split('=');
+    obj[decode(pair[0])] = decode(pair[1]);
+  }
+  return obj;
+}
+
+/**
+ * Encode.
+ */
+
+function encode(value){
+  try {
+    return encodeURIComponent(value);
+  } catch (e) {
+    debug('error `encode(%o)` - %o', value, e)
+  }
+}
+
+/**
+ * Decode.
+ */
+
+function decode(value) {
+  try {
+    return decodeURIComponent(value);
+  } catch (e) {
+    debug('error `decode(%o)` - %o', value, e)
+  }
+}
+
+}, {"debug":2}],
 12: [function(require, module, exports) {
 'use strict';
 
@@ -3248,8 +3382,8 @@ exports.stringify = function(obj){
   return pairs.join('&');
 };
 
-}, {"trim":24,"type":22}],
-24: [function(require, module, exports) {
+}, {"trim":25,"type":23}],
+25: [function(require, module, exports) {
 
 exports = module.exports = trim;
 
@@ -3369,8 +3503,8 @@ module.exports = function uuid(a){
   return module.exports = result;
 })(window);
 
-}, {"defaults":12,"flashdetect":25}],
-25: [function(require, module, exports) {
+}, {"defaults":12,"flashdetect":26}],
+26: [function(require, module, exports) {
 /*
 Copyright (c) Copyright (c) 2007, Carl S. Yestrau All rights reserved.
 Code licensed under the BSD License: http://www.featureblend.com/license.txt
@@ -3657,8 +3791,8 @@ if ( typeof define === 'function' && define.amd ) {
 
 })( window );
 
-}, {"eventie":26}],
-26: [function(require, module, exports) {
+}, {"eventie":27}],
+27: [function(require, module, exports) {
 /*!
  * eventie v1.0.6
  * event binding helper
@@ -3798,8 +3932,8 @@ module.exports = function debounce(func, wait, immediate){
   };
 };
 
-}, {"date-now":27}],
-27: [function(require, module, exports) {
+}, {"date-now":28}],
+28: [function(require, module, exports) {
 module.exports = Date.now || now
 
 function now() {
@@ -3875,8 +4009,8 @@ lsqueue = (function() {
 
 module.exports = lsqueue;
 
-}, {"json-fallback":28,"debounce":17,"store.js":19}],
-28: [function(require, module, exports) {
+}, {"json-fallback":29,"debounce":17,"store.js":19}],
+29: [function(require, module, exports) {
 /*
     json2.js
     2014-02-04
@@ -4593,8 +4727,8 @@ function isHTML(str) {
   return !!(match && match[1]);
 }
 
-}, {"domify":29,"each":30,"event":31,"keys":32,"query":33,"trim":24,"./lib/attributes":34,"./lib/classes":35,"./lib/events":36,"./lib/manipulate":37,"./lib/traverse":38}],
-29: [function(require, module, exports) {
+}, {"domify":30,"each":31,"event":32,"keys":33,"query":34,"trim":25,"./lib/attributes":35,"./lib/classes":36,"./lib/events":37,"./lib/manipulate":38,"./lib/traverse":39}],
+30: [function(require, module, exports) {
 
 /**
  * Expose `parse`.
@@ -4705,7 +4839,7 @@ function parse(html, doc) {
 }
 
 }, {}],
-30: [function(require, module, exports) {
+31: [function(require, module, exports) {
 
 /**
  * Module dependencies.
@@ -4796,8 +4930,8 @@ function array(obj, fn, ctx) {
   }
 }
 
-}, {"type":39,"component-type":39,"to-function":40}],
-39: [function(require, module, exports) {
+}, {"type":40,"component-type":40,"to-function":41}],
+40: [function(require, module, exports) {
 
 /**
  * toString ref.
@@ -4832,7 +4966,7 @@ module.exports = function(val){
 };
 
 }, {}],
-40: [function(require, module, exports) {
+41: [function(require, module, exports) {
 
 /**
  * Module Dependencies
@@ -4986,8 +5120,8 @@ function stripNested (prop, str, val) {
   });
 }
 
-}, {"props":41,"component-props":41}],
-41: [function(require, module, exports) {
+}, {"props":42,"component-props":42}],
+42: [function(require, module, exports) {
 /**
  * Global Names
  */
@@ -5075,7 +5209,7 @@ function prefixed(str) {
 }
 
 }, {}],
-31: [function(require, module, exports) {
+32: [function(require, module, exports) {
 var bind = window.addEventListener ? 'addEventListener' : 'attachEvent',
     unbind = window.removeEventListener ? 'removeEventListener' : 'detachEvent',
     prefix = bind !== 'addEventListener' ? 'on' : '';
@@ -5112,7 +5246,7 @@ exports.unbind = function(el, type, fn, capture){
   return fn;
 };
 }, {}],
-32: [function(require, module, exports) {
+33: [function(require, module, exports) {
 var has = Object.prototype.hasOwnProperty;
 
 module.exports = Object.keys || function(obj){
@@ -5128,7 +5262,7 @@ module.exports = Object.keys || function(obj){
 };
 
 }, {}],
-33: [function(require, module, exports) {
+34: [function(require, module, exports) {
 function one(selector, el) {
   return el.querySelector(selector);
 }
@@ -5152,7 +5286,7 @@ exports.engine = function(obj){
 };
 
 }, {}],
-34: [function(require, module, exports) {
+35: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -5240,8 +5374,8 @@ exports.value = function(val){
   });
 };
 
-}, {"value":42}],
-42: [function(require, module, exports) {
+}, {"value":43}],
+43: [function(require, module, exports) {
 
 /**
  * Module dependencies.
@@ -5338,8 +5472,8 @@ function type(el) {
   return name;
 }
 
-}, {"type":22}],
-35: [function(require, module, exports) {
+}, {"type":23}],
+36: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -5422,8 +5556,8 @@ exports.hasClass = function(name){
   return false;
 };
 
-}, {"classes":43}],
-43: [function(require, module, exports) {
+}, {"classes":44}],
+44: [function(require, module, exports) {
 /**
  * Module dependencies.
  */
@@ -5611,8 +5745,8 @@ ClassList.prototype.contains = function(name){
     : !! ~index(this.array(), name);
 };
 
-}, {"indexof":23}],
-36: [function(require, module, exports) {
+}, {"indexof":24}],
+37: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -5676,8 +5810,8 @@ exports.off = function(event, selector, fn, capture){
   });
 };
 
-}, {"event":31,"delegate":44}],
-44: [function(require, module, exports) {
+}, {"event":32,"delegate":45}],
+45: [function(require, module, exports) {
 /**
  * Module dependencies.
  */
@@ -5721,8 +5855,8 @@ exports.unbind = function(el, type, fn, capture){
   event.unbind(el, type, fn, capture);
 };
 
-}, {"closest":45,"event":31}],
-45: [function(require, module, exports) {
+}, {"closest":46,"event":32}],
+46: [function(require, module, exports) {
 var matches = require('matches-selector')
 
 module.exports = function (element, selector, checkYoSelf, root) {
@@ -5743,8 +5877,8 @@ module.exports = function (element, selector, checkYoSelf, root) {
   }
 }
 
-}, {"matches-selector":46}],
-46: [function(require, module, exports) {
+}, {"matches-selector":47}],
+47: [function(require, module, exports) {
 /**
  * Module dependencies.
  */
@@ -5792,8 +5926,8 @@ function match(el, selector) {
   return false;
 }
 
-}, {"query":33}],
-37: [function(require, module, exports) {
+}, {"query":34}],
+38: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -6080,8 +6214,8 @@ exports.focus = function(){
   return this;
 };
 
-}, {"value":42,"css":47,"text":48}],
-47: [function(require, module, exports) {
+}, {"value":43,"css":48,"text":49}],
+48: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -6141,8 +6275,8 @@ function setStyles(el, props) {
   return el;
 }
 
-}, {"debug":2,"./lib/style":49,"./lib/css":50}],
-49: [function(require, module, exports) {
+}, {"debug":2,"./lib/style":50,"./lib/css":51}],
+50: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -6250,8 +6384,8 @@ function get(el, prop, orig, extra) {
   return ret;
 }
 
-}, {"debug":2,"to-camel-case":51,"./support":52,"./prop":53,"./hooks":54}],
-51: [function(require, module, exports) {
+}, {"debug":2,"to-camel-case":52,"./support":53,"./prop":54,"./hooks":55}],
+52: [function(require, module, exports) {
 
 var toSpace = require('to-space-case');
 
@@ -6276,8 +6410,8 @@ function toCamelCase (string) {
     return letter.toUpperCase();
   });
 }
-}, {"to-space-case":55}],
-55: [function(require, module, exports) {
+}, {"to-space-case":56}],
+56: [function(require, module, exports) {
 
 var clean = require('to-no-case');
 
@@ -6302,8 +6436,8 @@ function toSpaceCase (string) {
     return match ? ' ' + match : '';
   });
 }
-}, {"to-no-case":56}],
-56: [function(require, module, exports) {
+}, {"to-no-case":57}],
+57: [function(require, module, exports) {
 
 /**
  * Expose `toNoCase`.
@@ -6379,7 +6513,7 @@ function uncamelize (string) {
   });
 }
 }, {}],
-52: [function(require, module, exports) {
+53: [function(require, module, exports) {
 /**
  * Support values
  */
@@ -6483,7 +6617,7 @@ function computePixelPositionAndBoxSizingReliable() {
 
 
 }, {}],
-53: [function(require, module, exports) {
+54: [function(require, module, exports) {
 /**
  * Module dependencies
  */
@@ -6521,8 +6655,8 @@ function prop(prop, style) {
   return prop;
 }
 
-}, {"debug":2,"to-camel-case":51,"./vendor":57}],
-57: [function(require, module, exports) {
+}, {"debug":2,"to-camel-case":52,"./vendor":58}],
+58: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -6561,7 +6695,7 @@ function vendor(prop, style) {
 }
 
 }, {}],
-54: [function(require, module, exports) {
+55: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -6725,8 +6859,8 @@ function augmentWidthOrHeight(el, prop, extra, isBorderBox, styles) {
   return val;
 }
 
-}, {"each":30,"./css":50,"./styles":58,"./support":52,"./swap":59,"./computed":60}],
-50: [function(require, module, exports) {
+}, {"each":31,"./css":51,"./styles":59,"./support":53,"./swap":60,"./computed":61}],
+51: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -6808,8 +6942,8 @@ function isNumeric(obj) {
   return !isNan(parseFloat(obj)) && isFinite(obj);
 }
 
-}, {"debug":2,"to-camel-case":51,"./computed":60,"./prop":53,"./hooks":54}],
-60: [function(require, module, exports) {
+}, {"debug":2,"to-camel-case":52,"./computed":61,"./prop":54,"./hooks":55}],
+61: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -6859,8 +6993,8 @@ function computed(el, prop, precomputed) {
   return undefined === ret ? ret : ret + '';
 }
 
-}, {"debug":2,"within-document":61,"./styles":58,"./style":49}],
-61: [function(require, module, exports) {
+}, {"debug":2,"within-document":62,"./styles":59,"./style":50}],
+62: [function(require, module, exports) {
 
 /**
  * Check if `el` is within the document.
@@ -6878,7 +7012,7 @@ module.exports = function(el) {
   return false;
 };
 }, {}],
-58: [function(require, module, exports) {
+59: [function(require, module, exports) {
 /**
  * Expose `styles`
  */
@@ -6901,7 +7035,7 @@ function styles(el) {
 }
 
 }, {}],
-59: [function(require, module, exports) {
+60: [function(require, module, exports) {
 /**
  * Export `swap`
  */
@@ -6936,7 +7070,7 @@ function swap(el, options, fn, args) {
 }
 
 }, {}],
-48: [function(require, module, exports) {
+49: [function(require, module, exports) {
 
 var text = 'innerText' in document.createElement('div')
   ? 'innerText'
@@ -6948,7 +7082,7 @@ module.exports = function (el, val) {
 };
 
 }, {}],
-38: [function(require, module, exports) {
+39: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -7240,8 +7374,8 @@ each([
   };
 });
 
-}, {"each":30,"traverse":62,"to-function":63,"matches-selector":64}],
-62: [function(require, module, exports) {
+}, {"each":31,"traverse":63,"to-function":64,"matches-selector":65}],
+63: [function(require, module, exports) {
 
 /**
  * dependencies
@@ -7277,8 +7411,8 @@ module.exports = function(type, el, selector, len){
   return ret;
 }
 
-}, {"matches-selector":46}],
-63: [function(require, module, exports) {
+}, {"matches-selector":47}],
+64: [function(require, module, exports) {
 
 /**
  * Module Dependencies
@@ -7432,8 +7566,8 @@ function stripNested (prop, str, val) {
   });
 }
 
-}, {"props":41,"component-props":41}],
-64: [function(require, module, exports) {
+}, {"props":42,"component-props":42}],
+65: [function(require, module, exports) {
 /**
  * Module dependencies.
  */
@@ -7480,7 +7614,7 @@ function match(el, selector) {
   return false;
 }
 
-}, {"query":33}],
+}, {"query":34}],
 6: [function(require, module, exports) {
 (function() {
   var $doc, $win, _tk, circplusTemplate, gmodal2, gsnSw, gsndfpfactory, loadScript, qsel, swcss, trakless2;
@@ -7628,7 +7762,36 @@ function match(el, selector) {
         disablePublisherConsole: false,
         disableInitialLoad: false,
         inViewOnly: true,
-        noFetch: false
+        noFetch: false,
+        sizeMapping: {
+          leaderboard: [
+            {
+              browser: [980, 600],
+              ad_sizes: [[728, 90], [640, 480]]
+            }, {
+              browser: [0, 0],
+              ad_sizes: [[320, 50]]
+            }
+          ],
+          box: [
+            {
+              browser: [980, 600],
+              ad_sizes: [[300, 250], [250, 250]]
+            }, {
+              browser: [0, 0],
+              ad_sizes: [[180, 150]]
+            }
+          ],
+          skyscraper: [
+            {
+              browser: [980, 600],
+              ad_sizes: [[160, 600], [120, 600]]
+            }, {
+              browser: [0, 0],
+              ad_sizes: [[120, 240]]
+            }
+          ]
+        }
       };
       for (k in ops) {
         v = ops[k];
@@ -7664,7 +7827,7 @@ function match(el, selector) {
       self.isVisible = false;
       $win.scrollTo(0, 0);
       if (!self.getCookie('gsnsw2')) {
-        self.setCookie('gsnsw2', gsndfp.gsnNetworkId + "," + gsndfp.enableCircPlus + "," + gsndfp.disableSw, 1);
+        self.setCookie('gsnsw2', gsndfp.gsnNetworkId + "," + gsndfp.enableCircPlus + "," + gsndfp.disableSw, gsndfp.expireHours);
       }
       if (typeof self.dops.onClose === 'function') {
         self.dops.onClose(self.didOpen);
@@ -7672,7 +7835,7 @@ function match(el, selector) {
     };
 
     gsndfpfactory.prototype.swSucccess = function(myrsp) {
-      var data, evt, handleEvent, rsp, self;
+      var data, evt, rsp, self;
       $win.gsnswCallback = null;
       rsp = myrsp;
       if (typeof myrsp === 'string') {
@@ -7685,6 +7848,7 @@ function match(el, selector) {
         }
         gsndfp.enableCircPlus = rsp.EnableCircPlus;
         gsndfp.disableSw = rsp.DisableSw;
+        gsndfp.expireHours = rsp.ExpireHours;
         data = rsp.Template;
       }
       self.dfpID = gsndfp.getNetworkId();
@@ -7698,24 +7862,16 @@ function match(el, selector) {
       }
       if (data) {
         data = data.replace(/%%CACHEBUSTER%%/g, (new Date).getTime()).replace(/%%CHAINID%%/g, gsndfp.gsnid);
-        if (!self.rect) {
+        if (!self.rect && ($doc.documentElement != null)) {
           self.rect = {
             w: Math.max($doc.documentElement.clientWidth, $win.innerWidth || 0),
             h: Math.max($doc.documentElement.clientHeight, $win.innerHeight || 0)
           };
         }
-        handleEvent = function(target) {
-          if (target.className.indexOf('sw-close') >= 0) {
-            $win.gmodal.off('click', handleEvent);
-            $win.gmodal.off('tap', handleEvent);
-            return $win.gmodal.hide();
-          }
-        };
-        $win.gmodal.on('click', handleEvent);
-        $win.gmodal.on('tap', handleEvent);
         if ($win.gmodal.show({
           content: "<div id='sw'>" + data + "<div>",
-          closeCls: 'sw-close'
+          closeCls: 'sw-close',
+          hideOn: 'click,tap'
         }, self.onCloseCallback)) {
           self.onOpenCallback();
         }
@@ -7774,15 +7930,17 @@ function match(el, selector) {
       return null;
     };
 
-    gsndfpfactory.prototype.setCookie = function(nameOfCookie, value, expiredays) {
-      var ed;
-      ed = new Date;
-      ed.setTime(ed.getTime() + expiredays * 24 * 3600 * 1000);
-      $doc.cookie = nameOfCookie + '=' + encodeURI(value) + (expiredays === null ? '' : '; expires=' + ed.toGMTString()) + '; path=/';
+    gsndfpfactory.prototype.setCookie = function(nameOfCookie, value, expireHours) {
+      var ed, edv, v;
+      ed = new Date();
+      ed.setTime(ed.getTime() + (expireHours || 24) * 3600 * 1000);
+      v = encodeURI(value);
+      edv = ed.toGMTString();
+      $doc.cookie = nameOfCookie + "=" + v + "; expires=" + edv + "; path=/";
     };
 
     gsndfpfactory.prototype.setTargeting = function($adUnitData, allData) {
-      var exclusions, exclusionsGroup, i, k, len, targeting, v, valueTrimmed;
+      var exclusions, exclusionsGroup, i, k, len, results, targeting, v, valueTrimmed;
       targeting = allData['targeting'];
       if (targeting) {
         if (typeof targeting === 'string') {
@@ -7800,14 +7958,17 @@ function match(el, selector) {
       if (exclusions) {
         exclusionsGroup = exclusions.split(',');
         valueTrimmed = void 0;
+        results = [];
         for (k = i = 0, len = exclusionsGroup.length; i < len; k = ++i) {
           v = exclusionsGroup[k];
           valueTrimmed = _tk.util.trim(v);
           if (valueTrimmed.length > 0) {
-            $adUnitData.setCategoryExclusion(valueTrimmed);
+            results.push($adUnitData.setCategoryExclusion(valueTrimmed));
+          } else {
+            results.push(void 0);
           }
-          return;
         }
+        return results;
       }
     };
 
@@ -7825,7 +7986,7 @@ function match(el, selector) {
         qsel(adUnit).html('');
         $adUnit.addClass('display-none');
         $win.googletag.cmd.push(function() {
-          var $adUnitData, companion;
+          var $adUnitData, companion, j, len1, map, mapping, ref1, v;
           $adUnitData = self.adUnitById[adUnitID];
           if ($adUnitData) {
             self.setTargeting($adUnitData, allData);
@@ -7845,6 +8006,16 @@ function match(el, selector) {
             $adUnitData.addService($win.googletag.companionAds());
           }
           self.setTargeting($adUnitData, allData);
+          mapping = allData['sizes'];
+          if (mapping && self.dops.sizeMapping[mapping]) {
+            map = $win.googletag.sizeMapping();
+            ref1 = self.dops.sizeMapping[mapping];
+            for (k = j = 0, len1 = ref1.length; j < len1; k = ++j) {
+              v = ref1[k];
+              map.addSize(v.browser, v.ad_sizes);
+            }
+            $adUnitData.defineSizeMapping(map.build());
+          }
           self.adUnitById[adUnitID] = $adUnitData;
           $adUnitData.oldRenderEnded = $adUnitData.oldRenderEnded || $adUnitData.renderEnded;
           $adUnitData.renderEnded = function() {
@@ -7973,7 +8144,8 @@ function match(el, selector) {
     };
 
     gsndfpfactory.prototype.getDimensions = function($adUnit, allData) {
-      var dimensionGroups, dimensionSet, dimensions, dimensionsData, i, k, len, v;
+      var dimensionGroups, dimensionSet, dimensions, dimensionsData, i, j, k, len, len1, mapping, ref, self, v;
+      self = this;
       dimensions = [];
       dimensionsData = allData['dimensions'];
       if (dimensionsData) {
@@ -7983,29 +8155,37 @@ function match(el, selector) {
           dimensionSet = v.split('x');
           dimensions.push([parseInt(dimensionSet[0], 10), parseInt(dimensionSet[1], 10)]);
         }
+      } else {
+        mapping = allData['sizes'];
+        if (mapping && self.dops.sizeMapping[mapping]) {
+          ref = self.dops.sizeMapping[mapping];
+          for (k = j = 0, len1 = ref.length; j < len1; k = ++j) {
+            v = ref[k];
+            dimensions = dimensions.concat(v.ad_sizes);
+          }
+        }
       }
       return dimensions;
     };
 
     gsndfpfactory.prototype.dfpLoader = function() {
-      var gads;
+      var gads, self;
+      self = this;
       if (self.isLoaded) {
         return;
       }
       $win.googletag = $win.googletag || {};
       $win.googletag.cmd = $win.googletag.cmd || [];
-      gads = $doc.createElement('script');
-      gads.async = true;
-      gads.type = 'text/javascript';
+      gads = loadScript('//www.googletagservices.com/tag/js/gpt.js', function() {
+        if (gads.style.display === 'none') {
+          self.dfpBlocked();
+        }
+      });
       gads.onerror = function() {
         self.dfpBlocked();
       };
-      loadScript('//www.googletagservices.com/tag/js/gpt.js');
       self.isLoaded = true;
-      if (gads.style.display === 'none') {
-        self.dfpBlocked();
-      }
-      return this;
+      return self;
     };
 
     gsndfpfactory.prototype.dfpBlocked = function() {
@@ -8084,8 +8264,8 @@ function match(el, selector) {
 
 }).call(this);
 
-}, {"trakless":3,"gmodal":65,"load-script":66,"dom":5,"./sw.css":67,"./circplus.html":68}],
-65: [function(require, module, exports) {
+}, {"trakless":3,"gmodal":66,"load-script":67,"dom":5,"./sw.css":68,"./circplus.html":69}],
+66: [function(require, module, exports) {
 // Generated by CoffeeScript 1.9.2
 var Emitter, checkEvent, createModal, domify, gmodal, hideModalInternal, modal, modals, showModalInternal, trim, win;
 
@@ -8100,7 +8280,7 @@ win = window;
 modals = [];
 
 checkEvent = function(self, name, evt, el) {
-  var scls, tg;
+  var myEvt, scls, tg;
   evt = evt || win.event;
   tg = evt.target || evt.srcElement;
   if (tg.nodeType === 3) {
@@ -8109,7 +8289,7 @@ checkEvent = function(self, name, evt, el) {
   if (self.hasCls(tg.parentNode, "" + self.closeCls)) {
     tg = tg.parentNode;
   }
-  scls = "gmodal-wrap " + self.closeCls;
+  scls = "gmodal-wrap";
   if (name === 'click') {
     if (self.hasCls(tg, scls) || tg === el) {
       self.emit('click', tg, evt);
@@ -8123,6 +8303,15 @@ checkEvent = function(self, name, evt, el) {
   } else if (name === 'tap') {
     if (self.hasCls(tg, scls) || tg === el) {
       self.emit('tap', tg, evt);
+    }
+  }
+  if (self.hasCls(tg, "" + self.closeCls)) {
+    myEvt = {
+      cancel: false
+    };
+    self.emit('close', myEvt, tg, evt);
+    if (!myEvt.cancel) {
+      hideModalInternal(self);
     }
   }
   return false;
@@ -8161,7 +8350,7 @@ createModal = function(self) {
 };
 
 showModalInternal = function(self, opts) {
-  var eCls;
+  var eCls, i, len, ref, v;
   self.isVisible = true;
   if ((opts != null)) {
     self.opts = opts;
@@ -8184,6 +8373,18 @@ showModalInternal = function(self, opts) {
   self.elWrapper.className = trim((self.baseCls + " ") + (self.opts.cls || ''));
   eCls = self.doc.getElementsByTagName('body')[0].className;
   self.doc.getElementsByTagName('body')[0].className = trim(eCls + " body-gmodal");
+  if (self.opts.hideOn) {
+    self.opts._autoHideHandler = function() {
+      return hideModalInternal(self);
+    };
+    ref = self.opts.hideOn.split(',');
+    for (i = 0, len = ref.length; i < len; i++) {
+      v = ref[i];
+      if (v === 'esc' || v === 'click' || v === 'tap') {
+        self.on(v, self.opts._autoHideHandler);
+      }
+    }
+  }
   self.emit('show', self);
   return self;
 };
@@ -8197,6 +8398,11 @@ hideModalInternal = function(self) {
   self.emit('hide', self);
   if (typeof self.opts.hideCallback === 'function') {
     self.opts.hideCallback(self);
+  }
+  if (self.opts._autoHideHandler) {
+    self.off('esc', self.opts._autoHideHandler);
+    self.off('click', self.opts._autoHideHandler);
+    self.off('tap', self.opts._autoHideHandler);
   }
   if (modals.length > 0) {
     return self.show();
@@ -8322,8 +8528,8 @@ win.gmodal = gmodal;
 
 module.exports = gmodal;
 
-}, {"emitter":69,"domify":70,"trim":24}],
-69: [function(require, module, exports) {
+}, {"emitter":70,"domify":71,"trim":25}],
+70: [function(require, module, exports) {
 
 /**
  * Expose `Emitter`.
@@ -8487,7 +8693,7 @@ Emitter.prototype.hasListeners = function(event){
 };
 
 }, {}],
-70: [function(require, module, exports) {
+71: [function(require, module, exports) {
 
 /**
  * Expose `parse`.
@@ -8598,7 +8804,7 @@ function parse(html, doc) {
 }
 
 }, {}],
-66: [function(require, module, exports) {
+67: [function(require, module, exports) {
 
 /**
  * Module dependencies.
@@ -8659,10 +8865,10 @@ module.exports = function loadScript(options, fn){
   // give it an ID or attributes.
   return script;
 };
-}, {"script-onload":20,"next-tick":21,"type":22}],
-67: [function(require, module, exports) {
+}, {"script-onload":21,"next-tick":22,"type":23}],
+68: [function(require, module, exports) {
 module.exports = '.gsnsw {\n  	float: left;\n}\n.gmodal {\n\n	/* IE 8- */\n	filter:alpha(opacity=90); \n	-ms-filter:"progid:DXImageTransform.Microsoft.Alpha(Opacity=90)";\n    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);\n\n	/* works for old school versions of the Mozilla browsers like Netscape Navigator. */\n	-moz-opacity: 0.9; \n\n	/* This is for old versions of Safari (1.x) with KHTML rendering engine */\n	-khtml-opacity: 0.9; \n\n	/* This is the "most important" one because it\'s the current standard in CSS. This will work in most versions of Firefox, Safari, and Opera. */  \n	opacity: 0.9; \n  	background: #000; /* IE5+ */\n  	background: rgba(0,0,0,0.90);\n}\n.sw-pop {\n	filter: alpha(opacity=100);\n    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";\n    filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);\n	-moz-opacity: 1; \n	-khtml-opacity: 1; \n	opacity: 1; \n	background: #777;\n	background: rgba(119, 119, 119, 1);\n}\n\n#gmodalContent {\n    vertical-align: top;\n    top: 50px;\n}\n\n@media (max-width: 640px) and (max-height: 640px){\n    .gsnsw {\n        float:none !important;\n    }\n\n    .sw-header-cta, .sw-header-break, .sw-header-right-img {\n        display:none !important;\n    }\n\n    .sw-header-break{\n        display:none !important;\n    }\n\n    .sw-pop {\n        width: 280px !important;\n        left:0 !important;\n        margin-left:0 !important;\n    }\n\n    .sw-header-dismiss {\n        position: static !important;\n        left:0 !important;\n        top:0 !important;\n        vertical-align: middle !important;\n        text-align: center !important;\n    }\n\n    .sw-close{\n        padding:1px !important;\n    }\n\n    #gmodalContent {\n        vertical-align: middle;\n        height: 80vh;\n        top: auto;\n    }\n\n    .sw-body {\n        max-height: 60vh;\n        overflow-y: scroll;\n    }\n}';
 }, {}],
-68: [function(require, module, exports) {
+69: [function(require, module, exports) {
 module.exports = '<div class="gsn-slot-container"><div class="cpslot cpslot2" data-companion="true" data-dimensions="300x50"></div></div><div class="gsn-slot-container"><div class="cpslot cpslot1" data-dimensions="300x100,300x120"></div></div>';
 }, {}]}, {}, {"1":""})

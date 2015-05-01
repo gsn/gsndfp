@@ -116,6 +116,20 @@ class gsndfpfactory
       disableInitialLoad: false
       inViewOnly: true
       noFetch: false
+      sizeMapping: 
+        leaderboard: [
+          {browser: [ 980, 600], ad_sizes: [[728, 90], [640, 480]]}
+          {browser: [   0,   0], ad_sizes: [[320, 50]]}
+        ],
+        box: [
+          {browser: [ 980, 600], ad_sizes: [[300, 250], [250, 250]]}
+          {browser: [   0,   0], ad_sizes: [[180, 150]]}
+        ],
+        skyscraper: [
+          {browser: [ 980, 600], ad_sizes: [[160, 600], [120, 600]]}
+          {browser: [   0,   0], ad_sizes: [[120, 240]]}
+        ]
+          
 
     # Merge options objects
     for k, v of ops
@@ -155,7 +169,7 @@ class gsndfpfactory
     self.isVisible = false
     $win.scrollTo 0, 0            
     if !self.getCookie('gsnsw2')
-      self.setCookie 'gsnsw2', "#{gsndfp.gsnNetworkId},#{gsndfp.enableCircPlus},#{gsndfp.disableSw}", 1
+      self.setCookie 'gsnsw2', "#{gsndfp.gsnNetworkId},#{gsndfp.enableCircPlus},#{gsndfp.disableSw}", gsndfp.expireHours
     if typeof self.dops.onClose == 'function'
       self.dops.onClose self.didOpen
     return
@@ -175,6 +189,7 @@ class gsndfpfactory
 
       gsndfp.enableCircPlus = rsp.EnableCircPlus
       gsndfp.disableSw = rsp.DisableSw
+      gsndfp.expireHours = rsp.ExpireHours
       data = rsp.Template
                                            
     self.dfpID = gsndfp.getNetworkId() 
@@ -187,22 +202,13 @@ class gsndfpfactory
       #add the random cachebuster
       data = data.replace(/%%CACHEBUSTER%%/g, (new Date).getTime()).replace(/%%CHAINID%%/g, gsndfp.gsnid)
 
-      if !self.rect
-        self.rect = 
-          w: Math.max($doc.documentElement.clientWidth, $win.innerWidth || 0)
-          h: Math.max($doc.documentElement.clientHeight, $win.innerHeight || 0)
-
-      handleEvent = (target)->
-        if (target.className.indexOf('sw-close') >= 0)
-          $win.gmodal.off('click', handleEvent)
-          $win.gmodal.off('tap', handleEvent)
-          $win.gmodal.hide()
-
-      $win.gmodal.on('click', handleEvent)
-      $win.gmodal.on('tap', handleEvent)
+      if !self.rect and $doc.documentElement?
+          self.rect = 
+            w: Math.max($doc.documentElement.clientWidth, $win.innerWidth || 0)
+            h: Math.max($doc.documentElement.clientHeight, $win.innerHeight || 0)
 
       # open the modal to show shopper welcome
-      if ($win.gmodal.show({content: "<div id='sw'>#{data}<div>", closeCls: 'sw-close'}, self.onCloseCallback))
+      if ($win.gmodal.show({content: "<div id='sw'>#{data}<div>", closeCls: 'sw-close', hideOn: 'click,tap'}, self.onCloseCallback))
         self.onOpenCallback()
     else
       self.onCloseCallback cancel: true
@@ -254,10 +260,12 @@ class gsndfpfactory
         return cookieData
     null
 
-  setCookie: (nameOfCookie, value, expiredays) ->
-    ed = new Date
-    ed.setTime ed.getTime() + expiredays * 24 * 3600 * 1000
-    $doc.cookie = nameOfCookie + '=' + encodeURI(value) + (if expiredays == null then '' else '; expires=' + ed.toGMTString()) + '; path=/'
+  setCookie: (nameOfCookie, value, expireHours) ->
+    ed = new Date()
+    ed.setTime ed.getTime() + (expireHours or 24) * 3600 * 1000
+    v = encodeURI(value);
+    edv = ed.toGMTString();
+    $doc.cookie = "#{nameOfCookie}=#{v}; expires=#{edv}; path=/"
     return
 
   setTargeting: ($adUnitData, allData) ->
@@ -280,7 +288,6 @@ class gsndfpfactory
         valueTrimmed = _tk.util.trim(v)
         if valueTrimmed.length > 0
           $adUnitData.setCategoryExclusion valueTrimmed
-        return
 
   createAds: ->
     self = @
@@ -324,6 +331,15 @@ class gsndfpfactory
 
         self.setTargeting $adUnitData, allData
 
+        mapping = allData['sizes']
+        if mapping and self.dops.sizeMapping[mapping]
+          # Convert verbose to DFP format
+          map = $win.googletag.sizeMapping()
+          for v, k in self.dops.sizeMapping[mapping]
+            map.addSize v.browser, v.ad_sizes
+
+          $adUnitData.defineSizeMapping map.build()
+
         # Store googleAdUnit reference
         self.adUnitById[adUnitID] = $adUnitData
 
@@ -344,6 +360,7 @@ class gsndfpfactory
           # Excute afterEachAdLoaded callback if provided
           if typeof self.dops.afterEachAdLoaded == 'function'
             self.dops.afterEachAdLoaded.call self, $adUnit, $adUnitData
+
           # Excute afterAllAdsLoaded callback if provided
           #if typeof dops.afterAllAdsLoaded == 'function' and rendered == self.count
           #  dops.afterAllAdsLoaded.call this, $ads
@@ -444,6 +461,7 @@ class gsndfpfactory
     return id
 
   getDimensions: ($adUnit, allData) ->
+    self = @
     dimensions = []
     dimensionsData = allData['dimensions']
 
@@ -456,32 +474,35 @@ class gsndfpfactory
           parseInt(dimensionSet[0], 10)
           parseInt(dimensionSet[1], 10)
         ]
+    else
+      mapping = allData['sizes']
+      if mapping and self.dops.sizeMapping[mapping]
+        for v, k in self.dops.sizeMapping[mapping]
+          dimensions = dimensions.concat(v.ad_sizes)
 
-    dimensions
+    return dimensions
 
   dfpLoader: ->
+    self = @
     if self.isLoaded
       return
 
     $win.googletag = $win.googletag or {}
     $win.googletag.cmd = $win.googletag.cmd or []
 
-    gads = $doc.createElement('script')
-    gads.async = true
-    gads.type = 'text/javascript'
-    # Adblock blocks the load of Ad scripts... so we check for that
+    gads = loadScript '//www.googletagservices.com/tag/js/gpt.js', ->
+      # Adblock plus seems to hide blocked scripts... so we check for that
+      if gads.style.display == 'none'
+        self.dfpBlocked()
+
+      return
 
     gads.onerror = ->
       self.dfpBlocked()
       return
 
-    loadScript('//www.googletagservices.com/tag/js/gpt.js')
     self.isLoaded = true
-
-    # Adblock plus seems to hide blocked scripts... so we check for that
-    if gads.style.display == 'none'
-      self.dfpBlocked()
-    @
+    return self
 
   dfpBlocked: ->
     self = @

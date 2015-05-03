@@ -230,7 +230,11 @@
       var result, self;
       self = this;
       result = self.gsnNetworkId + ((self.source || "").length > 0 ? "." + self.source : "");
-      if (includeStore) {
+      if (includeStore && typeof self.gsnNetworkStore === 'string') {
+        self.gsnNetworkStore = _tk.util.trim(self.gsnNetworkStore);
+        if (self.gsnNetworkStore.indexOf('/') !== 0) {
+          self.gsnNetworkStore = "/" + self.gsnNetworkStore;
+        }
         result = result.replace(/\/$/gi, '') + (self.gsnNetworkStore || '');
       }
       return result;
@@ -543,10 +547,10 @@
     #
      */
 
-    Plugin.prototype.actionHandler = function(evt) {
+    Plugin.prototype.actionHandler = function(target, evt) {
       var allData, elem, i, k, len, payLoad, realk, self, v;
       self = myGsn.Advertising;
-      elem = evt.target ? evt.target : evt.srcElement;
+      elem = target;
       payLoad = {};
       if (elem != null) {
         allData = trakless.util.allData(elem);
@@ -655,11 +659,17 @@
           },
           onClose: function() {
             if (self.selector != null) {
-              dom(self.selector)[0].onclick = function(e) {
-                e = e || win.event;
-                e.target = e.target || e.srcElement || e.parentNode;
-                if (win.gmodal.hasCls(e.target, 'gsnaction')) {
-                  return self.actionHandler(e);
+              dom(self.selector)[0].onclick = function(evt) {
+                var tg;
+                evt = evt || win.event;
+                tg = evt.target || evt.srcElement;
+                if (tg.nodeType === 3) {
+                  tg = tg.parentNode;
+                }
+                if (win.gmodal.hasCls(tg, 'gsnaction')) {
+                  return self.actionHandler(tg, evt);
+                } else if (win.gmodal.hasCls(tg.parentNode, 'gsnaction')) {
+                  return self.actionHandler(tg.parentNode, evt);
                 }
               };
               self.selector = null;
@@ -734,9 +744,9 @@
       self = myGsn.Advertising;
       if (gsnid) {
         self.gsnid = gsnid;
-        if (isDebug) {
-          debug.enable('gsndfp');
-        }
+      }
+      if (isDebug) {
+        debug.enable('gsndfp');
       }
       return self.refreshWithTimer({
         evtname: 'loading'
@@ -773,14 +783,14 @@
 
   win.gsndfp = myGsn.Advertising;
 
-  if ((gsnContext != null)) {
+  if (gsnContext != null) {
     buildqs = function(k, v) {
       if (v != null) {
         v = new String(v);
-        if (k !== 'ProductDescription') {
+        if (k === 'ProductDescription') {
           v = v.replace(/&/, '`');
         }
-        return k + '=' + v.toString();
+        return k + '=' + v;
       } else {
 
       }
@@ -789,7 +799,7 @@
       if (data.type !== 'gsnevent:clickRecipe') {
         return;
       }
-      win.location.replace('/Recipes/RecipeFull.aspx?recipeid=' + data.detail.RecipeId);
+      win.location.replace('/Recipes/RecipeFull.aspx?RecipeID=' + data.detail.RecipeId);
     });
     myGsn.Advertising.on('clickProduct', function(data) {
       var product, qs;
@@ -823,11 +833,11 @@
       }
       linkData = data.detail;
       if (linkData) {
-        if (linkData.Target === void 0 || linkData.Target === '') {
+        if (!(typeof linkData.Target === 'string')) {
           linkData.Target = '_top';
         }
         if (linkData.Target === '_blank') {
-          win.open(linkData.Url);
+
         } else {
           win.location.replace(linkData.Url);
         }
@@ -850,7 +860,7 @@
       }
       linkData = data.detail;
       if (linkData) {
-        url = myGsn.Advertising.apiUrl + '/profile/BrickOffer/' + gsnContext.ConsumerID + '/' + linkData.OfferCode;
+        url = myGsn.Advertising.apiUrl + "/profile/BrickOffer/" + gsnContext.ConsumerID + "/" + linkData.OfferCode;
         win.open(url, '');
       }
     });
@@ -7641,40 +7651,133 @@ function match(el, selector) {
 
 
   /** 
-   * gsndfpfactory
-  #
+   * gsndfpfactory for creating different gsndfp products
+   * gsnsw - shopper welcome
+   * circPlus - circular plus
+   * adpods - regular adpods
    */
 
   gsndfpfactory = (function() {
     function gsndfpfactory() {}
 
+
+    /**
+     * dfp network id
+     * @type {String}
+     */
+
     gsndfpfactory.prototype.dfpID = '';
+
+
+    /**
+     * count allow for unique ad id
+     * @type {Number}
+     */
 
     gsndfpfactory.prototype.count = 0;
 
+
+    /**
+     * count the number of rendered
+     * @type {Number}
+     */
+
     gsndfpfactory.prototype.rendered = 0;
+
+
+    /**
+     * selector to detect ads div
+     * @type {String}
+     */
 
     gsndfpfactory.prototype.sel = '.gsnunit';
 
-    gsndfpfactory.prototype.dops = {};
+
+    /**
+     * options
+     * @type {Object}
+     */
+
+    gsndfpfactory.prototype.dopts = {};
+
+
+    /**
+     * determine if googletag is loaded
+     * @type {Boolean}
+     */
 
     gsndfpfactory.prototype.isLoaded = false;
 
+
+    /**
+     * all the dom elements result from selector
+     * @type {[HTMLElement]}
+     */
+
     gsndfpfactory.prototype.$ads = void 0;
+
+
+    /**
+     * determine if adblocker is enabled
+     * @type {Boolean}
+     */
 
     gsndfpfactory.prototype.adBlockerOn = false;
 
+
+    /**
+     * dfp object storage key
+     * @type {String}
+     */
+
     gsndfpfactory.prototype.storeAs = 'gsnunit';
+
+
+    /**
+     * determine the last refresh timestamp
+     * @type {Number}
+     */
 
     gsndfpfactory.prototype.lastRefresh = 0;
 
+
+    /**
+     * determine if shopperwelcome has open
+     * @type {Boolean}
+     */
+
     gsndfpfactory.prototype.didOpen = false;
+
+
+    /**
+     * determine if shopperwelcome is visible
+     * @type {Boolean}
+     */
 
     gsndfpfactory.prototype.isVisible = false;
 
+
+    /**
+     * shopperwelcome determine if ie is old
+     * @type {Boolean}
+     */
+
     gsndfpfactory.prototype.ieOld = false;
 
+
+    /**
+     * circPlus html template
+     * @type {Object}
+     */
+
     gsndfpfactory.prototype.bodyTemplate = circplusTemplate;
+
+
+    /**
+     * refresh method
+     * @param  {Object} options
+     * @return {Object}
+     */
 
     gsndfpfactory.prototype.refresh = function(options) {
       var self;
@@ -7688,10 +7791,16 @@ function match(el, selector) {
       return this;
     };
 
+
+    /**
+     * internal refresh method
+     * @return {Object}
+     */
+
     gsndfpfactory.prototype.doIt = function() {
       var cp, currentTime, self, slot1;
       self = this;
-      self.sel = self.dops.sel || '.gsnunit';
+      self.sel = self.dopts.sel || '.gsnunit';
       if (typeof self.adUnitById !== 'object') {
         self.adUnitById = {};
       }
@@ -7699,7 +7808,7 @@ function match(el, selector) {
         self.ieOld = $doc.all && !$win.atop;
       }
       if (self.ieOld) {
-        self.dops.inViewOnly = false;
+        self.dopts.inViewOnly = false;
       }
       if (self.sel === '.circplus') {
         self.storeAs = 'circplus';
@@ -7707,20 +7816,20 @@ function match(el, selector) {
         slot1 = qsel('.cpslot1');
         if (cp.length > 0) {
           if (!slot1[0]) {
-            cp.html(self.dops.bodyTemplate || self.bodyTemplate);
+            cp.html(self.dopts.bodyTemplate || self.bodyTemplate);
           }
         }
         self.$ads = [qsel('.cpslot1')[0], qsel('.cpslot2')[0]];
-        if (self.$ads[0]) {
+        if (self.$ads[0] != null) {
           self.createAds().displayAds();
         }
       } else if (self.sel === '.gsnsw') {
-        self.dops.inViewOnly = false;
+        self.dopts.inViewOnly = false;
         $win.gmodal.injectStyle('swcss', swcss);
         gsnSw = self;
-        self.dops.enableSingleRequest = true;
+        self.dopts.enableSingleRequest = true;
         self.dfpID = gsndfp.getNetworkId();
-        if (qsel(self.dops.displayWhenExists || '.gsnunit').length <= 0) {
+        if (qsel(self.dopts.displayWhenExists || '.gsnunit').length <= 0) {
           return;
         }
         self.storeAs = 'gsnsw';
@@ -7749,10 +7858,16 @@ function match(el, selector) {
       return this;
     };
 
+
+    /**
+     * set options and merge with default options
+     * @param {Object} ops options
+     */
+
     gsndfpfactory.prototype.setOptions = function(ops) {
-      var dops, k, self, v;
+      var dopts, k, self, v;
       self = this;
-      dops = {
+      dopts = {
         setTargeting: {},
         setCategoryExclusion: '',
         setLocation: '',
@@ -7795,13 +7910,20 @@ function match(el, selector) {
       };
       for (k in ops) {
         v = ops[k];
-        dops[k] = v;
+        dopts[k] = v;
       }
-      self.dops = dops;
+      self.dopts = dopts;
       return this;
     };
 
-    gsndfpfactory.prototype.onOpenCallback = function(event) {
+
+    /**
+     * shopperwelcome open internal handler
+     * @param  {Object} evt event object
+     * @return {Object}
+     */
+
+    gsndfpfactory.prototype.onOpenCallback = function(evt) {
       var self;
       self = gsnSw;
       gsndfp.on('clickBrand', function(e) {
@@ -7818,10 +7940,19 @@ function match(el, selector) {
           qsel('.sw-header-copy')[0].style.display = 'none';
           qsel('.sw-row')[0].style.display = 'none';
         }
+        return self;
       }), 150);
+      return self;
     };
 
-    gsndfpfactory.prototype.onCloseCallback = function(event) {
+
+    /**
+     * shopperwelcome close internal handler
+     * @param  {Object} evt
+     * @return {Object}
+     */
+
+    gsndfpfactory.prototype.onCloseCallback = function(evt) {
       var self;
       self = gsnSw;
       self.isVisible = false;
@@ -7829,17 +7960,25 @@ function match(el, selector) {
       if (!self.getCookie('gsnsw2')) {
         self.setCookie('gsnsw2', gsndfp.gsnNetworkId + "," + gsndfp.enableCircPlus + "," + gsndfp.disableSw, gsndfp.expireHours);
       }
-      if (typeof self.dops.onClose === 'function') {
-        self.dops.onClose(self.didOpen);
+      if (typeof self.dopts.onClose === 'function') {
+        self.dopts.onClose(self.didOpen);
       }
+      return self;
     };
 
-    gsndfpfactory.prototype.swSucccess = function(myrsp) {
+
+    /**
+     * shopperwelcome callback success method
+     * @param  {Object} svrRsp server response
+     * @return {Object}
+     */
+
+    gsndfpfactory.prototype.swSucccess = function(svrRsp) {
       var data, evt, rsp, self;
       $win.gsnswCallback = null;
-      rsp = myrsp;
-      if (typeof myrsp === 'string') {
-        rsp = JSON.parse(myrsp);
+      rsp = svrRsp;
+      if (typeof svrRsp === 'string') {
+        rsp = JSON.parse(svrRsp);
       }
       self = gsnSw;
       if (rsp) {
@@ -7856,7 +7995,7 @@ function match(el, selector) {
         data: rsp,
         cancel: false
       };
-      self.dops.onData(evt);
+      self.dopts.onData(evt);
       if (evt.cancel) {
         data = null;
       }
@@ -7883,6 +8022,12 @@ function match(el, selector) {
       return this;
     };
 
+
+    /** 
+     * shopperwelcome request method
+     * @return {Object}
+     */
+
     gsndfpfactory.prototype.getPopup = function() {
       var dataType, self, url;
       self = this;
@@ -7893,18 +8038,15 @@ function match(el, selector) {
       };
       url += '?callback=gsnswCallback';
       loadScript(url);
-
-      /**else
-        request = new XMLHttpRequest()
-        request.open('GET', url, true)
-        request.onload = ->
-          req = @
-          if (req.status >= 200 and req.status < 400)
-            self.swSucccess req.response
-        request.send()
-       */
       return self;
     };
+
+
+    /**
+     * get cookie name
+     * @param  {string} nameOfCookie cookie name
+     * @return {[type]}              [description]
+     */
 
     gsndfpfactory.prototype.getCookie = function(nameOfCookie) {
       var begin, cd, cookieData, end;
@@ -7927,20 +8069,38 @@ function match(el, selector) {
           return cookieData;
         }
       }
-      return null;
     };
+
+
+    /**
+     * set cookie value
+     * @param {string} nameOfCookie 
+     * @param {Object} value        
+     * @param {Number} expireHours
+     */
 
     gsndfpfactory.prototype.setCookie = function(nameOfCookie, value, expireHours) {
-      var ed, edv, v;
-      ed = new Date();
-      ed.setTime(ed.getTime() + (expireHours || 24) * 3600 * 1000);
-      v = encodeURI(value);
-      edv = ed.toGMTString();
-      $doc.cookie = nameOfCookie + "=" + v + "; expires=" + edv + "; path=/";
+      var ed, edv, self, v;
+      self = this;
+      if (!gsndfp.isDebug) {
+        ed = new Date();
+        ed.setTime(ed.getTime() + (expireHours || 24) * 3600 * 1000);
+        v = encodeURI(value);
+        edv = ed.toGMTString();
+        $doc.cookie = nameOfCookie + "=" + v + "; expires=" + edv + "; path=/";
+      }
+      return self;
     };
 
-    gsndfpfactory.prototype.setTargeting = function($adUnitData, allData) {
-      var exclusions, exclusionsGroup, i, k, len, results, targeting, v, valueTrimmed;
+
+    /**
+     * set targeting
+     * @param {Object} gtslot      google tag object
+     * @param {Object} allData     object data attributes
+     */
+
+    gsndfpfactory.prototype.setTargeting = function(gtslot, allData) {
+      var exclusions, exclusionsGroup, i, k, len, targeting, v, valueTrimmed;
       targeting = allData['targeting'];
       if (targeting) {
         if (typeof targeting === 'string') {
@@ -7951,45 +8111,49 @@ function match(el, selector) {
           if (k === 'brand') {
             gsndfp.setBrand(v);
           }
-          $adUnitData.setTargeting(k, v);
+          gtslot.setTargeting(k, v);
         }
       }
       exclusions = allData['exclusions'];
       if (exclusions) {
         exclusionsGroup = exclusions.split(',');
         valueTrimmed = void 0;
-        results = [];
         for (k = i = 0, len = exclusionsGroup.length; i < len; k = ++i) {
           v = exclusionsGroup[k];
           valueTrimmed = _tk.util.trim(v);
           if (valueTrimmed.length > 0) {
-            results.push($adUnitData.setCategoryExclusion(valueTrimmed));
-          } else {
-            results.push(void 0);
+            gtslot.setCategoryExclusion(valueTrimmed);
           }
         }
-        return results;
       }
+      return this;
     };
 
+
+    /**
+     * create all the ads object
+     * @return {Object}
+     */
+
     gsndfpfactory.prototype.createAds = function() {
-      var $adUnit, $existingContent, adUnit, adUnitID, allData, dimensions, i, k, len, ref, self;
+      var $adUnit, $existingContent, adUnit, adUnitID, allData, dimensions, i, k, len, opts, ref, self;
       self = this;
+      opts = self.dopts;
       ref = self.$ads;
       for (k = i = 0, len = ref.length; i < len; k = ++i) {
         adUnit = ref[k];
         $adUnit = qsel(adUnit);
         allData = _tk.util.allData(adUnit);
         adUnitID = self.getID($adUnit, self.storeAs, adUnit);
-        dimensions = self.getDimensions($adUnit, allData);
+        dimensions = self.getDimensions(allData);
         $existingContent = adUnit.innerHTML;
         qsel(adUnit).html('');
         $adUnit.addClass('display-none');
         $win.googletag.cmd.push(function() {
-          var $adUnitData, companion, j, len1, map, mapping, ref1, v;
-          $adUnitData = self.adUnitById[adUnitID];
-          if ($adUnitData) {
-            self.setTargeting($adUnitData, allData);
+          var companion, gtslot, j, len1, map, mapping, ref1, v;
+          gtslot = self.adUnitById[adUnitID];
+          if (gtslot) {
+            self.setTargeting(gtslot, allData);
             return;
           }
           self.dfpID = self.dfpID.replace(/(\/\/)+/gi, '/').replace(/\s+/gi, '').replace(/(\/)$/, '/');
@@ -7997,110 +8161,135 @@ function match(el, selector) {
             self.dfpID = '/' + dfpID;
           }
           if (allData['outofpage']) {
-            $adUnitData = $win.googletag.defineOutOfPageSlot(self.dfpID, adUnitID).addService($win.googletag.pubads());
+            gtslot = $win.googletag.defineOutOfPageSlot(self.dfpID, adUnitID).addService($win.googletag.pubads());
           } else {
-            $adUnitData = $win.googletag.defineSlot(self.dfpID, dimensions, adUnitID).addService($win.googletag.pubads());
+            gtslot = $win.googletag.defineSlot(self.dfpID, dimensions, adUnitID).addService($win.googletag.pubads());
           }
           companion = allData['companion'];
           if (companion != null) {
-            $adUnitData.addService($win.googletag.companionAds());
+            gtslot.addService($win.googletag.companionAds());
           }
-          self.setTargeting($adUnitData, allData);
+          self.setTargeting(gtslot, allData);
           mapping = allData['sizes'];
-          if (mapping && self.dops.sizeMapping[mapping]) {
+          if (mapping && opts.sizeMapping[mapping]) {
             map = $win.googletag.sizeMapping();
-            ref1 = self.dops.sizeMapping[mapping];
+            ref1 = opts.sizeMapping[mapping];
             for (k = j = 0, len1 = ref1.length; j < len1; k = ++j) {
               v = ref1[k];
               map.addSize(v.browser, v.ad_sizes);
             }
-            $adUnitData.defineSizeMapping(map.build());
+            gtslot.defineSizeMapping(map.build());
           }
-          self.adUnitById[adUnitID] = $adUnitData;
-          $adUnitData.oldRenderEnded = $adUnitData.oldRenderEnded || $adUnitData.renderEnded;
-          $adUnitData.renderEnded = function() {
+          self.adUnitById[adUnitID] = gtslot;
+          gtslot.oldRenderEnded = gtslot.oldRenderEnded || gtslot.renderEnded;
+          gtslot.renderEnded = function() {
             var display;
             self.rendered++;
             display = adUnit.style.display;
             $adUnit.removeClass('display-none');
             $adUnit.addClass('display-' + display);
-            $adUnitData.existing = true;
-            if ($adUnitData.oldRenderEnded != null) {
-              $adUnitData.oldRenderEnded();
+            gtslot.existing = true;
+            if (gtslot.oldRenderEnded != null) {
+              gtslot.oldRenderEnded();
             }
-            if (typeof self.dops.afterEachAdLoaded === 'function') {
-              self.dops.afterEachAdLoaded.call(self, $adUnit, $adUnitData);
+            if (typeof opts.afterEachAdLoaded === 'function') {
+              opts.afterEachAdLoaded.call(self, $adUnit, gtslot);
+            }
+            if (typeof opts.afterAllAdsLoaded === 'function' && self.count > 0 && self.rendered === self.count) {
+              opts.afterAllAdsLoaded.call(self, self.$ads);
             }
           };
+          return self;
         });
       }
       $win.googletag.cmd.push(function() {
-        var brand, exclusionsGroup, j, len1, ref1, v, valueTrimmed;
-        if (typeof self.dops.setTargeting['brand'] === 'undefined') {
+        var brand, exclusionsGroup, j, len1, pubAds, ref1, setLoc, v, valueTrimmed;
+        pubAds = $win.googletag.pubads();
+        if (typeof opts.setTargeting['brand'] === 'undefined') {
           brand = gsndfp.getBrand();
           if (brand != null) {
-            self.dops.setTargeting['brand'] = brand;
+            opts.setTargeting['brand'] = brand;
           }
         }
-        if (self.dops.enableSingleRequest) {
-          $win.googletag.pubads().enableSingleRequest();
+        if (opts.enableSingleRequest) {
+          pubAds.enableSingleRequest();
         }
-        ref1 = self.dops.setTargeting;
+        ref1 = opts.setTargeting;
         for (k in ref1) {
           v = ref1[k];
           if (k === 'brand') {
             gsndfp.setBrand(v);
           }
-          $win.googletag.pubads().setTargeting(k, v);
+          pubAds.setTargeting(k, v);
         }
-        if (typeof self.dops.setLocation === 'object') {
-          if (typeof self.dops.setLocation.latitude === 'number' && typeof self.dops.setLocation.longitude === 'number' && typeof self.dops.setLocation.precision === 'number') {
-            $win.googletag.pubads().setLocation(self.dops.setLocation.latitude, self.dops.setLocation.longitude, self.dops.setLocation.precision);
-          } else if (typeof self.dops.setLocation.latitude === 'number' && typeof self.dops.setLocation.longitude === 'number') {
-            $win.googletag.pubads().setLocation(self.dops.setLocation.latitude, self.dops.setLocation.longitude);
+        setLoc = opts.setLocation;
+        if (typeof setLoc === 'object') {
+          if (typeof setLoc.latitude === 'number' && typeof setLoc.longitude === 'number' && typeof setLoc.precision === 'number') {
+            pubAds.setLocation(setLoc.latitude, setLoc.longitude, setLoc.precision);
+          } else if (typeof setLoc.latitude === 'number' && typeof setLoc.longitude === 'number') {
+            pubAds.setLocation(setLoc.latitude, setLoc.longitude);
           }
         }
-        if (self.dops.setCategoryExclusion.length > 0) {
-          exclusionsGroup = self.dops.setCategoryExclusion.split(',');
+        if (opts.setCategoryExclusion.length > 0) {
+          exclusionsGroup = opts.setCategoryExclusion.split(',');
           for (k = j = 0, len1 = exclusionsGroup.length; j < len1; k = ++j) {
             v = exclusionsGroup[k];
             valueTrimmed = _tk.util.trim(v);
             if (valueTrimmed.length > 0) {
-              $win.googletag.pubads().setCategoryExclusion(valueTrimmed);
+              pubAds.setCategoryExclusion(valueTrimmed);
             }
           }
         }
-        if (self.dops.collapseEmptyDivs || self.dops.collapseEmptyDivs === 'original') {
-          $win.googletag.pubads().collapseEmptyDivs();
+        if (opts.collapseEmptyDivs || opts.collapseEmptyDivs === 'original') {
+          pubAds.collapseEmptyDivs();
         }
-        if (self.dops.disablePublisherConsole) {
-          $win.googletag.pubads().disablePublisherConsole();
+        if (opts.disablePublisherConsole) {
+          pubAds.disablePublisherConsole();
         }
-        if (self.dops.disableInitialLoad) {
-          $win.googletag.pubads().disableInitialLoad();
+        if (opts.disableInitialLoad) {
+          pubAds.disableInitialLoad();
         }
-        if (self.dops.noFetch) {
-          $win.googletag.pubads().noFetch();
+        if (opts.noFetch) {
+          pubAds.noFetch();
         }
         if (self.sel === '.circplus') {
           $win.googletag.companionAds().setRefreshUnfilledSlots(true);
         }
         $win.googletag.enableServices();
+        return self;
       });
       return self;
     };
 
+
+    /**
+     * determine if ads height is in view
+     * @param  {HTMLElement}  el 
+     * @return {Boolean}
+     */
+
     gsndfpfactory.prototype.isHeightInView = function(el) {
-      var isVisible, overhang, percentVisible, rect;
-      percentVisible = 0.50;
-      rect = el.getBoundingClientRect();
-      overhang = rect.height * (1 - percentVisible);
-      isVisible = (rect.top >= -overhang) && (rect.bottom <= window.innerHeight + overhang);
+      var e, isVisible, overhang, percentVisible, rect;
+      isVisible = true;
+      try {
+        percentVisible = 0.50;
+        rect = el.getBoundingClientRect();
+        overhang = rect.height * (1 - percentVisible);
+        isVisible = (rect.top >= -overhang) && (rect.bottom <= window.innerHeight + overhang);
+      } catch (_error) {
+        e = _error;
+      }
       return isVisible;
     };
 
+
+    /**
+     * display all ads, either refresh or not
+     * @return {Object}
+     */
+
     gsndfpfactory.prototype.displayAds = function() {
-      var $adUnit, $adUnitData, adUnit, i, id, k, len, ref, self, toPush;
+      var $adUnit, adUnit, gtslot, i, id, k, len, ref, self, toPush;
       self = this;
       toPush = [];
       ref = self.$ads;
@@ -8108,11 +8297,11 @@ function match(el, selector) {
         adUnit = ref[k];
         $adUnit = qsel(adUnit);
         id = $adUnit.id();
-        $adUnitData = self.adUnitById[id];
-        if (($adUnitData != null)) {
-          if (!self.dops.inViewOnly || self.isHeightInView(adUnit)) {
-            if ($adUnitData.existing) {
-              toPush.push($adUnitData);
+        gtslot = self.adUnitById[id];
+        if (gtslot != null) {
+          if (!self.dopts.inViewOnly || self.isHeightInView(adUnit)) {
+            if (gtslot.existing) {
+              toPush.push(gtslot);
             } else {
               $win.googletag.cmd.push(function() {
                 return $win.googletag.display(id);
@@ -8132,6 +8321,15 @@ function match(el, selector) {
       }
     };
 
+
+    /**
+     * get id
+     * @param  {Object} $adUnit    
+     * @param  {string} adUnitName 
+     * @param  {Object} adUnit     
+     * @return {string}            the id
+     */
+
     gsndfpfactory.prototype.getID = function($adUnit, adUnitName, adUnit) {
       var id, self;
       self = this;
@@ -8143,7 +8341,14 @@ function match(el, selector) {
       return id;
     };
 
-    gsndfpfactory.prototype.getDimensions = function($adUnit, allData) {
+
+    /**
+     * get the dimension
+     * @param  {Object} allData element attribute
+     * @return {Array}         array of dimensions
+     */
+
+    gsndfpfactory.prototype.getDimensions = function(allData) {
       var dimensionGroups, dimensionSet, dimensions, dimensionsData, i, j, k, len, len1, mapping, ref, self, v;
       self = this;
       dimensions = [];
@@ -8157,8 +8362,8 @@ function match(el, selector) {
         }
       } else {
         mapping = allData['sizes'];
-        if (mapping && self.dops.sizeMapping[mapping]) {
-          ref = self.dops.sizeMapping[mapping];
+        if (mapping && self.dopts.sizeMapping[mapping]) {
+          ref = self.dopts.sizeMapping[mapping];
           for (k = j = 0, len1 = ref.length; j < len1; k = ++j) {
             v = ref[k];
             dimensions = dimensions.concat(v.ad_sizes);
@@ -8167,6 +8372,12 @@ function match(el, selector) {
       }
       return dimensions;
     };
+
+
+    /**
+     * load the dfp/googletag
+     * @return {Object}
+     */
 
     gsndfpfactory.prototype.dfpLoader = function() {
       var gads, self;
@@ -8180,13 +8391,21 @@ function match(el, selector) {
         if (gads.style.display === 'none') {
           self.dfpBlocked();
         }
+        return self;
       });
       gads.onerror = function() {
         self.dfpBlocked();
+        return self;
       };
       self.isLoaded = true;
       return self;
     };
+
+
+    /**
+     * mark that dfp is blocked
+     * @return {Object}
+     */
 
     gsndfpfactory.prototype.dfpBlocked = function() {
       var commands, self;
@@ -8251,9 +8470,10 @@ function match(el, selector) {
         for (k = i = 0, len = commands.length; i < len; k = ++i) {
           v = commands[k];
           $win.googletag.cmd.push(v);
-          return;
         }
+        return self;
       }), 50);
+      return self;
     };
 
     return gsndfpfactory;

@@ -117,7 +117,10 @@ class Plugin
   getNetworkId: (includeStore)->
     self = @
     result = self.gsnNetworkId + if (self.source or "").length > 0 then ".#{self.source}" else "" 
-    if (includeStore)
+    if includeStore and typeof(self.gsnNetworkStore) is 'string'
+      self.gsnNetworkStore = _tk.util.trim(self.gsnNetworkStore)
+      if (self.gsnNetworkStore.indexOf('/') != 0)
+        self.gsnNetworkStore = "/#{self.gsnNetworkStore}"
       result = result.replace(/\/$/gi, '') + (self.gsnNetworkStore or '')
     return result
 
@@ -248,8 +251,8 @@ class Plugin
   # @return {Object}
   ###
   ajaxFireUrl: (url) ->
-    #/ <summary>Hit a URL.  Good for click and impression tracking</summary>
-    if typeof url == 'string'
+    if typeof url is 'string'
+      # bad or empty url
       if url.length < 10
         return
 
@@ -357,9 +360,9 @@ class Plugin
   # handle a dom event
   #
   ###
-  actionHandler: (evt) ->
+  actionHandler: (target, evt) ->
     self = myGsn.Advertising
-    elem = if evt.target then evt.target else evt.srcElement
+    elem = target
     payLoad = {}
     if elem?
       allData = trakless.util.allData(elem)
@@ -437,14 +440,14 @@ class Plugin
   ###
   refresh: (actionParam, forceRefresh) ->
     self = myGsn.Advertising
-    if (!self.hasGsnUnit()) then return self
+    if !self.hasGsnUnit() then return self
 
+    # no need to refresh if gsnid or sw is already visible
     if (self.gsnid)
-
       if (gsnSw2.isVisible)
         return self
-        
-      gsnSw2.refresh(
+      
+      gsnSw2.refresh
         displayWhenExists: '.gsnadunit,.gsnunit'
         sel: '.gsnsw'
         onData: (evt) ->
@@ -454,16 +457,20 @@ class Plugin
         onClose: ->
           # make sure selector is always wired-up
           if self.selector?
-            dom(self.selector)[0].onclick = (e) ->
-              e = e or win.event
-              e.target = e.target or e.srcElement or e.parentNode
-              if (win.gmodal.hasCls(e.target, 'gsnaction'))
-                self.actionHandler e
+            dom(self.selector)[0].onclick = (evt) ->
+              evt = evt or win.event
+              tg = evt.target or evt.srcElement
+              if (tg.nodeType is 3)
+                  tg = tg.parentNode;
+
+              if (win.gmodal.hasCls(tg, 'gsnaction'))
+                self.actionHandler tg, evt
+              else if (win.gmodal.hasCls(tg.parentNode, 'gsnaction'))
+                self.actionHandler tg.parentNode, evt
               
             self.selector  = null
-          self.refreshAdPodsInternal(actionParam, forceRefresh)
-      )
 
+          self.refreshAdPodsInternal(actionParam, forceRefresh)
     @
 
   ###*
@@ -479,7 +486,7 @@ class Plugin
   ###
   setDefault: (defParam) ->
     self = myGsn.Advertising
-    if (typeof defParam == 'object')
+    if typeof defParam is 'object'
       for k, v of defParam when v?
         self.defP[k] = v
     @
@@ -490,11 +497,11 @@ class Plugin
   ###
   refreshWithTimer: (actionParam) ->
     self = myGsn.Advertising
-    if (!actionParam?)
+    if !actionParam?
       actionParam = { evtname: 'refresh-timer' }
 
     self.refresh(actionParam, true)
-    timer = (self.timer || 0) * 1000
+    timer = (self.timer or 0) * 1000
 
     if (timer > 0)
       setTimeout self.refreshWithTimer, timer
@@ -507,10 +514,10 @@ class Plugin
   ###
   load: (gsnid, isDebug) ->
     self = myGsn.Advertising
-    if (gsnid)
+    if gsnid
       self.gsnid = gsnid
-      if (isDebug)
-        debug.enable('gsndfp')
+    if isDebug
+      debug.enable('gsndfp')
 
     return self.refreshWithTimer({ evtname: 'loading' })
 
@@ -536,20 +543,20 @@ myGsn.Advertising.recipeRedirect = myPlugin.clickRecipe
 win.Gsn = myGsn
 win.gsndfp = myGsn.Advertising
 
-if (gsnContext?)
+if gsnContext?
   buildqs = (k, v) ->
     if v?
       v = new String(v)
-      if k != 'ProductDescription'
+      if k is 'ProductDescription'
         # some product descriptions have '&amp;' which should not be replaced with '`'.
         v = v.replace(/&/, '`')
-      k + '=' + v.toString()
+      k + '=' + v
     else
 
   myGsn.Advertising.on 'clickRecipe', (data) ->
     if data.type != 'gsnevent:clickRecipe'
       return
-    win.location.replace '/Recipes/RecipeFull.aspx?recipeid=' + data.detail.RecipeId
+    win.location.replace '/Recipes/RecipeFull.aspx?RecipeID=' + data.detail.RecipeId
     return
 
   myGsn.Advertising.on 'clickProduct', (data) ->
@@ -570,9 +577,10 @@ if (gsnContext?)
       qs += '~' + buildqs('SavingsStatement', product.SavingsStatement)
       qs += '~' + buildqs('Quantity', product.Quantity)
       qs += '~' + buildqs('AdCode', product.AdCode)
-      qs += '~' +buildqs('CreativeID', product.CreativeId)
+      qs += '~' + buildqs('CreativeID', product.CreativeId)
+
       # assume there is this global function
-      if typeof AddAdToShoppingList == 'function'
+      if typeof AddAdToShoppingList is 'function'
         AddAdToShoppingList qs
     return
 
@@ -582,14 +590,17 @@ if (gsnContext?)
       
     linkData = data.detail
     if linkData
-      if linkData.Target == undefined or linkData.Target == ''
+      if !(typeof linkData.Target is 'string')
         linkData.Target = '_top'
-      if linkData.Target == '_blank'
+
+      if linkData.Target is '_blank'
         # this is a link out to open in new window
-        win.open linkData.Url
+        # win.open linkData.Url
+        # don't do anything, ads should handle it
       else
         # assume this is an internal redirect
         win.location.replace linkData.Url
+
     return
 
   myGsn.Advertising.on 'clickPromotion', (data) ->
@@ -607,12 +618,14 @@ if (gsnContext?)
 
     linkData = data.detail
     if linkData
-      url = myGsn.Advertising.apiUrl + '/profile/BrickOffer/' + gsnContext.ConsumerID + '/' + linkData.OfferCode
+      url = "#{myGsn.Advertising.apiUrl}/profile/BrickOffer/#{gsnContext.ConsumerID}/#{linkData.OfferCode}"
+
       # open brick offer using the new api URL
+      # need to worry about popup blockers
       win.open url, ''
     return
-    
-#auto init with attributes
+
+# auto init with attributes
 # at this point, we expect Gsn.Advertising to be available from above
 
 aPlugin = myGsn.Advertising
@@ -654,8 +667,7 @@ trakless.store.init({url: '//cdn.gsngrocers.com/script/xstore.html', dntIgnore: 
 if aPlugin.hasGsnUnit() 
  aPlugin.load() 
 else 
-  trakless.util.ready( -> 
+  trakless.util.ready -> 
     aPlugin.load()
-  )
 
 module.exports = myGsn

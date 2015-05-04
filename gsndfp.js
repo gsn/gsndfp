@@ -182,6 +182,8 @@
 
     Plugin.prototype.isDebug = false;
 
+    Plugin.prototype.hasLoad = false;
+
     Plugin.prototype.gsnid = 0;
 
     Plugin.prototype.selector = 'body';
@@ -746,8 +748,13 @@
         self.gsnid = gsnid;
       }
       if (isDebug) {
+        self.isDebug = true;
         debug.enable('gsndfp');
       }
+      if (self.hasLoad) {
+        return self;
+      }
+      self.hasLoad = true;
       return self.refreshWithTimer({
         evtname: 'loading'
       });
@@ -8082,11 +8089,13 @@ function match(el, selector) {
     gsndfpfactory.prototype.setCookie = function(nameOfCookie, value, expireHours) {
       var ed, edv, self, v;
       self = this;
-      if (!gsndfp.isDebug) {
-        ed = new Date();
-        ed.setTime(ed.getTime() + (expireHours || 24) * 3600 * 1000);
-        v = encodeURI(value);
-        edv = ed.toGMTString();
+      ed = new Date();
+      ed.setTime(ed.getTime() + (expireHours || 24) * 3600 * 1000);
+      v = encodeURI(value);
+      edv = ed.toGMTString();
+      if (gsndfp.isDebug) {
+        $doc.cookie = nameOfCookie + "=" + v + "; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/";
+      } else {
         $doc.cookie = nameOfCookie + "=" + v + "; expires=" + edv + "; path=/";
       }
       return self;
@@ -8497,6 +8506,8 @@ trim = require('trim');
 
 win = window;
 
+gmodal = win.gmodal;
+
 modals = [];
 
 checkEvent = function(self, name, evt, el) {
@@ -8639,6 +8650,8 @@ modal = (function() {
 
   modal.prototype.doc = win.document;
 
+  modal.prototype.ishim = null;
+
   modal.prototype.elWrapper = null;
 
   modal.prototype.el = null;
@@ -8651,7 +8664,15 @@ modal = (function() {
 
   modal.prototype.tpl = '<div class="gmodal-wrap gmodal-left"></div><div class="gmodal-wrap gmodal-content" id="gmodalContent"></div><div class="gmodal-wrap gmodal-right"></div>';
 
-  modal.prototype.css = '.gmodal{display:none;overflow:hidden;outline:0;-webkit-overflow-scrolling:touch;position:fixed;top:0;left:0;bottom:0;right:0;width:100%;height:100%;z-index:9999990}.body-gmodal .gmodal{display:table}.body-gmodal{overflow:hidden}.gmodal-content,.gmodal-wrap{display:table-cell;position:relative;vertical-align: middle}.gmodal-left,.gmodal-right{width:50%}';
+  modal.prototype.css = '.gmodal{display:none;overflow:hidden;outline:0;-webkit-overflow-scrolling:touch;position:fixed;top:0;left:0;bottom:0;right:0;width:100%;height:100%;z-index:9999990}.gmodal .frameshim{position:absolute;display:block;visibility:hidden;margin:0;width:100%;height:100%;top:0;left:0;border:none;z-index:-999}.body-gmodal .gmodal{display:table}.body-gmodal{overflow:hidden}.gmodal-content,.gmodal-wrap{display:table-cell;position:relative;vertical-align: middle}.gmodal-left,.gmodal-right{width:50%}';
+
+
+  /**
+   * show or open modal
+   * @param  {[Object}  opts   options
+   * @param  {Function} hideCb callback function on hide
+   * @return {Object}
+   */
 
   modal.prototype.show = function(opts, hideCb) {
     var self;
@@ -8686,6 +8707,12 @@ modal = (function() {
     return this;
   };
 
+
+  /**
+   * hide or close modal
+   * @return {Object}
+   */
+
   modal.prototype.hide = function() {
     var self;
     self = this;
@@ -8703,6 +8730,14 @@ modal = (function() {
     }
     return self;
   };
+
+
+  /**
+   * Helper method to inject your own css
+   * @param  {string} id  css id
+   * @param  {string} css the css text
+   * @return {Object}
+   */
 
   modal.prototype.injectStyle = function(id, css) {
     var el, elx, self;
@@ -8724,6 +8759,14 @@ modal = (function() {
     return this;
   };
 
+
+  /**
+   * helper method to determine if an element has class
+   * @param  {HTMLElement}  el  
+   * @param  {string}       cls class names
+   * @return {Boolean}
+   */
+
   modal.prototype.hasCls = function(el, cls) {
     var i, k, len, ref, v;
     ref = cls.split(' ');
@@ -8736,15 +8779,40 @@ modal = (function() {
     return false;
   };
 
+
+  /**
+   * append an iframe shim for older IE
+   * WARNING: this is only for stupid older IE bug
+   * do not use with modern browser or site with ssl
+   * @return {Object}
+   */
+
+  modal.prototype.iShimmy = function() {
+    var self;
+    self = this;
+    if (self.elWrapper != null) {
+      if (!self.ishim) {
+        self.ishim = self.doc.createElement('iframe');
+        self.ishim.className = 'iframeshim';
+        self.ishim.scrolling = 'no';
+        self.ishim.frameborder = 0;
+        self.ishim.height = '100';
+        self.ishim.width = '100';
+        self.elWrapper.appendChild(self.ishim);
+      }
+    }
+    return self;
+  };
+
   return modal;
 
 })();
 
-Emitter(modal.prototype);
-
-gmodal = new modal();
-
-win.gmodal = gmodal;
+if (!gmodal) {
+  Emitter(modal.prototype);
+  gmodal = new modal();
+  win.gmodal = gmodal;
+}
 
 module.exports = gmodal;
 

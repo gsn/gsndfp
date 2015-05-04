@@ -344,11 +344,13 @@ class gsndfpfactory
   ###
   setCookie: (nameOfCookie, value, expireHours) ->
     self = @
-    if !gsndfp.isDebug
-      ed = new Date()
-      ed.setTime ed.getTime() + (expireHours or 24) * 3600 * 1000
-      v = encodeURI(value);
-      edv = ed.toGMTString();
+    ed = new Date()
+    ed.setTime ed.getTime() + (expireHours or 24) * 3600 * 1000
+    v = encodeURI(value);
+    edv = ed.toGMTString();
+    if (gsndfp.isDebug)
+      $doc.cookie = "#{nameOfCookie}=#{v}; expires=Thu, 01 Jan 1970 00:00:01 GMT; path=/"
+    else
       $doc.cookie = "#{nameOfCookie}=#{v}; expires=#{edv}; path=/"
     return self
 

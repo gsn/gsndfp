@@ -89,6 +89,7 @@ class Plugin
     evtaction: 'ea'
     evtvalue: 'ev'
   isDebug: false
+  hasLoad: false
   gsnid: 0
   selector: 'body'
   apiUrl: 'https://clientapi.gsn2.com/api/v1'
@@ -517,8 +518,11 @@ class Plugin
     if gsnid
       self.gsnid = gsnid
     if isDebug
+      self.isDebug = true
       debug.enable('gsndfp')
 
+    if self.hasLoad then return self
+    self.hasLoad = true
     return self.refreshWithTimer({ evtname: 'loading' })
 
 # create the plugin and map function for backward compatibility with Virtual Store

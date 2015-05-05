@@ -288,7 +288,7 @@ class gsndfpfactory
             h: Math.max($doc.documentElement.clientHeight, $win.innerHeight || 0)
 
       # open the modal to show shopper welcome
-      if ($win.gmodal.show({content: "<div id='sw'>#{data}<div>", closeCls: 'sw-close', hideOn: 'click,tap'}, self.onCloseCallback))
+      if ($win.gmodal.show({ content: "<div id='sw'>#{data}<div>", closeCls: 'sw-close' }, self.onCloseCallback))
         self.onOpenCallback()
     else
       self.onCloseCallback cancel: true

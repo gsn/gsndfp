@@ -188,7 +188,7 @@
 
     Plugin.prototype.selector = 'body';
 
-    Plugin.prototype.apiUrl = 'https://clientapi.gsngrocers.com/api/v1';
+    Plugin.prototype.apiUrl = 'https://clientapi.gsn2.com/api/v1';
 
     Plugin.prototype.gsnNetworkId = void 0;
 
@@ -618,6 +618,7 @@
         gsnpods.refresh({
           setTargeting: targetting,
           sel: '.gsnunit',
+          forceRefresh: forceRefresh,
           refreshExisting: self.refreshExisting.pods
         });
         self.refreshExisting.pods = true;
@@ -627,6 +628,7 @@
             setTargeting: targetting,
             bodyTemplate: self.bodyTemplate,
             sel: '.circplus',
+            forceRefresh: forceRefresh,
             refreshExisting: self.refreshExisting.circPlus
           });
           self.refreshExisting.circPlus = true;

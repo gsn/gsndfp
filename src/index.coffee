@@ -92,7 +92,7 @@ class Plugin
   hasLoad: false
   gsnid: 0
   selector: 'body'
-  apiUrl: 'https://clientapi.gsngrocers.com/api/v1'
+  apiUrl: 'https://clientapi.gsn2.com/api/v1'
   gsnNetworkId: undefined
   gsnNetworkStore: undefined
   onAllEvents: undefined
@@ -418,6 +418,7 @@ class Plugin
       gsnpods.refresh(
         setTargeting: targetting
         sel: '.gsnunit'
+        forceRefresh: forceRefresh
         refreshExisting: self.refreshExisting.pods
       )
       self.refreshExisting.pods = true
@@ -428,6 +429,7 @@ class Plugin
           setTargeting: targetting
           bodyTemplate: self.bodyTemplate
           sel: '.circplus'
+          forceRefresh: forceRefresh
           refreshExisting: self.refreshExisting.circPlus
         )
         self.refreshExisting.circPlus = true

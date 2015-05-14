@@ -8540,7 +8540,7 @@ checkEvent = function(self, name, evt, el) {
       hideModalInternal(self);
     }
   }
-  return false;
+  return true;
 };
 
 createModal = function(self) {

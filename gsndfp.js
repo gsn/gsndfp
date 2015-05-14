@@ -973,17 +973,10 @@ exports.formatArgs = formatArgs;
 exports.save = save;
 exports.load = load;
 exports.useColors = useColors;
-
-/**
- * Use chrome.storage.local if we are in an app
- */
-
-var storage;
-
-if (typeof chrome !== 'undefined' && typeof chrome.storage !== 'undefined')
-  storage = chrome.storage.local;
-else
-  storage = localstorage();
+exports.storage = 'undefined' != typeof chrome
+               && 'undefined' != typeof chrome.storage
+                  ? chrome.storage.local
+                  : localstorage();
 
 /**
  * Colors.
@@ -1091,9 +1084,9 @@ function log() {
 function save(namespaces) {
   try {
     if (null == namespaces) {
-      storage.removeItem('debug');
+      exports.storage.removeItem('debug');
     } else {
-      storage.debug = namespaces;
+      exports.storage.debug = namespaces;
     }
   } catch(e) {}
 }
@@ -1108,7 +1101,7 @@ function save(namespaces) {
 function load() {
   var r;
   try {
-    r = storage.debug;
+    r = exports.storage.debug;
   } catch(e) {}
   return r;
 }
@@ -1378,6 +1371,8 @@ module.exports = function(val, options){
  */
 
 function parse(str) {
+  str = '' + str;
+  if (str.length > 10000) return;
   var match = /^((?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|years?|yrs?|y)?$/i.exec(str);
   if (!match) return;
   var n = parseFloat(match[1]);
@@ -7965,7 +7960,6 @@ function match(el, selector) {
       var self;
       self = gsnSw;
       self.isVisible = false;
-      $win.scrollTo(0, 0);
       if (!self.getCookie('gsnsw2')) {
         self.setCookie('gsnsw2', gsndfp.gsnNetworkId + "," + gsndfp.enableCircPlus + "," + gsndfp.disableSw, gsndfp.expireHours);
       }
@@ -8527,7 +8521,7 @@ checkEvent = function(self, name, evt, el) {
       self.emit('click', tg, evt);
     }
   } else if (name === 'keypress') {
-    if (self.hasCls(tg, scls) || tg === el || tg === sel.doc || tg === self.doc.body) {
+    if (self.hasCls(tg, scls) || tg === el || tg === self.doc || tg === self.doc.body) {
       if ((evt.which || evt.keyCode) === 27) {
         self.emit('esc', tg, evt);
       }

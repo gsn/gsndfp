@@ -240,8 +240,7 @@ class gsndfpfactory
   ###
   onCloseCallback: (evt) ->
     self = gsnSw
-    self.isVisible = false
-    $win.scrollTo 0, 0            
+    self.isVisible = false  
     if !self.getCookie('gsnsw2')
       self.setCookie 'gsnsw2', "#{gsndfp.gsnNetworkId},#{gsndfp.enableCircPlus},#{gsndfp.disableSw}", gsndfp.expireHours
     if typeof self.dopts.onClose == 'function'

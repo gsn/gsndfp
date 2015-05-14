@@ -258,11 +258,13 @@
       win.setTimeout((function() {
         _tk.emitTop(en, {
           type: en,
+          en: en.replace('gsnevent:', ''),
           detail: ed
         });
         if (typeof this.onAllEvents === 'function') {
           this.onAllEvents({
             type: en,
+            en: en.replace('gsnevent:', ''),
             detail: ed
           });
         }
@@ -8767,7 +8769,7 @@ modal = (function() {
     ref = cls.split(' ');
     for (k = i = 0, len = ref.length; i < len; k = ++i) {
       v = ref[k];
-      if ((' ' + el.className).indexOf(' ' + v) >= 0) {
+      if ((' ' + el.className + ' ').indexOf(' ' + v + ' ') >= 0) {
         return true;
       }
     }

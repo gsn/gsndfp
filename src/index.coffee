@@ -140,11 +140,13 @@ class Plugin
     win.setTimeout (->
       _tk.emitTop en,
           type: en
+          en: en.replace('gsnevent:', '')
           detail: ed
 
       if typeof @onAllEvents == 'function'
         @onAllEvents
           type: en
+          en: en.replace('gsnevent:', '')
           detail: ed
       return
     ), 100

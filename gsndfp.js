@@ -2490,14 +2490,13 @@ module.exports = trakless;
 
 }, {"debug":2,"load-iframe":4,"store.js":19,"cookie":20}],
 4: [function(require, module, exports) {
-
 /**
  * Module dependencies.
  */
 
+var is = require('is');
 var onload = require('script-onload');
 var tick = require('next-tick');
-var type = require('type');
 
 /**
  * Expose `loadScript`.
@@ -2511,7 +2510,7 @@ module.exports = function loadIframe(options, fn){
   if (!options) throw new Error('Cant load nothing...');
 
   // Allow for the simplest case, just passing a `src` string.
-  if ('string' == type(options)) options = { src : options };
+  if (is.string(options)) options = { src : options };
 
   var https = document.location.protocol === 'https:' ||
               document.location.protocol === 'chrome-extension:';
@@ -2537,7 +2536,7 @@ module.exports = function loadIframe(options, fn){
   // If we have a fn, attach event handlers, even in IE. Based off of
   // the Third-Party Javascript script loading example:
   // https://github.com/thirdpartyjs/thirdpartyjs-code/blob/master/examples/templates/02/loading-files/index.html
-  if ('function' == type(fn)) {
+  if (is.fn(fn)) {
     onload(iframe, fn);
   }
 
@@ -2551,8 +2550,774 @@ module.exports = function loadIframe(options, fn){
   // give it an ID or attributes.
   return iframe;
 };
-}, {"script-onload":21,"next-tick":22,"type":23}],
+
+}, {"is":21,"script-onload":22,"next-tick":23}],
 21: [function(require, module, exports) {
+
+/**!
+ * is
+ * the definitive JavaScript type testing library
+ *
+ * @copyright 2013-2014 Enrico Marino / Jordan Harband
+ * @license MIT
+ */
+
+var objProto = Object.prototype;
+var owns = objProto.hasOwnProperty;
+var toStr = objProto.toString;
+var symbolValueOf;
+if (typeof Symbol === 'function') {
+  symbolValueOf = Symbol.prototype.valueOf;
+}
+var isActualNaN = function (value) {
+  return value !== value;
+};
+var NON_HOST_TYPES = {
+  boolean: 1,
+  number: 1,
+  string: 1,
+  undefined: 1
+};
+
+var base64Regex = /^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}==)$/;
+var hexRegex = /^[A-Fa-f0-9]+$/;
+
+/**
+ * Expose `is`
+ */
+
+var is = module.exports = {};
+
+/**
+ * Test general.
+ */
+
+/**
+ * is.type
+ * Test if `value` is a type of `type`.
+ *
+ * @param {Mixed} value value to test
+ * @param {String} type type
+ * @return {Boolean} true if `value` is a type of `type`, false otherwise
+ * @api public
+ */
+
+is.a = is.type = function (value, type) {
+  return typeof value === type;
+};
+
+/**
+ * is.defined
+ * Test if `value` is defined.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if 'value' is defined, false otherwise
+ * @api public
+ */
+
+is.defined = function (value) {
+  return typeof value !== 'undefined';
+};
+
+/**
+ * is.empty
+ * Test if `value` is empty.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is empty, false otherwise
+ * @api public
+ */
+
+is.empty = function (value) {
+  var type = toStr.call(value);
+  var key;
+
+  if ('[object Array]' === type || '[object Arguments]' === type || '[object String]' === type) {
+    return value.length === 0;
+  }
+
+  if ('[object Object]' === type) {
+    for (key in value) {
+      if (owns.call(value, key)) { return false; }
+    }
+    return true;
+  }
+
+  return !value;
+};
+
+/**
+ * is.equal
+ * Test if `value` is equal to `other`.
+ *
+ * @param {Mixed} value value to test
+ * @param {Mixed} other value to compare with
+ * @return {Boolean} true if `value` is equal to `other`, false otherwise
+ */
+
+is.equal = function (value, other) {
+  var strictlyEqual = value === other;
+  if (strictlyEqual) {
+    return true;
+  }
+
+  var type = toStr.call(value);
+  var key;
+
+  if (type !== toStr.call(other)) {
+    return false;
+  }
+
+  if ('[object Object]' === type) {
+    for (key in value) {
+      if (!is.equal(value[key], other[key]) || !(key in other)) {
+        return false;
+      }
+    }
+    for (key in other) {
+      if (!is.equal(value[key], other[key]) || !(key in value)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  if ('[object Array]' === type) {
+    key = value.length;
+    if (key !== other.length) {
+      return false;
+    }
+    while (--key) {
+      if (!is.equal(value[key], other[key])) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  if ('[object Function]' === type) {
+    return value.prototype === other.prototype;
+  }
+
+  if ('[object Date]' === type) {
+    return value.getTime() === other.getTime();
+  }
+
+  return strictlyEqual;
+};
+
+/**
+ * is.hosted
+ * Test if `value` is hosted by `host`.
+ *
+ * @param {Mixed} value to test
+ * @param {Mixed} host host to test with
+ * @return {Boolean} true if `value` is hosted by `host`, false otherwise
+ * @api public
+ */
+
+is.hosted = function (value, host) {
+  var type = typeof host[value];
+  return type === 'object' ? !!host[value] : !NON_HOST_TYPES[type];
+};
+
+/**
+ * is.instance
+ * Test if `value` is an instance of `constructor`.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an instance of `constructor`
+ * @api public
+ */
+
+is.instance = is['instanceof'] = function (value, constructor) {
+  return value instanceof constructor;
+};
+
+/**
+ * is.nil / is.null
+ * Test if `value` is null.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is null, false otherwise
+ * @api public
+ */
+
+is.nil = is['null'] = function (value) {
+  return value === null;
+};
+
+/**
+ * is.undef / is.undefined
+ * Test if `value` is undefined.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is undefined, false otherwise
+ * @api public
+ */
+
+is.undef = is.undefined = function (value) {
+  return typeof value === 'undefined';
+};
+
+/**
+ * Test arguments.
+ */
+
+/**
+ * is.args
+ * Test if `value` is an arguments object.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an arguments object, false otherwise
+ * @api public
+ */
+
+is.args = is.arguments = function (value) {
+  var isStandardArguments = '[object Arguments]' === toStr.call(value);
+  var isOldArguments = !is.array(value) && is.arraylike(value) && is.object(value) && is.fn(value.callee);
+  return isStandardArguments || isOldArguments;
+};
+
+/**
+ * Test array.
+ */
+
+/**
+ * is.array
+ * Test if 'value' is an array.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an array, false otherwise
+ * @api public
+ */
+
+is.array = function (value) {
+  return '[object Array]' === toStr.call(value);
+};
+
+/**
+ * is.arguments.empty
+ * Test if `value` is an empty arguments object.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an empty arguments object, false otherwise
+ * @api public
+ */
+is.args.empty = function (value) {
+  return is.args(value) && value.length === 0;
+};
+
+/**
+ * is.array.empty
+ * Test if `value` is an empty array.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an empty array, false otherwise
+ * @api public
+ */
+is.array.empty = function (value) {
+  return is.array(value) && value.length === 0;
+};
+
+/**
+ * is.arraylike
+ * Test if `value` is an arraylike object.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an arguments object, false otherwise
+ * @api public
+ */
+
+is.arraylike = function (value) {
+  return !!value && !is.boolean(value)
+    && owns.call(value, 'length')
+    && isFinite(value.length)
+    && is.number(value.length)
+    && value.length >= 0;
+};
+
+/**
+ * Test boolean.
+ */
+
+/**
+ * is.boolean
+ * Test if `value` is a boolean.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a boolean, false otherwise
+ * @api public
+ */
+
+is.boolean = function (value) {
+  return '[object Boolean]' === toStr.call(value);
+};
+
+/**
+ * is.false
+ * Test if `value` is false.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is false, false otherwise
+ * @api public
+ */
+
+is['false'] = function (value) {
+  return is.boolean(value) && Boolean(Number(value)) === false;
+};
+
+/**
+ * is.true
+ * Test if `value` is true.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is true, false otherwise
+ * @api public
+ */
+
+is['true'] = function (value) {
+  return is.boolean(value) && Boolean(Number(value)) === true;
+};
+
+/**
+ * Test date.
+ */
+
+/**
+ * is.date
+ * Test if `value` is a date.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a date, false otherwise
+ * @api public
+ */
+
+is.date = function (value) {
+  return '[object Date]' === toStr.call(value);
+};
+
+/**
+ * Test element.
+ */
+
+/**
+ * is.element
+ * Test if `value` is an html element.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an HTML Element, false otherwise
+ * @api public
+ */
+
+is.element = function (value) {
+  return value !== undefined
+    && typeof HTMLElement !== 'undefined'
+    && value instanceof HTMLElement
+    && value.nodeType === 1;
+};
+
+/**
+ * Test error.
+ */
+
+/**
+ * is.error
+ * Test if `value` is an error object.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an error object, false otherwise
+ * @api public
+ */
+
+is.error = function (value) {
+  return '[object Error]' === toStr.call(value);
+};
+
+/**
+ * Test function.
+ */
+
+/**
+ * is.fn / is.function (deprecated)
+ * Test if `value` is a function.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a function, false otherwise
+ * @api public
+ */
+
+is.fn = is['function'] = function (value) {
+  var isAlert = typeof window !== 'undefined' && value === window.alert;
+  return isAlert || '[object Function]' === toStr.call(value);
+};
+
+/**
+ * Test number.
+ */
+
+/**
+ * is.number
+ * Test if `value` is a number.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a number, false otherwise
+ * @api public
+ */
+
+is.number = function (value) {
+  return '[object Number]' === toStr.call(value);
+};
+
+/**
+ * is.infinite
+ * Test if `value` is positive or negative infinity.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is positive or negative Infinity, false otherwise
+ * @api public
+ */
+is.infinite = function (value) {
+  return value === Infinity || value === -Infinity;
+};
+
+/**
+ * is.decimal
+ * Test if `value` is a decimal number.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a decimal number, false otherwise
+ * @api public
+ */
+
+is.decimal = function (value) {
+  return is.number(value) && !isActualNaN(value) && !is.infinite(value) && value % 1 !== 0;
+};
+
+/**
+ * is.divisibleBy
+ * Test if `value` is divisible by `n`.
+ *
+ * @param {Number} value value to test
+ * @param {Number} n dividend
+ * @return {Boolean} true if `value` is divisible by `n`, false otherwise
+ * @api public
+ */
+
+is.divisibleBy = function (value, n) {
+  var isDividendInfinite = is.infinite(value);
+  var isDivisorInfinite = is.infinite(n);
+  var isNonZeroNumber = is.number(value) && !isActualNaN(value) && is.number(n) && !isActualNaN(n) && n !== 0;
+  return isDividendInfinite || isDivisorInfinite || (isNonZeroNumber && value % n === 0);
+};
+
+/**
+ * is.int
+ * Test if `value` is an integer.
+ *
+ * @param value to test
+ * @return {Boolean} true if `value` is an integer, false otherwise
+ * @api public
+ */
+
+is.int = function (value) {
+  return is.number(value) && !isActualNaN(value) && value % 1 === 0;
+};
+
+/**
+ * is.maximum
+ * Test if `value` is greater than 'others' values.
+ *
+ * @param {Number} value value to test
+ * @param {Array} others values to compare with
+ * @return {Boolean} true if `value` is greater than `others` values
+ * @api public
+ */
+
+is.maximum = function (value, others) {
+  if (isActualNaN(value)) {
+    throw new TypeError('NaN is not a valid value');
+  } else if (!is.arraylike(others)) {
+    throw new TypeError('second argument must be array-like');
+  }
+  var len = others.length;
+
+  while (--len >= 0) {
+    if (value < others[len]) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+/**
+ * is.minimum
+ * Test if `value` is less than `others` values.
+ *
+ * @param {Number} value value to test
+ * @param {Array} others values to compare with
+ * @return {Boolean} true if `value` is less than `others` values
+ * @api public
+ */
+
+is.minimum = function (value, others) {
+  if (isActualNaN(value)) {
+    throw new TypeError('NaN is not a valid value');
+  } else if (!is.arraylike(others)) {
+    throw new TypeError('second argument must be array-like');
+  }
+  var len = others.length;
+
+  while (--len >= 0) {
+    if (value > others[len]) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+/**
+ * is.nan
+ * Test if `value` is not a number.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is not a number, false otherwise
+ * @api public
+ */
+
+is.nan = function (value) {
+  return !is.number(value) || value !== value;
+};
+
+/**
+ * is.even
+ * Test if `value` is an even number.
+ *
+ * @param {Number} value value to test
+ * @return {Boolean} true if `value` is an even number, false otherwise
+ * @api public
+ */
+
+is.even = function (value) {
+  return is.infinite(value) || (is.number(value) && value === value && value % 2 === 0);
+};
+
+/**
+ * is.odd
+ * Test if `value` is an odd number.
+ *
+ * @param {Number} value value to test
+ * @return {Boolean} true if `value` is an odd number, false otherwise
+ * @api public
+ */
+
+is.odd = function (value) {
+  return is.infinite(value) || (is.number(value) && value === value && value % 2 !== 0);
+};
+
+/**
+ * is.ge
+ * Test if `value` is greater than or equal to `other`.
+ *
+ * @param {Number} value value to test
+ * @param {Number} other value to compare with
+ * @return {Boolean}
+ * @api public
+ */
+
+is.ge = function (value, other) {
+  if (isActualNaN(value) || isActualNaN(other)) {
+    throw new TypeError('NaN is not a valid value');
+  }
+  return !is.infinite(value) && !is.infinite(other) && value >= other;
+};
+
+/**
+ * is.gt
+ * Test if `value` is greater than `other`.
+ *
+ * @param {Number} value value to test
+ * @param {Number} other value to compare with
+ * @return {Boolean}
+ * @api public
+ */
+
+is.gt = function (value, other) {
+  if (isActualNaN(value) || isActualNaN(other)) {
+    throw new TypeError('NaN is not a valid value');
+  }
+  return !is.infinite(value) && !is.infinite(other) && value > other;
+};
+
+/**
+ * is.le
+ * Test if `value` is less than or equal to `other`.
+ *
+ * @param {Number} value value to test
+ * @param {Number} other value to compare with
+ * @return {Boolean} if 'value' is less than or equal to 'other'
+ * @api public
+ */
+
+is.le = function (value, other) {
+  if (isActualNaN(value) || isActualNaN(other)) {
+    throw new TypeError('NaN is not a valid value');
+  }
+  return !is.infinite(value) && !is.infinite(other) && value <= other;
+};
+
+/**
+ * is.lt
+ * Test if `value` is less than `other`.
+ *
+ * @param {Number} value value to test
+ * @param {Number} other value to compare with
+ * @return {Boolean} if `value` is less than `other`
+ * @api public
+ */
+
+is.lt = function (value, other) {
+  if (isActualNaN(value) || isActualNaN(other)) {
+    throw new TypeError('NaN is not a valid value');
+  }
+  return !is.infinite(value) && !is.infinite(other) && value < other;
+};
+
+/**
+ * is.within
+ * Test if `value` is within `start` and `finish`.
+ *
+ * @param {Number} value value to test
+ * @param {Number} start lower bound
+ * @param {Number} finish upper bound
+ * @return {Boolean} true if 'value' is is within 'start' and 'finish'
+ * @api public
+ */
+is.within = function (value, start, finish) {
+  if (isActualNaN(value) || isActualNaN(start) || isActualNaN(finish)) {
+    throw new TypeError('NaN is not a valid value');
+  } else if (!is.number(value) || !is.number(start) || !is.number(finish)) {
+    throw new TypeError('all arguments must be numbers');
+  }
+  var isAnyInfinite = is.infinite(value) || is.infinite(start) || is.infinite(finish);
+  return isAnyInfinite || (value >= start && value <= finish);
+};
+
+/**
+ * Test object.
+ */
+
+/**
+ * is.object
+ * Test if `value` is an object.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is an object, false otherwise
+ * @api public
+ */
+
+is.object = function (value) {
+  return '[object Object]' === toStr.call(value);
+};
+
+/**
+ * is.hash
+ * Test if `value` is a hash - a plain object literal.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a hash, false otherwise
+ * @api public
+ */
+
+is.hash = function (value) {
+  return is.object(value) && value.constructor === Object && !value.nodeType && !value.setInterval;
+};
+
+/**
+ * Test regexp.
+ */
+
+/**
+ * is.regexp
+ * Test if `value` is a regular expression.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a regexp, false otherwise
+ * @api public
+ */
+
+is.regexp = function (value) {
+  return '[object RegExp]' === toStr.call(value);
+};
+
+/**
+ * Test string.
+ */
+
+/**
+ * is.string
+ * Test if `value` is a string.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if 'value' is a string, false otherwise
+ * @api public
+ */
+
+is.string = function (value) {
+  return '[object String]' === toStr.call(value);
+};
+
+/**
+ * Test base64 string.
+ */
+
+/**
+ * is.base64
+ * Test if `value` is a valid base64 encoded string.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if 'value' is a base64 encoded string, false otherwise
+ * @api public
+ */
+
+is.base64 = function (value) {
+  return is.string(value) && (!value.length || base64Regex.test(value));
+};
+
+/**
+ * Test base64 string.
+ */
+
+/**
+ * is.hex
+ * Test if `value` is a valid hex encoded string.
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if 'value' is a hex encoded string, false otherwise
+ * @api public
+ */
+
+is.hex = function (value) {
+  return is.string(value) && (!value.length || hexRegex.test(value));
+};
+
+/**
+ * is.symbol
+ * Test if `value` is an ES6 Symbol
+ *
+ * @param {Mixed} value value to test
+ * @return {Boolean} true if `value` is a Symbol, false otherise
+ * @api public
+ */
+
+is.symbol = function (value) {
+  return typeof Symbol === 'function' && toStr.call(value) === '[object Symbol]' && typeof symbolValueOf.call(value) === 'symbol';
+};
+
+}, {}],
+22: [function(require, module, exports) {
 
 // https://github.com/thirdpartyjs/thirdpartyjs-code/blob/master/examples/templates/02/loading-files/index.html
 
@@ -2588,7 +3353,7 @@ function add(el, fn){
 }
 
 /**
- * Attach evnet.
+ * Attach event.
  *
  * @param {Element} el
  * @param {Function} fn
@@ -2608,77 +3373,71 @@ function attach(el, fn){
 }
 
 }, {}],
-22: [function(require, module, exports) {
-"use strict"
-
-if (typeof setImmediate == 'function') {
-  module.exports = function(f){ setImmediate(f) }
-}
-// legacy node.js
-else if (typeof process != 'undefined' && typeof process.nextTick == 'function') {
-  module.exports = process.nextTick
-}
-// fallback for other environments / postMessage behaves badly on IE8
-else if (typeof window == 'undefined' || window.ActiveXObject || !window.postMessage) {
-  module.exports = function(f){ setTimeout(f) };
-} else {
-  var q = [];
-
-  window.addEventListener('message', function(){
-    var i = 0;
-    while (i < q.length) {
-      try { q[i++](); }
-      catch (e) {
-        q = q.slice(i);
-        window.postMessage('tic!', '*');
-        throw e;
-      }
-    }
-    q.length = 0;
-  }, true);
-
-  module.exports = function(fn){
-    if (!q.length) window.postMessage('tic!', '*');
-    q.push(fn);
-  }
-}
-
-}, {}],
 23: [function(require, module, exports) {
-/**
- * toString ref.
- */
+'use strict';
 
-var toString = Object.prototype.toString;
+var callable, byObserver;
 
-/**
- * Return the type of `val`.
- *
- * @param {Mixed} val
- * @return {String}
- * @api public
- */
-
-module.exports = function(val){
-  switch (toString.call(val)) {
-    case '[object Date]': return 'date';
-    case '[object RegExp]': return 'regexp';
-    case '[object Arguments]': return 'arguments';
-    case '[object Array]': return 'array';
-    case '[object Error]': return 'error';
-  }
-
-  if (val === null) return 'null';
-  if (val === undefined) return 'undefined';
-  if (val !== val) return 'nan';
-  if (val && val.nodeType === 1) return 'element';
-
-  val = val.valueOf
-    ? val.valueOf()
-    : Object.prototype.valueOf.apply(val)
-
-  return typeof val;
+callable = function (fn) {
+	if (typeof fn !== 'function') throw new TypeError(fn + " is not a function");
+	return fn;
 };
+
+byObserver = function (Observer) {
+	var node = document.createTextNode(''), queue, i = 0;
+	new Observer(function () {
+		var data;
+		if (!queue) return;
+		data = queue;
+		queue = null;
+		if (typeof data === 'function') {
+			data();
+			return;
+		}
+		data.forEach(function (fn) { fn(); });
+	}).observe(node, { characterData: true });
+	return function (fn) {
+		callable(fn);
+		if (queue) {
+			if (typeof queue === 'function') queue = [queue, fn];
+			else queue.push(fn);
+			return;
+		}
+		queue = fn;
+		node.data = (i = ++i % 2);
+	};
+};
+
+module.exports = (function () {
+	// Node.js
+	if ((typeof process === 'object') && process &&
+			(typeof process.nextTick === 'function')) {
+		return process.nextTick;
+	}
+
+	// MutationObserver
+	if ((typeof document === 'object') && document) {
+		if (typeof MutationObserver === 'function') {
+			return byObserver(MutationObserver);
+		}
+		if (typeof WebKitMutationObserver === 'function') {
+			return byObserver(WebKitMutationObserver);
+		}
+	}
+
+	// W3C Draft
+	// http://dvcs.w3.org/hg/webperf/raw-file/tip/specs/setImmediate/Overview.html
+	if (typeof setImmediate === 'function') {
+		return function (cb) { setImmediate(callable(cb)); };
+	}
+
+	// Wide available standard
+	if ((typeof setTimeout === 'function') || (typeof setTimeout === 'object')) {
+		return function (cb) { setTimeout(callable(cb), 0); };
+	}
+
+	return null;
+}());
 
 }, {}],
 19: [function(require, module, exports) {
@@ -3398,7 +4157,7 @@ exports.stringify = function(obj){
   return pairs.join('&');
 };
 
-}, {"trim":25,"type":23}],
+}, {"trim":25,"type":26}],
 25: [function(require, module, exports) {
 
 exports = module.exports = trim;
@@ -3416,6 +4175,43 @@ exports.left = function(str){
 exports.right = function(str){
   if (str.trimRight) return str.trimRight();
   return str.replace(/\s*$/, '');
+};
+
+}, {}],
+26: [function(require, module, exports) {
+/**
+ * toString ref.
+ */
+
+var toString = Object.prototype.toString;
+
+/**
+ * Return the type of `val`.
+ *
+ * @param {Mixed} val
+ * @return {String}
+ * @api public
+ */
+
+module.exports = function(val){
+  switch (toString.call(val)) {
+    case '[object Date]': return 'date';
+    case '[object RegExp]': return 'regexp';
+    case '[object Arguments]': return 'arguments';
+    case '[object Array]': return 'array';
+    case '[object Error]': return 'error';
+  }
+
+  if (val === null) return 'null';
+  if (val === undefined) return 'undefined';
+  if (val !== val) return 'nan';
+  if (val && val.nodeType === 1) return 'element';
+
+  val = val.valueOf
+    ? val.valueOf()
+    : Object.prototype.valueOf.apply(val)
+
+  return typeof val;
 };
 
 }, {}],
@@ -3519,8 +4315,8 @@ module.exports = function uuid(a){
   return module.exports = result;
 })(window);
 
-}, {"defaults":12,"flashdetect":26}],
-26: [function(require, module, exports) {
+}, {"defaults":12,"flashdetect":27}],
+27: [function(require, module, exports) {
 /*
 Copyright (c) Copyright (c) 2007, Carl S. Yestrau All rights reserved.
 Code licensed under the BSD License: http://www.featureblend.com/license.txt
@@ -3807,8 +4603,8 @@ if ( typeof define === 'function' && define.amd ) {
 
 })( window );
 
-}, {"eventie":27}],
-27: [function(require, module, exports) {
+}, {"eventie":28}],
+28: [function(require, module, exports) {
 /*!
  * eventie v1.0.6
  * event binding helper
@@ -3948,8 +4744,8 @@ module.exports = function debounce(func, wait, immediate){
   };
 };
 
-}, {"date-now":28}],
-28: [function(require, module, exports) {
+}, {"date-now":29}],
+29: [function(require, module, exports) {
 module.exports = Date.now || now
 
 function now() {
@@ -4025,8 +4821,8 @@ lsqueue = (function() {
 
 module.exports = lsqueue;
 
-}, {"json-fallback":29,"debounce":17,"store.js":19}],
-29: [function(require, module, exports) {
+}, {"json-fallback":30,"debounce":17,"store.js":19}],
+30: [function(require, module, exports) {
 /*
     json2.js
     2014-02-04
@@ -4743,8 +5539,8 @@ function isHTML(str) {
   return !!(match && match[1]);
 }
 
-}, {"domify":30,"each":31,"event":32,"keys":33,"query":34,"trim":25,"./lib/attributes":35,"./lib/classes":36,"./lib/events":37,"./lib/manipulate":38,"./lib/traverse":39}],
-30: [function(require, module, exports) {
+}, {"domify":31,"each":32,"event":33,"keys":34,"query":35,"trim":25,"./lib/attributes":36,"./lib/classes":37,"./lib/events":38,"./lib/manipulate":39,"./lib/traverse":40}],
+31: [function(require, module, exports) {
 
 /**
  * Expose `parse`.
@@ -4855,7 +5651,7 @@ function parse(html, doc) {
 }
 
 }, {}],
-31: [function(require, module, exports) {
+32: [function(require, module, exports) {
 
 /**
  * Module dependencies.
@@ -4946,8 +5742,8 @@ function array(obj, fn, ctx) {
   }
 }
 
-}, {"type":40,"component-type":40,"to-function":41}],
-40: [function(require, module, exports) {
+}, {"type":41,"component-type":41,"to-function":42}],
+41: [function(require, module, exports) {
 
 /**
  * toString ref.
@@ -4982,7 +5778,7 @@ module.exports = function(val){
 };
 
 }, {}],
-41: [function(require, module, exports) {
+42: [function(require, module, exports) {
 
 /**
  * Module Dependencies
@@ -5136,8 +5932,8 @@ function stripNested (prop, str, val) {
   });
 }
 
-}, {"props":42,"component-props":42}],
-42: [function(require, module, exports) {
+}, {"props":43,"component-props":43}],
+43: [function(require, module, exports) {
 /**
  * Global Names
  */
@@ -5225,7 +6021,7 @@ function prefixed(str) {
 }
 
 }, {}],
-32: [function(require, module, exports) {
+33: [function(require, module, exports) {
 var bind = window.addEventListener ? 'addEventListener' : 'attachEvent',
     unbind = window.removeEventListener ? 'removeEventListener' : 'detachEvent',
     prefix = bind !== 'addEventListener' ? 'on' : '';
@@ -5262,7 +6058,7 @@ exports.unbind = function(el, type, fn, capture){
   return fn;
 };
 }, {}],
-33: [function(require, module, exports) {
+34: [function(require, module, exports) {
 var has = Object.prototype.hasOwnProperty;
 
 module.exports = Object.keys || function(obj){
@@ -5278,7 +6074,7 @@ module.exports = Object.keys || function(obj){
 };
 
 }, {}],
-34: [function(require, module, exports) {
+35: [function(require, module, exports) {
 function one(selector, el) {
   return el.querySelector(selector);
 }
@@ -5302,7 +6098,7 @@ exports.engine = function(obj){
 };
 
 }, {}],
-35: [function(require, module, exports) {
+36: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -5390,8 +6186,8 @@ exports.value = function(val){
   });
 };
 
-}, {"value":43}],
-43: [function(require, module, exports) {
+}, {"value":44}],
+44: [function(require, module, exports) {
 
 /**
  * Module dependencies.
@@ -5488,8 +6284,8 @@ function type(el) {
   return name;
 }
 
-}, {"type":23}],
-36: [function(require, module, exports) {
+}, {"type":26}],
+37: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -5572,8 +6368,8 @@ exports.hasClass = function(name){
   return false;
 };
 
-}, {"classes":44}],
-44: [function(require, module, exports) {
+}, {"classes":45}],
+45: [function(require, module, exports) {
 /**
  * Module dependencies.
  */
@@ -5762,7 +6558,7 @@ ClassList.prototype.contains = function(name){
 };
 
 }, {"indexof":24}],
-37: [function(require, module, exports) {
+38: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -5826,8 +6622,8 @@ exports.off = function(event, selector, fn, capture){
   });
 };
 
-}, {"event":32,"delegate":45}],
-45: [function(require, module, exports) {
+}, {"event":33,"delegate":46}],
+46: [function(require, module, exports) {
 /**
  * Module dependencies.
  */
@@ -5871,8 +6667,8 @@ exports.unbind = function(el, type, fn, capture){
   event.unbind(el, type, fn, capture);
 };
 
-}, {"closest":46,"event":32}],
-46: [function(require, module, exports) {
+}, {"closest":47,"event":33}],
+47: [function(require, module, exports) {
 var matches = require('matches-selector')
 
 module.exports = function (element, selector, checkYoSelf, root) {
@@ -5893,8 +6689,8 @@ module.exports = function (element, selector, checkYoSelf, root) {
   }
 }
 
-}, {"matches-selector":47}],
-47: [function(require, module, exports) {
+}, {"matches-selector":48}],
+48: [function(require, module, exports) {
 /**
  * Module dependencies.
  */
@@ -5942,8 +6738,8 @@ function match(el, selector) {
   return false;
 }
 
-}, {"query":34}],
-38: [function(require, module, exports) {
+}, {"query":35}],
+39: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -6230,8 +7026,8 @@ exports.focus = function(){
   return this;
 };
 
-}, {"value":43,"css":48,"text":49}],
-48: [function(require, module, exports) {
+}, {"value":44,"css":49,"text":50}],
+49: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -6291,8 +7087,8 @@ function setStyles(el, props) {
   return el;
 }
 
-}, {"debug":2,"./lib/style":50,"./lib/css":51}],
-50: [function(require, module, exports) {
+}, {"debug":2,"./lib/style":51,"./lib/css":52}],
+51: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -6400,8 +7196,8 @@ function get(el, prop, orig, extra) {
   return ret;
 }
 
-}, {"debug":2,"to-camel-case":52,"./support":53,"./prop":54,"./hooks":55}],
-52: [function(require, module, exports) {
+}, {"debug":2,"to-camel-case":53,"./support":54,"./prop":55,"./hooks":56}],
+53: [function(require, module, exports) {
 
 var toSpace = require('to-space-case');
 
@@ -6426,8 +7222,8 @@ function toCamelCase (string) {
     return letter.toUpperCase();
   });
 }
-}, {"to-space-case":56}],
-56: [function(require, module, exports) {
+}, {"to-space-case":57}],
+57: [function(require, module, exports) {
 
 var clean = require('to-no-case');
 
@@ -6452,8 +7248,8 @@ function toSpaceCase (string) {
     return match ? ' ' + match : '';
   });
 }
-}, {"to-no-case":57}],
-57: [function(require, module, exports) {
+}, {"to-no-case":58}],
+58: [function(require, module, exports) {
 
 /**
  * Expose `toNoCase`.
@@ -6529,7 +7325,7 @@ function uncamelize (string) {
   });
 }
 }, {}],
-53: [function(require, module, exports) {
+54: [function(require, module, exports) {
 /**
  * Support values
  */
@@ -6633,7 +7429,7 @@ function computePixelPositionAndBoxSizingReliable() {
 
 
 }, {}],
-54: [function(require, module, exports) {
+55: [function(require, module, exports) {
 /**
  * Module dependencies
  */
@@ -6671,8 +7467,8 @@ function prop(prop, style) {
   return prop;
 }
 
-}, {"debug":2,"to-camel-case":52,"./vendor":58}],
-58: [function(require, module, exports) {
+}, {"debug":2,"to-camel-case":53,"./vendor":59}],
+59: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -6711,7 +7507,7 @@ function vendor(prop, style) {
 }
 
 }, {}],
-55: [function(require, module, exports) {
+56: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -6875,8 +7671,8 @@ function augmentWidthOrHeight(el, prop, extra, isBorderBox, styles) {
   return val;
 }
 
-}, {"each":31,"./css":51,"./styles":59,"./support":53,"./swap":60,"./computed":61}],
-51: [function(require, module, exports) {
+}, {"each":32,"./css":52,"./styles":60,"./support":54,"./swap":61,"./computed":62}],
+52: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -6958,8 +7754,8 @@ function isNumeric(obj) {
   return !isNan(parseFloat(obj)) && isFinite(obj);
 }
 
-}, {"debug":2,"to-camel-case":52,"./computed":61,"./prop":54,"./hooks":55}],
-61: [function(require, module, exports) {
+}, {"debug":2,"to-camel-case":53,"./computed":62,"./prop":55,"./hooks":56}],
+62: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -7009,8 +7805,8 @@ function computed(el, prop, precomputed) {
   return undefined === ret ? ret : ret + '';
 }
 
-}, {"debug":2,"within-document":62,"./styles":59,"./style":50}],
-62: [function(require, module, exports) {
+}, {"debug":2,"within-document":63,"./styles":60,"./style":51}],
+63: [function(require, module, exports) {
 
 /**
  * Check if `el` is within the document.
@@ -7028,7 +7824,7 @@ module.exports = function(el) {
   return false;
 };
 }, {}],
-59: [function(require, module, exports) {
+60: [function(require, module, exports) {
 /**
  * Expose `styles`
  */
@@ -7051,7 +7847,7 @@ function styles(el) {
 }
 
 }, {}],
-60: [function(require, module, exports) {
+61: [function(require, module, exports) {
 /**
  * Export `swap`
  */
@@ -7086,7 +7882,7 @@ function swap(el, options, fn, args) {
 }
 
 }, {}],
-49: [function(require, module, exports) {
+50: [function(require, module, exports) {
 
 var text = 'innerText' in document.createElement('div')
   ? 'innerText'
@@ -7098,7 +7894,7 @@ module.exports = function (el, val) {
 };
 
 }, {}],
-39: [function(require, module, exports) {
+40: [function(require, module, exports) {
 /**
  * Module Dependencies
  */
@@ -7390,8 +8186,8 @@ each([
   };
 });
 
-}, {"each":31,"traverse":63,"to-function":64,"matches-selector":65}],
-63: [function(require, module, exports) {
+}, {"each":32,"traverse":64,"to-function":65,"matches-selector":66}],
+64: [function(require, module, exports) {
 
 /**
  * dependencies
@@ -7427,8 +8223,8 @@ module.exports = function(type, el, selector, len){
   return ret;
 }
 
-}, {"matches-selector":47}],
-64: [function(require, module, exports) {
+}, {"matches-selector":48}],
+65: [function(require, module, exports) {
 
 /**
  * Module Dependencies
@@ -7582,8 +8378,8 @@ function stripNested (prop, str, val) {
   });
 }
 
-}, {"props":42,"component-props":42}],
-65: [function(require, module, exports) {
+}, {"props":43,"component-props":43}],
+66: [function(require, module, exports) {
 /**
  * Module dependencies.
  */
@@ -7630,7 +8426,7 @@ function match(el, selector) {
   return false;
 }
 
-}, {"query":34}],
+}, {"query":35}],
 6: [function(require, module, exports) {
 (function() {
   var $doc, $win, _tk, circplusTemplate, gmodal2, gsnSw, gsndfpfactory, loadScript, qsel, swcss, trakless2;
@@ -8490,8 +9286,8 @@ function match(el, selector) {
 
 }).call(this);
 
-}, {"trakless":3,"gmodal":66,"load-script":67,"dom":5,"./sw.css":68,"./circplus.html":69}],
-66: [function(require, module, exports) {
+}, {"trakless":3,"gmodal":67,"load-script":68,"dom":5,"./sw.css":69,"./circplus.html":70}],
+67: [function(require, module, exports) {
 // Generated by CoffeeScript 1.9.2
 var Emitter, checkEvent, createModal, domify, gmodal, hideModalInternal, modal, modals, showModalInternal, trim, win;
 
@@ -8818,8 +9614,8 @@ if (!gmodal) {
 
 module.exports = gmodal;
 
-}, {"emitter":70,"domify":71,"trim":25}],
-70: [function(require, module, exports) {
+}, {"emitter":71,"domify":72,"trim":25}],
+71: [function(require, module, exports) {
 
 /**
  * Expose `Emitter`.
@@ -8983,7 +9779,7 @@ Emitter.prototype.hasListeners = function(event){
 };
 
 }, {}],
-71: [function(require, module, exports) {
+72: [function(require, module, exports) {
 
 /**
  * Expose `parse`.
@@ -9094,7 +9890,7 @@ function parse(html, doc) {
 }
 
 }, {}],
-67: [function(require, module, exports) {
+68: [function(require, module, exports) {
 
 /**
  * Module dependencies.
@@ -9155,10 +9951,46 @@ module.exports = function loadScript(options, fn){
   // give it an ID or attributes.
   return script;
 };
-}, {"script-onload":21,"next-tick":22,"type":23}],
-68: [function(require, module, exports) {
-module.exports = '.gsnsw {\n  	float: left;\n}\n\n.gmodal {\n    background: url("data:image/gif;base64, iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNg2AQAALUAs0e+XlcAAAAASUVORK5CYII=");\n}\n\n.sw-pop {\n    /* default transparency for IE8 */\n	background: rgba(119, 119, 119, 1);\n}\n\n#gmodalContent {\n    vertical-align: top;\n    top: 50px;\n}\n\n@media (max-width: 640px) and (max-height: 640px){\n    .gsnsw {\n        float:none !important;\n    }\n\n    .sw-header-cta, .sw-header-break, .sw-header-right-img {\n        display:none !important;\n    }\n\n    .sw-header-break{\n        display:none !important;\n    }\n\n    .sw-pop {\n        width: 280px !important;\n        left:0 !important;\n        margin-left:0 !important;\n    }\n\n    .sw-header-dismiss {\n        position: static !important;\n        left:0 !important;\n        top:0 !important;\n        vertical-align: middle !important;\n        text-align: center !important;\n    }\n\n    .sw-close{\n        padding:1px !important;\n    }\n\n    #gmodalContent {\n        vertical-align: middle;\n        height: 80vh;\n        top: auto;\n    }\n\n    .sw-body {\n        max-height: 60vh;\n        overflow-y: scroll;\n    }\n}';
+}, {"script-onload":22,"next-tick":73,"type":26}],
+73: [function(require, module, exports) {
+"use strict"
+
+if (typeof setImmediate == 'function') {
+  module.exports = function(f){ setImmediate(f) }
+}
+// legacy node.js
+else if (typeof process != 'undefined' && typeof process.nextTick == 'function') {
+  module.exports = process.nextTick
+}
+// fallback for other environments / postMessage behaves badly on IE8
+else if (typeof window == 'undefined' || window.ActiveXObject || !window.postMessage) {
+  module.exports = function(f){ setTimeout(f) };
+} else {
+  var q = [];
+
+  window.addEventListener('message', function(){
+    var i = 0;
+    while (i < q.length) {
+      try { q[i++](); }
+      catch (e) {
+        q = q.slice(i);
+        window.postMessage('tic!', '*');
+        throw e;
+      }
+    }
+    q.length = 0;
+  }, true);
+
+  module.exports = function(fn){
+    if (!q.length) window.postMessage('tic!', '*');
+    q.push(fn);
+  }
+}
+
 }, {}],
 69: [function(require, module, exports) {
+module.exports = '.gsnsw {\n  	float: left;\n}\n\n.gmodal {\n    background: url("data:image/gif;base64, iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNg2AQAALUAs0e+XlcAAAAASUVORK5CYII=");\n}\n\n.sw-pop {\n    /* default transparency for IE8 */\n	background: rgba(119, 119, 119, 1);\n}\n\n#gmodalContent {\n    vertical-align: top;\n    top: 50px;\n}\n\n@media (max-width: 640px) and (max-height: 640px){\n    .gsnsw {\n        float:none !important;\n    }\n\n    .sw-header-cta, .sw-header-break, .sw-header-right-img {\n        display:none !important;\n    }\n\n    .sw-header-break{\n        display:none !important;\n    }\n\n    .sw-pop {\n        width: 280px !important;\n        left:0 !important;\n        margin-left:0 !important;\n    }\n\n    .sw-header-dismiss {\n        position: static !important;\n        left:0 !important;\n        top:0 !important;\n        vertical-align: middle !important;\n        text-align: center !important;\n    }\n\n    .sw-close{\n        padding:1px !important;\n    }\n\n    #gmodalContent {\n        vertical-align: middle;\n        height: 80vh;\n        top: auto;\n    }\n\n    .sw-body {\n        max-height: 60vh;\n        overflow-y: scroll;\n    }\n}';
+}, {}],
+70: [function(require, module, exports) {
 module.exports = '<div class="gsn-slot-container"><div class="cpslot cpslot2" data-companion="true" data-dimensions="300x50"></div></div><div class="gsn-slot-container"><div class="cpslot cpslot1" data-dimensions="300x100,300x120"></div></div>';
 }, {}]}, {}, {"1":""})

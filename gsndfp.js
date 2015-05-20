@@ -239,6 +239,10 @@
         }
         result = result.replace(/\/$/gi, '') + (self.gsnNetworkStore || '');
       }
+      if (result.indexOf('6394') <= 0) {
+        result += '/6394/' + result;
+        result = result.replace('//', '/');
+      }
       return result;
     };
 
@@ -917,6 +921,12 @@
         return;
       }
       return aPlugin.timer = value;
+    },
+    hideon: function(value) {
+      if (!value) {
+        return;
+      }
+      return aPlugin.hideOn = value;
     },
     selector: function(value) {
       if (typeof value !== "string") {
@@ -8731,16 +8741,16 @@ function match(el, selector) {
       gsndfp.on('clickBrand', function(e) {
         $win.gmodal.hide();
       });
+      qsel('#sw .remove').remove();
       self.didOpen = true;
       self.isVisible = true;
       self.$ads = qsel(self.sel);
       self.createAds().displayAds();
       setTimeout((function() {
         if (self.adBlockerOn) {
-          qsel('.remove').remove();
-          qsel('.sw-msg')[0].style.display = 'block';
-          qsel('.sw-header-copy')[0].style.display = 'none';
-          qsel('.sw-row')[0].style.display = 'none';
+          qsel('#sw .sw-msg')[0].style.display = 'block';
+          qsel('#sw .sw-header-copy')[0].style.display = 'none';
+          qsel('#sw .sw-row')[0].style.display = 'none';
         }
         return self;
       }), 150);
@@ -8810,7 +8820,8 @@ function match(el, selector) {
         }
         if ($win.gmodal.show({
           content: "<div id='sw'>" + data + "<div>",
-          closeCls: 'sw-close'
+          closeCls: 'sw-close',
+          hideOn: gsndfp.hideOn || ''
         }, self.onCloseCallback)) {
           self.onOpenCallback();
         }
@@ -8938,7 +8949,7 @@ function match(el, selector) {
      */
 
     gsndfpfactory.prototype.createAds = function() {
-      var $adUnit, $existingContent, adUnit, adUnitID, allData, dimensions, i, k, len, opts, ref, self;
+      var $adUnit, adUnit, adUnitID, allData, dimensions, i, k, len, opts, ref, self;
       self = this;
       opts = self.dopts;
       ref = self.$ads;
@@ -8948,8 +8959,6 @@ function match(el, selector) {
         allData = _tk.util.allData(adUnit);
         adUnitID = self.getID($adUnit, self.storeAs, adUnit);
         dimensions = self.getDimensions(allData);
-        $existingContent = adUnit.innerHTML;
-        qsel(adUnit).html('');
         $adUnit.addClass('display-none');
         $win.googletag.cmd.push(function() {
           var companion, gtslot, j, len1, map, mapping, ref1, v;
@@ -9398,9 +9407,9 @@ showModalInternal = function(self, opts) {
   self.elWrapper.className = trim((self.baseCls + " ") + (self.opts.cls || ''));
   setTimeout(function() {
     var body, eCls;
-    body = self.doc.getElementsByTagName('body')[0];
+    body = self.doc.getElementsByTagName('html')[0];
     eCls = body.className;
-    body.className = trim(eCls + " body-gmodal");
+    body.className = trim(eCls + " html-gmodal");
   }, 50);
   if (self.opts.hideOn) {
     self.opts._autoHideHandler = function() {
@@ -9421,8 +9430,8 @@ showModalInternal = function(self, opts) {
 hideModalInternal = function(self) {
   var eCls;
   self.elWrapper.className = "" + self.baseCls;
-  eCls = self.doc.getElementsByTagName('body')[0].className;
-  self.doc.getElementsByTagName('body')[0].className = trim(eCls.replace(/body\-gmodal/gi, ''));
+  eCls = self.doc.getElementsByTagName('html')[0].className;
+  self.doc.getElementsByTagName('html')[0].className = trim(eCls.replace(/html\-gmodal/gi, ''));
   self.isVisible = false;
   self.emit('hide', self);
   if (typeof self.opts.hideCallback === 'function') {
@@ -9462,7 +9471,7 @@ modal = (function() {
 
   modal.prototype.tpl = '<div class="gmodal-container"><div class="gmodal-wrap gmodal-left"></div><div class="gmodal-wrap gmodal-content" id="gmodalContent"></div><div class="gmodal-wrap gmodal-right"></div></div>';
 
-  modal.prototype.css = '.gmodal{display:none;overflow:hidden;outline:0;-webkit-overflow-scrolling:touch;position:fixed;position:absolute;top:0;left:0;bottom:0;right:0;width:100%;height:100%;z-index:9999990}.gmodal .frameshim{position:absolute;display:block;visibility:hidden;margin:0;width:100%;height:100%;top:0;left:0;border:none;z-index:-999}.body-gmodal .gmodal{display:block}.body-gmodal{overflow:hidden}.gmodal-container{display:table;position:relative;z-index:1;width:100%;height:100%}.gmodal-wrap{display:table-cell;position:relative;vertical-align:middle}.gmodal-left,.gmodal-right{width:50%}';
+  modal.prototype.css = '.gmodal{display:none;overflow:hidden;outline:0;-webkit-overflow-scrolling:touch;position:fixed;position:absolute;top:0;left:0;width:200%;height:200%;z-index:9999990}.gmodal .frameshim{position:absolute;display:block;visibility:hidden;width:100%;height:100%;margin:0;top:0;left:0;border:none;z-index:-999}.html-gmodal body .gmodal{display:block}.html-gmodal,.html-modal body{overflow:hidden;margin:0;padding:0;height:100%;width:100%}.gmodal-container{display:table;position:relative;z-index:1;width:50%;height:50%}.gmodal-wrap{display:table-cell;position:relative;vertical-align:middle;z-index:1}.gmodal-left,.gmodal-right{width:50%;z-index:1}';
 
 
   /**

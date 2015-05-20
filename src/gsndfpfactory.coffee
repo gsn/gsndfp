@@ -216,18 +216,19 @@ class gsndfpfactory
       $win.gmodal.hide()
       return
 
+    qsel('#sw .remove').remove()
     self.didOpen = true  
     self.isVisible = true
     self.$ads = qsel(self.sel)
     self.createAds().displayAds()
     setTimeout (->  
+
       # adblocking detection  
       if self.adBlockerOn
         # remove any class that is tagged to be remove
-        qsel('.remove').remove()
-        qsel('.sw-msg')[0].style.display = 'block';
-        qsel('.sw-header-copy')[0].style.display = 'none';
-        qsel('.sw-row')[0].style.display = 'none';
+        qsel('#sw .sw-msg')[0].style.display = 'block';
+        qsel('#sw .sw-header-copy')[0].style.display = 'none';
+        qsel('#sw .sw-row')[0].style.display = 'none';
 
       return self
     ), 150
@@ -283,11 +284,11 @@ class gsndfpfactory
 
       if !self.rect and $doc.documentElement?
           self.rect = 
-            w: Math.max($doc.documentElement.clientWidth, $win.innerWidth || 0)
-            h: Math.max($doc.documentElement.clientHeight, $win.innerHeight || 0)
+            w: Math.max($doc.documentElement.clientWidth, $win.innerWidth or 0)
+            h: Math.max($doc.documentElement.clientHeight, $win.innerHeight or 0)
 
       # open the modal to show shopper welcome
-      if ($win.gmodal.show({ content: "<div id='sw'>#{data}<div>", closeCls: 'sw-close' }, self.onCloseCallback))
+      if ($win.gmodal.show({ content: "<div id='sw'>#{data}<div>", closeCls: 'sw-close', hideOn: gsndfp.hideOn or '' }, self.onCloseCallback))
         self.onOpenCallback()
     else
       self.onCloseCallback cancel: true
@@ -397,9 +398,9 @@ class gsndfpfactory
       # get dimensions of the adUnit
       dimensions = self.getDimensions(allData)
       # get existing content
-      $existingContent = adUnit.innerHTML
+      # $existingContent = adUnit.innerHTML
       # wipe html clean ready for ad and set the default display class.
-      qsel(adUnit).html('')
+      # qsel(adUnit).html('')
       $adUnit.addClass 'display-none'
       # Push commands to DFP to create ads
       $win.googletag.cmd.push ->

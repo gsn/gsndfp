@@ -123,6 +123,9 @@ class Plugin
       if (self.gsnNetworkStore.indexOf('/') != 0)
         self.gsnNetworkStore = "/#{self.gsnNetworkStore}"
       result = result.replace(/\/$/gi, '') + (self.gsnNetworkStore or '')
+    if (result.indexOf('6394') <= 0)
+      result += '/6394/' + result
+      result = result.replace('//', '/');
     return result
 
   ###*
@@ -658,6 +661,9 @@ attrs =
   timer: (value) ->
     return unless value
     aPlugin.timer = value
+  hideon: (value) ->
+    return unless value
+    aPlugin.hideOn = value
   selector: (value) ->
     return unless typeof value is "string"
     aPlugin.selector = value

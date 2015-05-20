@@ -240,8 +240,7 @@
         result = result.replace(/\/$/gi, '') + (self.gsnNetworkStore || '');
       }
       if (result.indexOf('6394') <= 0) {
-        result += '/6394/' + result;
-        result = result.replace('//', '/');
+        result = ('/6394/' + result).replace('//', '/');
       }
       return result;
     };

@@ -124,8 +124,7 @@ class Plugin
         self.gsnNetworkStore = "/#{self.gsnNetworkStore}"
       result = result.replace(/\/$/gi, '') + (self.gsnNetworkStore or '')
     if (result.indexOf('6394') <= 0)
-      result += '/6394/' + result
-      result = result.replace('//', '/');
+      result = ('/6394/' + result).replace('//', '/');
     return result
 
   ###*

@@ -456,7 +456,7 @@ class Plugin
         return self
       
       gsnSw2.refresh
-        displayWhenExists: '.gsnadunit,.gsnunit'
+        displayWhenExists: '.gsnadunit,.gsnunit,.gsn-noads'
         sel: '.gsnsw'
         onData: (evt) ->
           if (self.source or '').length > 0
@@ -486,7 +486,7 @@ class Plugin
   #
   ###
   hasGsnUnit: () ->
-    return dom('.gsnadunit,.gsnunit,.circplus').length > 0
+    return dom('.gsnadunit,.gsnunit,.circplus,.gsn-noads').length > 0
 
   ###*
   # set global defaults
@@ -664,6 +664,9 @@ attrs =
   hideon: (value) ->
     return unless value
     aPlugin.hideOn = value
+  cleanrefresh: (value) ->
+    return unless value
+    aPlugin.cleanRefresh = value
   selector: (value) ->
     return unless typeof value is "string"
     aPlugin.selector = value

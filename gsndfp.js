@@ -660,7 +660,7 @@
           return self;
         }
         gsnSw2.refresh({
-          displayWhenExists: '.gsnadunit,.gsnunit',
+          displayWhenExists: '.gsnadunit,.gsnunit,.gsn-noads',
           sel: '.gsnsw',
           onData: function(evt) {
             if ((self.source || '').length > 0) {
@@ -698,7 +698,7 @@
      */
 
     Plugin.prototype.hasGsnUnit = function() {
-      return dom('.gsnadunit,.gsnunit,.circplus').length > 0;
+      return dom('.gsnadunit,.gsnunit,.circplus,.gsn-noads').length > 0;
     };
 
 
@@ -927,6 +927,12 @@
         return;
       }
       return aPlugin.hideOn = value;
+    },
+    cleanrefresh: function(value) {
+      if (!value) {
+        return;
+      }
+      return aPlugin.cleanRefresh = value;
     },
     selector: function(value) {
       if (typeof value !== "string") {
@@ -8949,7 +8955,7 @@ function match(el, selector) {
      */
 
     gsndfpfactory.prototype.createAds = function() {
-      var $adUnit, adUnit, adUnitID, allData, dimensions, i, k, len, opts, ref, self;
+      var $adUnit, $existingContent, adUnit, adUnitID, allData, dimensions, i, k, len, opts, ref, self;
       self = this;
       opts = self.dopts;
       ref = self.$ads;
@@ -8959,6 +8965,10 @@ function match(el, selector) {
         allData = _tk.util.allData(adUnit);
         adUnitID = self.getID($adUnit, self.storeAs, adUnit);
         dimensions = self.getDimensions(allData);
+        if (gsndfp.cleanRefresh) {
+          $existingContent = adUnit.innerHTML;
+          qsel(adUnit).html('');
+        }
         $adUnit.addClass('display-none');
         $win.googletag.cmd.push(function() {
           var companion, gtslot, j, len1, map, mapping, ref1, v;

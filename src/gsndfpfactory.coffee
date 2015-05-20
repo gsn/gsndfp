@@ -397,10 +397,13 @@ class gsndfpfactory
       adUnitID = self.getID($adUnit, self.storeAs, adUnit)
       # get dimensions of the adUnit
       dimensions = self.getDimensions(allData)
-      # get existing content
-      # $existingContent = adUnit.innerHTML
-      # wipe html clean ready for ad and set the default display class.
-      # qsel(adUnit).html('')
+
+      if (gsndfp.cleanRefresh)
+        # get existing content
+        $existingContent = adUnit.innerHTML
+        # wipe html clean ready for ad and set the default display class.
+        qsel(adUnit).html('')
+
       $adUnit.addClass 'display-none'
       # Push commands to DFP to create ads
       $win.googletag.cmd.push ->

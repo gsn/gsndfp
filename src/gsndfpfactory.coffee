@@ -219,18 +219,15 @@ class gsndfpfactory
     self.didOpen = true  
     self.isVisible = true
     self.$ads = qsel(self.sel)
-    setTimeout (->  
-      self.createAds().displayAds()
-      qsel('#sw .remove').remove()
-      # adblocking detection  
-      if self.adBlockerOn
-        # remove any class that is tagged to be remove
-        qsel('#sw .sw-msg')[0].style.display = 'block';
-        qsel('#sw .sw-header-copy')[0].style.display = 'none';
-        qsel('#sw .sw-row')[0].style.display = 'none';
 
-      return self
-    ), 150
+    self.createAds().displayAds()
+    qsel('#sw .remove').remove()
+    # adblocking detection  
+    if self.adBlockerOn
+      # remove any class that is tagged to be remove
+      qsel('#sw .sw-msg')[0].style.display = 'block';
+      qsel('#sw .sw-header-copy')[0].style.display = 'none';
+      qsel('#sw .sw-row')[0].style.display = 'none';
 
     return self
   ###*

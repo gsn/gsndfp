@@ -216,13 +216,12 @@ class gsndfpfactory
       $win.gmodal.hide()
       return
 
-    qsel('#sw .remove').remove()
     self.didOpen = true  
     self.isVisible = true
     self.$ads = qsel(self.sel)
-    self.createAds().displayAds()
     setTimeout (->  
-
+      self.createAds().displayAds()
+      qsel('#sw .remove').remove()
       # adblocking detection  
       if self.adBlockerOn
         # remove any class that is tagged to be remove
@@ -244,7 +243,7 @@ class gsndfpfactory
     self.isVisible = false  
     if !self.getCookie('gsnsw2')
       self.setCookie 'gsnsw2', "#{gsndfp.gsnNetworkId},#{gsndfp.enableCircPlus},#{gsndfp.disableSw}", gsndfp.expireHours
-    if typeof self.dopts.onClose == 'function'
+    if typeof self.dopts.onClose is 'function'
       self.dopts.onClose self.didOpen
 
     return self
@@ -556,11 +555,16 @@ class gsndfpfactory
           if (gtslot.existing)
             toPush.push gtslot
           else
-            $win.googletag.cmd.push ->
-              $win.googletag.display id
+            isVisible = true
+            if self.sel is '.gsnsw'
+              isVisible = !(adUnit.offsetWidth is 0 and adUnit.offsetHeight is 0)
+            if isVisible
+              $win.googletag.cmd.push ->
+                $win.googletag.display id
+
       else
-        $win.googletag.cmd.push ->
-          $win.googletag.display id
+          $win.googletag.cmd.push ->
+            $win.googletag.display id
      
 
     if toPush.length > 0

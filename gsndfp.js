@@ -8746,12 +8746,12 @@ function match(el, selector) {
       gsndfp.on('clickBrand', function(e) {
         $win.gmodal.hide();
       });
-      qsel('#sw .remove').remove();
       self.didOpen = true;
       self.isVisible = true;
       self.$ads = qsel(self.sel);
-      self.createAds().displayAds();
       setTimeout((function() {
+        self.createAds().displayAds();
+        qsel('#sw .remove').remove();
         if (self.adBlockerOn) {
           qsel('#sw .sw-msg')[0].style.display = 'block';
           qsel('#sw .sw-header-copy')[0].style.display = 'none';
@@ -9109,7 +9109,7 @@ function match(el, selector) {
      */
 
     gsndfpfactory.prototype.displayAds = function() {
-      var $adUnit, adUnit, gtslot, i, id, k, len, ref, self, toPush;
+      var $adUnit, adUnit, gtslot, i, id, isVisible, k, len, ref, self, toPush;
       self = this;
       toPush = [];
       ref = self.$ads;
@@ -9123,9 +9123,15 @@ function match(el, selector) {
             if (gtslot.existing) {
               toPush.push(gtslot);
             } else {
-              $win.googletag.cmd.push(function() {
-                return $win.googletag.display(id);
-              });
+              isVisible = true;
+              if (self.sel === '.gsnsw') {
+                isVisible = !(adUnit.offsetWidth === 0 && adUnit.offsetHeight === 0);
+              }
+              if (isVisible) {
+                $win.googletag.cmd.push(function() {
+                  return $win.googletag.display(id);
+                });
+              }
             }
           }
         } else {

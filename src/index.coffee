@@ -139,7 +139,7 @@ class Plugin
       en = 'gsnevent:' + en
 
     # a little timeout to make sure click tracking stick
-    win.setTimeout (->
+    win.setTimeout ->
       _tk.emitTop en,
           type: en
           en: en.replace('gsnevent:', '')
@@ -151,7 +151,7 @@ class Plugin
           en: en.replace('gsnevent:', '')
           detail: ed
       return
-    ), 100
+    , 100
     @
 
   ###*

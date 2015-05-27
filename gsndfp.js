@@ -258,7 +258,7 @@
       if (en.indexOf('gsnevent') < 0) {
         en = 'gsnevent:' + en;
       }
-      win.setTimeout((function() {
+      win.setTimeout(function() {
         _tk.emitTop(en, {
           type: en,
           en: en.replace('gsnevent:', ''),
@@ -271,7 +271,7 @@
             detail: ed
           });
         }
-      }), 100);
+      }, 100);
       return this;
     };
 
@@ -8642,7 +8642,6 @@ function match(el, selector) {
         }
       } else if (self.sel === '.gsnsw') {
         self.dopts.inViewOnly = false;
-        $win.gmodal.injectStyle('swcss', swcss);
         gsnSw = self;
         self.dopts.enableSingleRequest = true;
         self.dfpID = gsndfp.getNetworkId();
@@ -8825,6 +8824,7 @@ function match(el, selector) {
           closeCls: 'sw-close',
           hideOn: gsndfp.hideOn || ''
         }, self.onCloseCallback)) {
+          $win.gmodal.injectStyle('swcss', swcss);
           self.onOpenCallback();
         }
       } else {
@@ -9411,15 +9411,17 @@ showModalInternal = function(self, opts) {
       self.opts.content = null;
     }
   }
-  if (self.opts.closeCls) {
-    self.closeCls = self.opts.closeCls;
-  }
+  self.closeCls = self.opts.closeCls || self.closeCls;
   win.scrollTo(0, 0);
   self.elWrapper.style.display = self.elWrapper.style.visibility = "";
   self.elWrapper.className = trim((self.baseCls + " ") + (self.opts.cls || ''));
   body = self.doc.getElementsByTagName('html')[0];
   eCls = body.className;
   body.className = trim(eCls + " html-gmodal");
+  setTimeout(function() {
+    self.emit('show-timeout', self);
+    self.el.className = trim((" " + self.el.className + " ").replace(' in ', '') + ' in');
+  }, self.opts.timeout || 50);
   if (self.opts.hideOn) {
     self.opts._autoHideHandler = function() {
       return hideModalInternal(self);
@@ -9437,23 +9439,27 @@ showModalInternal = function(self, opts) {
 };
 
 hideModalInternal = function(self) {
-  var eCls;
   self.elWrapper.className = "" + self.baseCls;
-  eCls = self.doc.getElementsByTagName('html')[0].className;
-  self.doc.getElementsByTagName('html')[0].className = trim(eCls.replace(/html\-gmodal/gi, ''));
-  self.isVisible = false;
-  self.emit('hide', self);
-  if (typeof self.opts.hideCallback === 'function') {
-    self.opts.hideCallback(self);
-  }
-  if (self.opts._autoHideHandler) {
-    self.off('esc', self.opts._autoHideHandler);
-    self.off('click', self.opts._autoHideHandler);
-    self.off('tap', self.opts._autoHideHandler);
-  }
-  if (modals.length > 0) {
-    return self.show();
-  }
+  self.el.className = 'gmodal-wrap gmodal-content';
+  setTimeout(function() {
+    var eCls;
+    eCls = self.doc.getElementsByTagName('html')[0].className;
+    self.doc.getElementsByTagName('html')[0].className = trim(eCls.replace(/html\-gmodal/gi, ''));
+    self.isVisible = false;
+    self.emit('hide', self);
+    if (typeof self.opts.hideCallback === 'function') {
+      self.opts.hideCallback(self);
+    }
+    if (self.opts._autoHideHandler) {
+      self.off('esc', self.opts._autoHideHandler);
+      self.off('click', self.opts._autoHideHandler);
+      self.off('tap', self.opts._autoHideHandler);
+    }
+    if (modals.length !== 0) {
+      return self.show();
+    }
+  }, self.opts.timeout || 50);
+  return self;
 };
 
 
@@ -9491,9 +9497,9 @@ modal = (function() {
    */
 
   modal.prototype.show = function(opts, hideCb) {
-    var self;
+    var ref, self;
     self = this;
-    if (!self.doc || !self.doc.body) {
+    if (!((ref = self.doc) != null ? ref.body : void 0)) {
       return false;
     }
     self.elWrapper = createModal(self);
@@ -9504,23 +9510,17 @@ modal = (function() {
       opts.hideCallback = hideCb;
       modals.push(opts);
     }
-    if (self.isVisible) {
+    if (!!self.isVisible) {
       return false;
     }
     if (modals.length > 0) {
       opts = modals.shift();
     }
-    if (!self.opts && !opts) {
+    if (!opts) {
       return false;
     }
-    if ((self.opts || opts).timeout) {
-      setTimeout(function() {
-        showModalInternal(self, opts);
-      }, (self.opts || opts).timeout);
-    } else {
-      showModalInternal(self, opts);
-    }
-    return this;
+    showModalInternal(self, opts);
+    return self;
   };
 
 
@@ -9535,14 +9535,8 @@ modal = (function() {
     if (!self.elWrapper) {
       return self;
     }
-    if (self.opts) {
-      if (self.opts.timeout) {
-        setTimeout(function() {
-          hideModalInternal(self);
-        }, self.opts.timeout);
-      } else {
-        hideModalInternal(self);
-      }
+    if (!!self.opts) {
+      hideModalInternal(self);
     }
     return self;
   };
@@ -9572,7 +9566,7 @@ modal = (function() {
       elx = elx || (self.doc.head || self.doc.getElementsByTagName('head')[0]).lastChild;
       elx.parentNode.insertBefore(el, elx);
     }
-    return this;
+    return self;
   };
 
 
@@ -9606,16 +9600,14 @@ modal = (function() {
   modal.prototype.iShimmy = function() {
     var self;
     self = this;
-    if (self.elWrapper != null) {
-      if (!self.ishim) {
-        self.ishim = self.doc.createElement('iframe');
-        self.ishim.className = 'iframeshim';
-        self.ishim.scrolling = 'no';
-        self.ishim.frameborder = 0;
-        self.ishim.height = '100';
-        self.ishim.width = '100';
-        self.elWrapper.appendChild(self.ishim);
-      }
+    if ((self.elWrapper != null) && !self.shim) {
+      self.ishim = self.doc.createElement('iframe');
+      self.ishim.className = 'iframeshim';
+      self.ishim.scrolling = 'no';
+      self.ishim.frameborder = 0;
+      self.ishim.height = '100';
+      self.ishim.width = '100';
+      self.elWrapper.appendChild(self.ishim);
     }
     return self;
   };
@@ -10007,7 +9999,7 @@ else if (typeof window == 'undefined' || window.ActiveXObject || !window.postMes
 
 }, {}],
 69: [function(require, module, exports) {
-module.exports = '.gsnsw {\n  	float: left;\n}\n\n.gmodal {\n    background: url("data:image/gif;base64, iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNg2AQAALUAs0e+XlcAAAAASUVORK5CYII=");\n}\n\n.sw-pop {\n    /* default transparency for IE8 */\n	background: rgba(119, 119, 119, 1);\n}\n\n#gmodalContent {\n    vertical-align: top;\n    top: 50px;\n}\n\n@media (max-width: 640px) and (max-height: 640px){\n    .gsnsw {\n        float:none !important;\n    }\n\n    .sw-header-cta, .sw-header-break, .sw-header-right-img {\n        display:none !important;\n    }\n\n    .sw-header-break{\n        display:none !important;\n    }\n\n    .sw-pop {\n        width: 280px !important;\n        left:0 !important;\n        margin-left:0 !important;\n    }\n\n    .sw-header-dismiss {\n        position: static !important;\n        left:0 !important;\n        top:0 !important;\n        vertical-align: middle !important;\n        text-align: center !important;\n    }\n\n    .sw-close{\n        padding:1px !important;\n    }\n\n    #gmodalContent {\n        vertical-align: middle;\n        height: 80vh;\n        top: auto;\n    }\n\n    .sw-body {\n        max-height: 60vh;\n        overflow-y: scroll;\n    }\n}';
+module.exports = '.gsnsw {\n  	float: left;\n}\n\n.gmodal {\n    background: url("data:image/gif;base64, iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNg2AQAALUAs0e+XlcAAAAASUVORK5CYII=");\n}\n\n.sw-pop {\n    /* default transparency for IE8 */\n	background: rgba(119, 119, 119, 1);\n}\n\n.gmodal-content {\n    vertical-align: top;\n    top: 50px;\n}\n\n@media (max-width: 640px) and (max-height: 640px){\n    .gsnsw {\n        float: none !important;\n    }\n\n    .sw-header-cta, .sw-header-break, .sw-header-right-img {\n        display: none !important;\n    }\n\n    .sw-header-break{\n        display:none !important;\n    }\n\n    .sw-pop {\n        width: 280px !important;\n        left:0 !important;\n        margin-left:0 !important;\n    }\n\n    .sw-header-dismiss {\n        position: static !important;\n        left:0 !important;\n        top:0 !important;\n        vertical-align: middle !important;\n        text-align: center !important;\n    }\n\n    .sw-close{\n        padding: 1px !important;\n    }\n\n    .gmodal-content {\n        vertical-align: middle;\n        height: 80vh;\n        top: auto;\n    }\n\n    .sw-body {\n        max-height: 60vh;\n        overflow-y: scroll;\n    }\n}';
 }, {}],
 70: [function(require, module, exports) {
 module.exports = '<div class="gsn-slot-container"><div class="cpslot cpslot2" data-companion="true" data-dimensions="300x50"></div></div><div class="gsn-slot-container"><div class="cpslot cpslot1" data-dimensions="300x100,300x120"></div></div>';

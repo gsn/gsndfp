@@ -135,7 +135,6 @@ class gsndfpfactory
     # handle sw
     else if (self.sel is '.gsnsw')
       self.dopts.inViewOnly = false
-      $win.gmodal.injectStyle('swcss', swcss)
 
       gsnSw = self
       self.dopts.enableSingleRequest = true
@@ -285,6 +284,7 @@ class gsndfpfactory
 
       # open the modal to show shopper welcome
       if ($win.gmodal.show({ content: "<div id='sw'>#{data}<div>", closeCls: 'sw-close', hideOn: gsndfp.hideOn or '' }, self.onCloseCallback))
+        $win.gmodal.injectStyle('swcss', swcss)
         self.onOpenCallback()
     else
       self.onCloseCallback cancel: true

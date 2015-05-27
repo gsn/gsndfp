@@ -11,18 +11,18 @@
 	background: rgba(119, 119, 119, 1);
 }
 
-#gmodalContent {
+.gmodal-content {
     vertical-align: top;
     top: 50px;
 }
 
 @media (max-width: 640px) and (max-height: 640px){
     .gsnsw {
-        float:none !important;
+        float: none !important;
     }
 
     .sw-header-cta, .sw-header-break, .sw-header-right-img {
-        display:none !important;
+        display: none !important;
     }
 
     .sw-header-break{
@@ -44,10 +44,10 @@
     }
 
     .sw-close{
-        padding:1px !important;
+        padding: 1px !important;
     }
 
-    #gmodalContent {
+    .gmodal-content {
         vertical-align: middle;
         height: 80vh;
         top: auto;

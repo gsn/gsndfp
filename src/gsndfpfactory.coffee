@@ -227,6 +227,7 @@ class gsndfpfactory
       qsel('#sw .sw-msg')[0].style.display = 'block';
       qsel('#sw .sw-header-copy')[0].style.display = 'none';
       qsel('#sw .sw-row')[0].style.display = 'none';
+      qsel('#sw')[0].className += ' blocked';
 
     return self
   ###*

@@ -9,7 +9,7 @@ _tk = $win._tk
 $doc = $win.document
 gsnSw = null
 
-###* 
+###*
 # gsndfpfactory for creating different gsndfp products
 # gsnsw - shopper welcome
 # circPlus - circular plus
@@ -89,7 +89,7 @@ class gsndfpfactory
   ###*
    * refresh method
    * @param  {Object} options
-   * @return {Object}         
+   * @return {Object}
   ###
   refresh: (options) ->
     self = @
@@ -101,7 +101,7 @@ class gsndfpfactory
     @
   ###*
    * internal refresh method
-   * @return {Object} 
+   * @return {Object}
   ###
   doIt: () ->
     self = @
@@ -141,7 +141,7 @@ class gsndfpfactory
       self.dfpID = gsndfp.getNetworkId()
       if qsel(self.dopts.displayWhenExists or '.gsnunit').length <= 0
         return
-    
+
       self.storeAs = 'gsnsw'
       if self.didOpen or self.getCookie('gsnsw2')?
         setTimeout ->
@@ -182,7 +182,7 @@ class gsndfpfactory
       disableInitialLoad: false
       inViewOnly: true
       noFetch: false
-      sizeMapping: 
+      sizeMapping:
         leaderboard: [
           {browser: [ 980, 600], ad_sizes: [[728, 90], [640, 480]]}
           {browser: [   0,   0], ad_sizes: [[320, 50]]}
@@ -205,7 +205,7 @@ class gsndfpfactory
   ###*
    * shopperwelcome open internal handler
    * @param  {Object} evt event object
-   * @return {Object}       
+   * @return {Object}
   ###
   onOpenCallback: (evt) ->
     self = gsnSw
@@ -215,13 +215,13 @@ class gsndfpfactory
       $win.gmodal.hide()
       return
 
-    self.didOpen = true  
+    self.didOpen = true
     self.isVisible = true
     self.$ads = qsel(self.sel)
 
     self.createAds().displayAds()
     qsel('#sw .remove').remove()
-    # adblocking detection  
+    # adblocking detection
     if self.adBlockerOn
       # remove any class that is tagged to be remove
       qsel('#sw .sw-msg')[0].style.display = 'block';
@@ -233,11 +233,11 @@ class gsndfpfactory
   ###*
    * shopperwelcome close internal handler
    * @param  {Object} evt
-   * @return {Object}       
+   * @return {Object}
   ###
   onCloseCallback: (evt) ->
     self = gsnSw
-    self.isVisible = false  
+    self.isVisible = false
     if !self.getCookie('gsnsw2')
       self.setCookie 'gsnsw2', "#{gsndfp.gsnNetworkId},#{gsndfp.enableCircPlus},#{gsndfp.disableSw}", gsndfp.expireHours
     if typeof self.dopts.onClose is 'function'
@@ -248,7 +248,7 @@ class gsndfpfactory
   ###*
    * shopperwelcome callback success method
    * @param  {Object} svrRsp server response
-   * @return {Object}       
+   * @return {Object}
   ###
   swSucccess: (svrRsp) ->
     # remove handler for security reason
@@ -256,7 +256,7 @@ class gsndfpfactory
     rsp = svrRsp
     if (typeof svrRsp is 'string')
       rsp = JSON.parse(svrRsp)
-      
+
     self = gsnSw
     if rsp
       # allow for local value to override remote value
@@ -267,19 +267,19 @@ class gsndfpfactory
       gsndfp.disableSw = rsp.DisableSw
       gsndfp.expireHours = rsp.ExpireHours
       data = rsp.Template
-                                           
-    self.dfpID = gsndfp.getNetworkId() 
-    evt = { data: rsp, cancel: false }                      
+
+    self.dfpID = gsndfp.getNetworkId()
+    evt = { data: rsp, cancel: false }
     self.dopts.onData evt
 
     if evt.cancel
-      data = null 
+      data = null
     if data
       #add the random cachebuster
       data = data.replace(/%%CACHEBUSTER%%/g, (new Date).getTime()).replace(/%%CHAINID%%/g, gsndfp.gsnid)
 
       if !self.rect and $doc.documentElement?
-          self.rect = 
+          self.rect =
             w: Math.max($doc.documentElement.clientWidth, $win.innerWidth or 0)
             h: Math.max($doc.documentElement.clientHeight, $win.innerHeight or 0)
 
@@ -289,10 +289,10 @@ class gsndfpfactory
         self.onOpenCallback()
     else
       self.onCloseCallback cancel: true
-    
+
     @
 
-  ###* 
+  ###*
    * shopperwelcome request method
    * @return {Object}
   ###
@@ -300,13 +300,13 @@ class gsndfpfactory
     self = @
     url = "#{gsndfp.apiUrl}/ShopperWelcome/Get/#{gsndfp.gsnid}"
     dataType = 'json'
-    
+
     # fallback to jsonp for IE lt 10
     # this allow for better caching on non-IE browser
     # if I am opera I need to not enter this function
     $win.gsnswCallback = (rsp) ->
       self.swSucccess(rsp)
-    url += '?callback=gsnswCallback' 
+    url += '?callback=gsnswCallback'
     loadScript(url)
     return self
 
@@ -335,9 +335,9 @@ class gsndfpfactory
 
   ###*
    * set cookie value
-   * @param {string} nameOfCookie 
-   * @param {Object} value        
-   * @param {Number} expireHours  
+   * @param {string} nameOfCookie
+   * @param {Object} value
+   * @param {Number} expireHours
   ###
   setCookie: (nameOfCookie, value, expireHours) ->
     self = @
@@ -363,8 +363,11 @@ class gsndfpfactory
       if typeof targeting == 'string'
         targeting = eval('(' + targeting + ')')
       for k, v of targeting
-        if k == 'brand'
+        if k is 'brand'
           gsndfp.setBrand(v)
+        if k is 'dept' and typeof(v) is 'string'
+          v = v.split(",").reverse()
+
         gtslot.setTargeting k, v
 
     # Sets custom exclusions for just THIS ad unit if it has been specified
@@ -380,7 +383,7 @@ class gsndfpfactory
 
   ###*
    * create all the ads object
-   * @return {Object} 
+   * @return {Object}
   ###
   createAds: ->
     self = @
@@ -517,13 +520,13 @@ class gsndfpfactory
 
   ###*
    * determine if ads height is in view
-   * @param  {HTMLElement}  el 
-   * @return {Boolean}    
+   * @param  {HTMLElement}  el
+   * @return {Boolean}
   ###
   isHeightInView: (el) ->
     # check for 50% visible
     isVisible = true
-    try 
+    try
       percentVisible = 0.50
       rect = el.getBoundingClientRect()
       overhang = rect.height * (1 - percentVisible)
@@ -536,7 +539,7 @@ class gsndfpfactory
 
   ###*
    * display all ads, either refresh or not
-   * @return {Object} 
+   * @return {Object}
   ###
   displayAds: ->
     self = @
@@ -546,7 +549,7 @@ class gsndfpfactory
       $adUnit = qsel(adUnit)
       id = $adUnit.id()
       gtslot = self.adUnitById[id]
-      
+
       if gtslot?
         # determine if element is in view
         if !self.dopts.inViewOnly or self.isHeightInView(adUnit)
@@ -563,7 +566,7 @@ class gsndfpfactory
       else
           $win.googletag.cmd.push ->
             $win.googletag.display id
-     
+
 
     if toPush.length > 0
       $win.googletag.cmd.push ->
@@ -573,9 +576,9 @@ class gsndfpfactory
 
   ###*
    * get id
-   * @param  {Object} $adUnit    
-   * @param  {string} adUnitName 
-   * @param  {Object} adUnit     
+   * @param  {Object} $adUnit
+   * @param  {string} adUnitName
+   * @param  {Object} adUnit
    * @return {string}            the id
   ###
   getID: ($adUnit, adUnitName, adUnit) ->

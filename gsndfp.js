@@ -460,7 +460,6 @@
         myPlugin: this,
         OfferCode: offerCode || 0
       });
-      return this;
     };
 
 
@@ -476,7 +475,6 @@
         myPlugin: this,
         BrandName: brandName
       });
-      return this;
     };
 
 
@@ -491,7 +489,6 @@
         myPlugin: this,
         AdCode: adCode
       });
-      return this;
     };
 
 
@@ -505,7 +502,6 @@
       this.emit('clickRecipe', {
         RecipeId: recipeId
       });
-      return this;
     };
 
 
@@ -524,7 +520,6 @@
         Url: url,
         Target: target
       });
-      return this;
     };
 
 
@@ -535,7 +530,6 @@
 
     Plugin.prototype.setBrand = function(brandName) {
       trakless.util.session('gsndfp:brand', brandName);
-      return this;
     };
 
 
@@ -8467,7 +8461,7 @@ function match(el, selector) {
   gsnSw = null;
 
 
-  /** 
+  /**
    * gsndfpfactory for creating different gsndfp products
    * gsnsw - shopper welcome
    * circPlus - circular plus
@@ -8837,7 +8831,7 @@ function match(el, selector) {
     };
 
 
-    /** 
+    /**
      * shopperwelcome request method
      * @return {Object}
      */
@@ -8888,8 +8882,8 @@ function match(el, selector) {
 
     /**
      * set cookie value
-     * @param {string} nameOfCookie 
-     * @param {Object} value        
+     * @param {string} nameOfCookie
+     * @param {Object} value
      * @param {Number} expireHours
      */
 
@@ -8926,6 +8920,9 @@ function match(el, selector) {
           v = targeting[k];
           if (k === 'brand') {
             gsndfp.setBrand(v);
+          }
+          if (k === 'dept' && typeof v === 'string') {
+            v = v.split(",").reverse();
           }
           gtslot.setTargeting(k, v);
         }
@@ -9082,7 +9079,7 @@ function match(el, selector) {
 
     /**
      * determine if ads height is in view
-     * @param  {HTMLElement}  el 
+     * @param  {HTMLElement}  el
      * @return {Boolean}
      */
 
@@ -9148,9 +9145,9 @@ function match(el, selector) {
 
     /**
      * get id
-     * @param  {Object} $adUnit    
-     * @param  {string} adUnitName 
-     * @param  {Object} adUnit     
+     * @param  {Object} $adUnit
+     * @param  {string} adUnitName
+     * @param  {Object} adUnit
      * @return {string}            the id
      */
 

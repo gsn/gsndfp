@@ -298,7 +298,7 @@ class Plugin
     @emit 'clickBrickOffer',
       myPlugin: this
       OfferCode: offerCode or 0
-    @
+    return
 
   ###*
   # Trigger when a brand offer or shopper welcome is clicked.
@@ -310,7 +310,7 @@ class Plugin
     @emit 'clickBrand',
       myPlugin: this
       BrandName: brandName
-    @
+    return
 
   ###*
   # Trigger when a promotion is clicked.  AKA: promotionRedirect
@@ -321,7 +321,7 @@ class Plugin
     @emit 'clickPromotion',
       myPlugin: this
       AdCode: adCode
-    @
+    return
 
   ###*
   # Trigger when a recipe is clicked.  AKA: recipeRedirect
@@ -330,7 +330,7 @@ class Plugin
   clickRecipe: (click, recipeId) ->
     @ajaxFireUrl click
     @emit 'clickRecipe', RecipeId: recipeId
-    @
+    return
 
   ###*
   # Trigger when a generic link is clicked.  AKA: verifyClickThru
@@ -344,7 +344,7 @@ class Plugin
       myPlugin: this
       Url: url
       Target: target
-    @
+    return
 
   ###*
   # set the brand for the session
@@ -352,7 +352,7 @@ class Plugin
   ###
   setBrand: (brandName) ->
     trakless.util.session('gsndfp:brand', brandName)
-    @
+    return
 
   ###*
   # get the brand currently in session
@@ -592,6 +592,8 @@ if gsnContext?
       # assume there is this global function
       if typeof AddAdToShoppingList is 'function'
         AddAdToShoppingList qs
+
+    # myGsn.Advertising.refresh()
     return
 
   myGsn.Advertising.on 'clickLink', (data) ->
@@ -604,9 +606,7 @@ if gsnContext?
         linkData.Target = '_top'
 
       if linkData.Target is '_blank'
-        # this is a link out to open in new window
-        # win.open linkData.Url
-        # don't do anything, ads should handle it
+        # myGsn.Advertising.refresh()
       else
         # assume this is an internal redirect
         win.location.replace linkData.Url
@@ -633,6 +633,8 @@ if gsnContext?
       # open brick offer using the new api URL
       # need to worry about popup blockers
       win.open url, ''
+
+    # myGsn.Advertising.refresh()
     return
 
 # auto init with attributes

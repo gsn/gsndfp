@@ -445,7 +445,6 @@
         CreativeId: creativeId,
         Quantity: quantity || 1
       });
-      return this;
     };
 
 

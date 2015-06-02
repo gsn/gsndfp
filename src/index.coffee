@@ -287,7 +287,7 @@ class Plugin
       AdCode: adCode
       CreativeId: creativeId
       Quantity: quantity or 1
-    @
+    return
 
   ###*
   # Trigger when a brick offer is clicked.  AKA: brickRedirect

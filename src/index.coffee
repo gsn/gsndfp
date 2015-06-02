@@ -7,11 +7,11 @@ gsndfpfactory = require('./gsndfpfactory.coffee')
 
 if console?
   if (console.log.bind?)
-    log.log = console.log.bind(console); 
+    log.log = console.log.bind(console);
 
 win = window
 doc = win.document
-gsnContext = win.gsnContext
+gsnContext = win.GSNContext
 _tk = win._tk
 myGsn = win.Gsn or {}
 oldGsnAdvertising = myGsn.Advertising
@@ -117,7 +117,7 @@ class Plugin
   ###
   getNetworkId: (includeStore)->
     self = @
-    result = self.gsnNetworkId + if (self.source or "").length > 0 then ".#{self.source}" else "" 
+    result = self.gsnNetworkId + if (self.source or "").length > 0 then ".#{self.source}" else ""
     if includeStore and typeof(self.gsnNetworkStore) is 'string'
       self.gsnNetworkStore = _tk.util.trim(self.gsnNetworkStore)
       if (self.gsnNetworkStore.indexOf('/') != 0)
@@ -216,7 +216,7 @@ class Plugin
           tsP[k2] = v
 
     _tk.track('gsn', tsP)
-      
+
     self.log actionParam
 
     @
@@ -374,7 +374,7 @@ class Plugin
       for k, v in allData when /^gsn/gi.test(k)
         realk = /^gsn/i.replace(k, '').toLowerCase()
         payLoad[realk] = v
-    
+
     self.refresh payLoad
     return self
 
@@ -418,7 +418,7 @@ class Plugin
         self.depts = "," + targetting.dept.join(',')
       else
         targetting.dept = ['produce']
-        
+
       gsnpods.refresh(
         setTargeting: targetting
         sel: '.gsnunit'
@@ -453,7 +453,7 @@ class Plugin
     if (self.gsnid)
       if (gsnSw2.isVisible)
         return self
-      
+
       gsnSw2.refresh
         displayWhenExists: '.gsnadunit,.gsnunit,.gsn-noads'
         sel: '.gsnsw'
@@ -474,7 +474,7 @@ class Plugin
                 self.actionHandler tg, evt
               else if (win.gmodal.hasCls(tg.parentNode, 'gsnaction'))
                 self.actionHandler tg.parentNode, evt
-              
+
             self.selector  = null
 
           self.refreshAdPodsInternal(actionParam, forceRefresh)
@@ -597,7 +597,7 @@ if gsnContext?
   myGsn.Advertising.on 'clickLink', (data) ->
     if data.type != 'gsnevent:clickLink'
       return
-      
+
     linkData = data.detail
     if linkData
       if !(typeof linkData.Target is 'string')
@@ -645,7 +645,7 @@ attrs =
   debug: (value) ->
     return unless typeof value is "string"
     aPlugin.isDebug = value isnt "false"
-    if (value) 
+    if (value)
       debug.enable('gsndfp')
   api: (value) ->
     return unless typeof value is "string"
@@ -680,10 +680,10 @@ for script in doc.getElementsByTagName("script")
 trakless.setPixel('//pi.gsngrocers.com/pi.gif')
 trakless.store.init({url: '//cdn.gsngrocers.com/script/xstore.html', dntIgnore: true})
 
-if aPlugin.hasGsnUnit() 
- aPlugin.load() 
-else 
-  trakless.util.ready -> 
+if aPlugin.hasGsnUnit()
+ aPlugin.load()
+else
+  trakless.util.ready ->
     aPlugin.load()
 
 module.exports = myGsn

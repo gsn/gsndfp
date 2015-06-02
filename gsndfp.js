@@ -108,7 +108,7 @@
 
   doc = win.document;
 
-  gsnContext = win.gsnContext;
+  gsnContext = win.GSNContext;
 
   _tk = win._tk;
 
@@ -8754,6 +8754,7 @@ function match(el, selector) {
         qsel('#sw .sw-msg')[0].style.display = 'block';
         qsel('#sw .sw-header-copy')[0].style.display = 'none';
         qsel('#sw .sw-row')[0].style.display = 'none';
+        qsel('#sw')[0].className += ' blocked';
       }
       return self;
     };

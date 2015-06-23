@@ -556,12 +556,8 @@ class gsndfpfactory
           if (gtslot.existing)
             toPush.push gtslot
           else
-            isVisible = true
-            if self.sel is '.gsnsw'
-              isVisible = !(adUnit.offsetWidth is 0 and adUnit.offsetHeight is 0)
-            if isVisible
-              $win.googletag.cmd.push ->
-                $win.googletag.display id
+            $win.googletag.cmd.push ->
+              $win.googletag.display id
 
       else
           $win.googletag.cmd.push ->

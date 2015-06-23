@@ -30,18 +30,15 @@
    */
 
   function call(id, require){
-    var m = { exports: {} };
+    var m = cache[id] = { exports: {} };
     var mod = modules[id];
     var name = mod[2];
     var fn = mod[0];
 
     fn.call(m.exports, function(req){
       var dep = modules[id][1][req];
-      return require(dep || req);
+      return require(dep ? dep : req);
     }, m, m.exports, outer, modules, cache, entries);
-
-    // store to cache after successful resolve
-    cache[id] = m;
 
     // expose as `name`.
     if (name) cache[name] = cache[id];
@@ -8974,7 +8971,7 @@ function match(el, selector) {
      */
 
     gsndfpfactory.prototype.displayAds = function() {
-      var $adUnit, adUnit, gtslot, i, id, isVisible, k, len, ref, self, toPush;
+      var $adUnit, adUnit, gtslot, i, id, k, len, ref, self, toPush;
       self = this;
       toPush = [];
       ref = self.$ads;
@@ -8988,15 +8985,9 @@ function match(el, selector) {
             if (gtslot.existing) {
               toPush.push(gtslot);
             } else {
-              isVisible = true;
-              if (self.sel === '.gsnsw') {
-                isVisible = !(adUnit.offsetWidth === 0 && adUnit.offsetHeight === 0);
-              }
-              if (isVisible) {
-                $win.googletag.cmd.push(function() {
-                  return $win.googletag.display(id);
-                });
-              }
+              $win.googletag.cmd.push(function() {
+                return $win.googletag.display(id);
+              });
             }
           }
         } else {

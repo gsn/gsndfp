@@ -7,7 +7,7 @@ gsndfpfactory = require('./gsndfpfactory.coffee')
 
 if console?
   if (console.log.bind?)
-    log.log = console.log.bind(console)
+    log.log = console.log.bind(console);
 
 win = window
 doc = win.document

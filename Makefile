@@ -26,7 +26,7 @@ default: gsndfp.js
 #
 
 clean:
-	@rm -rf components $(BUILD)
+	@rm -rf components $(BUILD) build
 	@rm -f gsndfp.js gsndfp.min.js
 	@rm -rf node_modules npm-debug.log
 #
@@ -69,7 +69,8 @@ test-browser: $(BUILD)
 #
 
 gsndfp.js: node_modules $(SRC)
-	@$(DUO) --use duo-coffee src/index.coffee > gsndfp.js
+	@$(DUO) --use duo-coffee src/index.coffee
+	@cp build/src/index.js gsndfp.js
 	@$(MINIFY) gsndfp.js --output gsndfp.min.js
 
 #
@@ -86,7 +87,8 @@ node_modules: package.json
 
 
 $(BUILD): node_modules $(TESTS) src/index.coffee
-	@$(DUO) --development --use duo-coffee test/tests.coffee > $(BUILD)
+	@$(DUO) --development --use duo-coffee test/tests.coffee
+	@cp build/test/tests.js build.js
 
 #
 # Phony build target

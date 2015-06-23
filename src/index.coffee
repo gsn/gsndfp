@@ -7,7 +7,7 @@ gsndfpfactory = require('./gsndfpfactory.coffee')
 
 if console?
   if (console.log.bind?)
-    log.log = console.log.bind(console);
+    log.log = console.log.bind(console)
 
 win = window
 doc = win.document
@@ -344,6 +344,18 @@ class Plugin
       myPlugin: this
       Url: url
       Target: target
+    return
+
+  ###*
+  # Trigger custom event.
+  #
+  ###
+  clickCustom: (click, name, value) ->
+    @ajaxFireUrl click
+    @emit 'clickCustom',
+      myPlugin: this
+      Name: name
+      Value: value
     return
 
   ###*

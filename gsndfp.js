@@ -30,15 +30,18 @@
    */
 
   function call(id, require){
-    var m = cache[id] = { exports: {} };
+    var m = { exports: {} };
     var mod = modules[id];
     var name = mod[2];
     var fn = mod[0];
 
     fn.call(m.exports, function(req){
       var dep = modules[id][1][req];
-      return require(dep ? dep : req);
+      return require(dep || req);
     }, m, m.exports, outer, modules, cache, entries);
+
+    // store to cache after successful resolve
+    cache[id] = m;
 
     // expose as `name`.
     if (name) cache[name] = cache[id];
@@ -849,7 +852,7 @@
       }
     });
     myGsn.Advertising.on('clickLink', function(data) {
-      var linkData;
+      var linkData, url;
       if (data.type !== 'gsnevent:clickLink') {
         return;
       }
@@ -861,7 +864,17 @@
         if (linkData.Target === '_blank') {
 
         } else {
-          win.location.replace(linkData.Url);
+          url = _tk.util.trim(linkData.Url);
+          if (url === 'circular') {
+            url = '/Shop/WeeklyAd.aspx';
+          } else if (url === 'coupon') {
+            url = '/Shop/Coupons.aspx';
+          } else if (url === 'recipecenter') {
+            url = '/Recipes/RecipeCenter.aspx';
+          } else if (url === 'registration') {
+            url = '/Profile/SignUp.aspx';
+          }
+          win.location.replace(url);
         }
       }
     });

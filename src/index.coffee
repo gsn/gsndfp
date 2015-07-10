@@ -620,8 +620,18 @@ if gsnContext?
       if linkData.Target is '_blank'
         # myGsn.Advertising.refresh()
       else
+        url = _tk.util.trim(linkData.Url)
+        if (url is 'circular')
+          url = '/Shop/WeeklyAd.aspx'
+        else if (url is 'coupon')
+          url = '/Shop/Coupons.aspx'
+        else if (url is 'recipecenter')
+          url = '/Recipes/RecipeCenter.aspx'
+        else if (url is 'registration')
+          url = '/Profile/SignUp.aspx'
+
         # assume this is an internal redirect
-        win.location.replace linkData.Url
+        win.location.replace url
 
     return
 

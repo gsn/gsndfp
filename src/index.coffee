@@ -623,7 +623,7 @@ if gsnContext?
         url = _tk.util.trim(linkData.Url)
         if (url is 'circular')
           url = '/Shop/WeeklyAd.aspx'
-        else if (url is 'coupon')
+        else if (url is 'coupons')
           url = '/Shop/Coupons.aspx'
         else if (url is 'recipecenter')
           url = '/Recipes/RecipeCenter.aspx'

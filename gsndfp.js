@@ -871,7 +871,7 @@
           url = _tk.util.trim(linkData.Url);
           if (url === 'circular') {
             url = '/Shop/WeeklyAd.aspx';
-          } else if (url === 'coupon') {
+          } else if (url === 'coupons') {
             url = '/Shop/Coupons.aspx';
           } else if (url === 'recipecenter') {
             url = '/Recipes/RecipeCenter.aspx';
@@ -6717,24 +6717,37 @@ exports.unbind = function(el, type, fn, capture){
 
 }, {"closest":47,"event":33}],
 47: [function(require, module, exports) {
+/**
+ * Module Dependencies
+ */
+
 var matches = require('matches-selector')
 
-module.exports = function (element, selector, checkYoSelf, root) {
-  element = checkYoSelf ? {parentNode: element} : element
+/**
+ * Export `closest`
+ */
 
-  root = root || document
+module.exports = closest
 
-  // Make sure `element !== document` and `element != null`
-  // otherwise we get an illegal invocation
-  while ((element = element.parentNode) && element !== document) {
-    if (matches(element, selector))
-      return element
-    // After `matches` on the edge case that
-    // the selector matches the root
-    // (when the root is not the document)
-    if (element === root)
-      return
+/**
+ * Closest
+ *
+ * @param {Element} el
+ * @param {String} selector
+ * @param {Element} scope (optional)
+ */
+
+function closest (el, selector, scope) {
+  scope = scope || document.documentElement;
+
+  // walk up the dom
+  while (el && el !== scope) {
+    if (matches(el, selector)) return el;
+    el = el.parentNode;
   }
+
+  // check scope for match
+  return matches(el, selector) ? el : null;
 }
 
 }, {"matches-selector":48}],
@@ -9679,13 +9692,17 @@ module.exports = parse;
  * Tests for browser support.
  */
 
-var div = document.createElement('div');
-// Setup
-div.innerHTML = '  <link/><table></table><a href="/a">a</a><input type="checkbox"/>';
-// Make sure that link elements get serialized correctly by innerHTML
-// This requires a wrapper element in IE
-var innerHTMLBug = !div.getElementsByTagName('link').length;
-div = undefined;
+var innerHTMLBug = false;
+var bugTestDiv;
+if (typeof document !== 'undefined') {
+  bugTestDiv = document.createElement('div');
+  // Setup
+  bugTestDiv.innerHTML = '  <link/><table></table><a href="/a">a</a><input type="checkbox"/>';
+  // Make sure that link elements get serialized correctly by innerHTML
+  // This requires a wrapper element in IE
+  innerHTMLBug = !bugTestDiv.getElementsByTagName('link').length;
+  bugTestDiv = undefined;
+}
 
 /**
  * Wrap map from jquery.

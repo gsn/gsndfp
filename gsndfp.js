@@ -10,11 +10,10 @@
    * Require `name`.
    *
    * @param {String} name
-   * @param {Boolean} jumped
    * @api public
    */
 
-  function require(name, jumped){
+  function require(name){
     if (cache[name]) return cache[name].exports;
     if (modules[name]) return call(name, require);
     throw new Error('cannot find module "' + name + '"');
@@ -30,21 +29,26 @@
    */
 
   function call(id, require){
-    var m = { exports: {} };
+    var m = cache[id] = { exports: {} };
     var mod = modules[id];
     var name = mod[2];
     var fn = mod[0];
+    var threw = true;
 
-    fn.call(m.exports, function(req){
-      var dep = modules[id][1][req];
-      return require(dep || req);
-    }, m, m.exports, outer, modules, cache, entries);
-
-    // store to cache after successful resolve
-    cache[id] = m;
-
-    // expose as `name`.
-    if (name) cache[name] = cache[id];
+    try {
+      fn.call(m.exports, function(req){
+        var dep = modules[id][1][req];
+        return require(dep || req);
+      }, m, m.exports, outer, modules, cache, entries);
+      threw = false;
+    } finally {
+      if (threw) {
+        delete cache[id];
+      } else if (name) {
+        // expose as 'name'.
+        cache[name] = cache[id];
+      }
+    }
 
     return cache[id].exports;
   }
@@ -3454,12 +3458,12 @@ byObserver = function (Observer) {
 
 module.exports = (function () {
 	// Node.js
-	if ((typeof process === 'object') && process &&
+	if ((typeof process !== 'undefined') && process &&
 			(typeof process.nextTick === 'function')) {
 		return process.nextTick;
 	}
 
-	// MutationObserver
+	// MutationObserver=
 	if ((typeof document === 'object') && document) {
 		if (typeof MutationObserver === 'function') {
 			return byObserver(MutationObserver);
@@ -3476,7 +3480,7 @@ module.exports = (function () {
 	}
 
 	// Wide available standard
-	if ((typeof setTimeout === 'function') || (typeof setTimeout === 'object')) {
+	if (typeof setTimeout === 'function') {
 		return function (cb) { setTimeout(callable(cb), 0); };
 	}
 

@@ -9,8 +9,19 @@
   <body>
     <h1>AppNexus tag demo</h1>
     
-    <div>
-<SCRIPT SRC="http://ib.adnxs.com/ttj?id=6086393&size=728x90" TYPE="text/javascript"></SCRIPT>
-</div>
+<iframe name="iframe" src="emptypage.html"></iframe>
+<script>
+window.onload=function() {
+  var iframe = window.frames['iframe'];
+  var doc = iframe.document;
+  doc.write('<scr'+'ipt src="http://ib.adnxs.com/ttj?id=5506238&cb=${CACHEBUSTER}&referrer=http://plungjan.name"></scr' + 'ipt>');
+  doc.close();
+ } 
+</script>
+
+<iframe name="iframe1" src="emptypage1.html"></iframe>
+
+<iframe name="iframe2" src="emptypage2.html"></iframe>
+
   </body>
 </html>

@@ -205,7 +205,7 @@
 
     Plugin.prototype.oldGsnAdvertising = oldGsnAdvertising;
 
-    Plugin.prototype.minSecondBetweenRefresh = 5;
+    Plugin.prototype.minSecondBetweenRefresh = 2;
 
     Plugin.prototype.enableCircPlus = false;
 

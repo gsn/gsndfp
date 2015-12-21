@@ -97,7 +97,7 @@ class Plugin
   gsnNetworkStore: undefined
   onAllEvents: undefined
   oldGsnAdvertising: oldGsnAdvertising
-  minSecondBetweenRefresh: 5
+  minSecondBetweenRefresh: 2
   enableCircPlus: false
   disableSw: ''
   source: ''
